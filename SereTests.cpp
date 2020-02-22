@@ -1,6 +1,8 @@
 #include <iostream>
 #include <memory>
 
+#include "gtest/gtest.h"
+
 #include "Language.hpp"
 #include "EvalSere.hpp"
 
@@ -29,71 +31,58 @@
 //         (RE_VAR("x"))))));
 // }
 
-void testcase_empty() {
-  assert(evalSere(*RE_EMPTY, {}) == Match_Ok);
-  assert(evalSere(*RE_EMPTY, {{"",""}}) == Match_Failed);
+TEST(Sere, empty) {
+  ASSERT_EQ(evalSere(*RE_EMPTY, {}), Match_Ok);
+  ASSERT_EQ(evalSere(*RE_EMPTY, {{"",""}}), Match_Failed);
 }
 
-void testcase_bool() {
-  assert(evalSere(*RE_TRUE, {{"y", "x"}}) == Match_Ok);
-  assert(evalSere(*RE_FALSE, {{"y", "x"}}) == Match_Failed);
-  assert(evalSere(*RE_NOT(RE_TRUE), {{"y", "x"}}) == Match_Failed);
-  assert(evalSere(*RE_VAR("y"), {{"y", "x"}}) == Match_Ok);
-  assert(evalSere(*RE_VAR("x"), {{"y", "x"}}) == Match_Failed);
+TEST(Sere, boolean) {
+  ASSERT_EQ(evalSere(*RE_TRUE, {{"y", "x"}}), Match_Ok);
+  ASSERT_EQ(evalSere(*RE_FALSE, {{"y", "x"}}), Match_Failed);
+  ASSERT_EQ(evalSere(*RE_NOT(RE_TRUE), {{"y", "x"}}), Match_Failed);
+  ASSERT_EQ(evalSere(*RE_VAR("y"), {{"y", "x"}}), Match_Ok);
+  ASSERT_EQ(evalSere(*RE_VAR("x"), {{"y", "x"}}), Match_Failed);
 
   SereChildPtr tc = RE_AND(RE_TRUE, RE_NOT(RE_VAR("x")));
-  assert(evalSere(*tc, {{"y", "x"}}) == Match_Ok);
-  assert(evalSere(*tc, {{"x", "y"}}) == Match_Failed);
-  assert(evalSere(*tc, {{"y", "x"}, {"y", "x"}}) == Match_Failed);
-  assert(evalSere(*tc, {}) == Match_Partial);
-  // assert(evalSere(*tc, {{"z", "y"}}) == Match_Failed);
+  ASSERT_EQ(evalSere(*tc, {{"y", "x"}}), Match_Ok);
+  ASSERT_EQ(evalSere(*tc, {{"x", "y"}}), Match_Failed);
+  ASSERT_EQ(evalSere(*tc, {{"y", "x"}, {"y", "x"}}), Match_Failed);
+  ASSERT_EQ(evalSere(*tc, {}), Match_Partial);
+  // ASSERT_EQ(evalSere(*tc, {{"z", "y"}}), Match_Failed);
 }
 
-void testcase_concat() {
-  assert(evalSere(*RE_CONCAT
+TEST(Sere, concat) {
+  ASSERT_EQ(evalSere(*RE_CONCAT
                   (RE_VAR("x"),
                    RE_VAR("y")),
-                  {}) == Match_Partial);
-  assert(evalSere(*RE_CONCAT
+                  {}), Match_Partial);
+  ASSERT_EQ(evalSere(*RE_CONCAT
                   (RE_VAR("x"),
                    RE_VAR("y")),
-                  {{"x",""},{"y",""}}) == Match_Ok);
-  assert(evalSere(*RE_CONCAT
+                  {{"x",""},{"y",""}}), Match_Ok);
+  ASSERT_EQ(evalSere(*RE_CONCAT
                   (RE_VAR("x"),
                    RE_VAR("y")),
-                  {{"xy",""},{"x","y"}}) == Match_Failed);
-  assert(evalSere
+                  {{"xy",""},{"x","y"}}), Match_Failed);
+  ASSERT_EQ(evalSere
          (*RE_CONCAT
           (RE_CONCAT
            (RE_VAR("x"),
             RE_VAR("y")
             ),
            RE_VAR("x")),
-          {{"x","y"}}) == Match_Partial);
-  assert(evalSere
+          {{"x","y"}}), Match_Partial);
+  ASSERT_EQ(evalSere
          (*RE_CONCAT
           (RE_CONCAT
            (RE_VAR("x"),
             RE_VAR("y")
             ),
            RE_VAR("x")),
-          {{"x","y"},{"x","y"}}) == Match_Failed);
+          {{"x","y"},{"x","y"}}), Match_Failed);
 }
 
-int main() {
-  /*
-  SereChildPtr tc0 = test0();
-  std::cout << tc0->pretty() << std::endl;
-  std::cout << "at " << tc0->getLoc().pretty() << std::endl;
-
-  Letter l0("hello", "world");
-  Letter l1("ello", "world");
-  std::cout << prettyWord({l0,l1}) << std::endl;
-  */
-
-  testcase_empty();
-  testcase_bool();
-  testcase_concat();
-
-  return 0;
+int main(int argc, char **argv) {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

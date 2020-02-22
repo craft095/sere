@@ -6,13 +6,16 @@ LL=g++
 
 CPP_FLAGS= -O0 -g -Wall -Wextra
 
-%.o : %.c
+%.o : %.cpp
 	$(CC) -c $(CPP_FLAGS) $< -o $@
 
 SereTests : $(objects)
-	$(LL) $(objects) -o SereTests
+	$(LL) $(objects) -o SereTests -lgtest -lpthread
 
-#utils.o : defs.h
+SereTests.cpp : Located.hpp Letter.hpp Language.hpp EvalSere.hpp
+Letter.cpp : Letter.hpp
+Language.cpp : Located.hpp Language.hpp
+EvalSere.cpp : Letter.hpp Language.hpp EvalSere.hpp
 
 .PHONY : clean test
 
