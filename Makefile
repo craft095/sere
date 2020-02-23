@@ -1,4 +1,4 @@
-objects = Language.o EvalSere.o SereTests.o
+objects = Language.o EvalSere.o SereTests.o Letter.o Z3.o
 
 CC=g++
 
@@ -10,12 +10,13 @@ CPP_FLAGS= -O0 -g -Wall -Wextra
 	$(CC) -c $(CPP_FLAGS) $< -o $@
 
 SereTests : $(objects)
-	$(LL) $(objects) -o SereTests -lgtest -lpthread
+	$(LL) $(objects) -o SereTests -lgtest -lpthread -lz3
 
-SereTests.cpp : Located.hpp Letter.hpp Language.hpp EvalSere.hpp
+SereTests.cpp : Located.hpp Letter.hpp Language.hpp EvalSere.hpp Z3.hpp
 Letter.cpp : Letter.hpp
 Language.cpp : Located.hpp Language.hpp
-EvalSere.cpp : Letter.hpp Language.hpp EvalSere.hpp
+EvalSere.cpp : Letter.hpp Language.hpp EvalSere.hpp Z3.hpp
+Z3.cpp : Letter.hpp Language.hpp Located.hpp Z3.hpp
 
 .PHONY : clean test
 

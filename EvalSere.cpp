@@ -2,6 +2,8 @@
 #include "Language.hpp"
 #include "EvalSere.hpp"
 
+#include "Z3.hpp"
+
 class EvalBool : public BoolVisitor {
 private:
   Letter letter;
@@ -173,7 +175,7 @@ public:
   }
 
 private:
-  void calcBool(BoolExpr& boolExpr) {
+  void calcBool0(BoolExpr& boolExpr) {
     switch (word.size()) {
     case 0:
       result = Match_Partial;
@@ -183,6 +185,30 @@ private:
         result = Match_Ok;
       } else {
         result = Match_Failed;
+      }
+      break;
+    default:
+      result = Match_Failed;
+    }
+  }
+
+  void calcBool(BoolExpr& boolExpr) {
+    switch (word.size()) {
+    case 0:
+      result = Match_Partial;
+      break;
+    case 1:
+      {
+        z3::expr l = letterToZex(word[0]);
+        z3::expr b = boolSereToZex(boolExpr);
+
+        bool r = evalWithImply(l,b);
+
+        if (r) {
+          result = Match_Ok;
+        } else {
+          result = Match_Failed;
+        }
       }
       break;
     default:
