@@ -1,7 +1,7 @@
 #ifndef Z3_HPP
 #define Z3_HPP
 
-#include "z3++.h"
+#include "c++/z3++.h"
 
 namespace z3 {
   class expr;

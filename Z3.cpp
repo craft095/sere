@@ -1,4 +1,4 @@
-#include "z3++.h"
+#include "c++/z3++.h"
 
 #include "Letter.hpp"
 #include "Language.hpp"
