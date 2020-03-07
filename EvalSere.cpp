@@ -181,7 +181,7 @@ private:
       result = Match_Partial;
       break;
     case 1:
-      if (EvalBool(boolExpr, word[0]).getResult()) {
+      if (evalBool(boolExpr, word[0])) {
         result = Match_Ok;
       } else {
         result = Match_Failed;
@@ -199,12 +199,7 @@ private:
       break;
     case 1:
       {
-        z3::expr l = letterToZex(word[0]);
-        z3::expr b = boolSereToZex(boolExpr);
-
-        bool r = evalWithImply(l,b);
-
-        if (r) {
+        if (evalBoolZ3(boolExpr, word[0])) {
           result = Match_Ok;
         } else {
           result = Match_Failed;
@@ -220,4 +215,16 @@ private:
 
 Match evalSere(SereExpr& expr, const Word& word) {
   return EvalSere::eval(expr, word);
+}
+
+bool evalBool(BoolExpr& expr, const Letter& letter) {
+  return EvalBool(expr, letter).getResult();
+}
+
+bool evalBoolZ3(BoolExpr& expr, const Letter& letter) {
+  z3::expr l = letterToZex(letter);
+  z3::expr b = boolSereToZex(expr);
+
+  bool r = evalWithImply(l,b);
+  return r;
 }

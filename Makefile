@@ -6,9 +6,11 @@ AUTOCHECK=../autocheck/include
 CATCH2=../Catch2/single_include
 
 # output binary
-BIN := sere_tests nfasl_tests
+BIN := sere_tests
+#nfasl_tests
 
-TESTS := sere_tests nfasl_tests
+TESTS := sere_tests
+#nfasl_tests
 
 # source files
 SERE_SRCS := \
@@ -54,9 +56,9 @@ LD := g++
 TAR := tar
 
 # C flags
-CFLAGS := -std=c11
+CFLAGS :=
 # C++ flags
-CXXFLAGS := -std=c++11 -I$(JSON) -I$(Z3)/src/api -I$(AUTOCHECK) -I$(CATCH2)
+CXXFLAGS := -std=c++17 -I$(JSON) -I$(Z3)/src/api -I$(AUTOCHECK) -I$(CATCH2)
 # C/C++ flags
 CPPFLAGS := -g -Wall -Wextra -pedantic  -lpthread
 # linker flags
@@ -100,7 +102,7 @@ uninstall:
 
 .PHONY: check
 check: $(BIN)
-	LD_LIBRARY_PATH=$(Z3LIBPATH) ./sere_tests
+	LD_LIBRARY_PATH=$(Z3LIBPATH) gdb ./sere_tests
 	LD_LIBRARY_PATH=$(Z3LIBPATH) ./nfasl_tests
 
 .PHONY: help
