@@ -64,7 +64,7 @@ CPPFLAGS := -g -Wall -Wextra -pedantic  -lpthread
 # linker flags
 LDFLAGS :=
 
-LDLIBS := $(Z3LIB) -lgtest -lpthread
+LDLIBS := $(Z3LIB) -lgtest -lpthread -Wl,-rpath,$(Z3LIBPATH)
 # flags required for dependency generation; passed to compilers
 DEPFLAGS = -MT $@ -MD -MP -MF $(DEPDIR)/$*.Td
 
@@ -102,8 +102,11 @@ uninstall:
 
 .PHONY: check
 check: $(BIN)
+	LD_LIBRARY_PATH=$(Z3LIBPATH) ./sere_tests
+#	LD_LIBRARY_PATH=$(Z3LIBPATH) ./nfasl_tests
+
+gdb: $(BIN)
 	LD_LIBRARY_PATH=$(Z3LIBPATH) gdb ./sere_tests
-	LD_LIBRARY_PATH=$(Z3LIBPATH) ./nfasl_tests
 
 .PHONY: help
 help:
