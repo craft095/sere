@@ -6,11 +6,9 @@ AUTOCHECK=../autocheck/include
 CATCH2=../Catch2/single_include
 
 # output binary
-BIN := sere_tests
-#nfasl_tests
+BIN := sere_tests nfasl_tests
 
-TESTS := sere_tests
-#nfasl_tests
+TESTS := sere_tests nfasl_tests
 
 # source files
 SERE_SRCS := \
@@ -20,7 +18,7 @@ SERE_TESTS_SRCS := \
     SereTests.cpp $(SERE_SRCS)
 
 NFASL_TESTS_SRCS := \
-    Nfasl.cpp $(SERE_SRCS)
+    NfaslTests.cpp Nfasl.cpp $(SERE_SRCS)
 
 SRCS := $(SERE_SRCS) $(SERE_TESTS_SRCS) $(NFASL_TESTS_SRCS)
 

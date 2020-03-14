@@ -3,6 +3,7 @@
 
 #include "TestTools.hpp"
 #include "Language.hpp"
+#include "Z3.hpp"
 
 class BoolExprGenerator : public Catch2::IGenerator <Ptr<BoolExpr>> {
 private:
@@ -69,11 +70,16 @@ public:
   }
 };
 
-Catch2::GeneratorWrapper<Ptr<BoolExpr>>
+inline Catch2::GeneratorWrapper<Ptr<BoolExpr>>
 genBoolExpr(size_t depth, size_t atomics) {
   return Catch2::GeneratorWrapper<Ptr<BoolExpr>>
     (std::make_unique<BoolExprGenerator>
      (depth, atomics));
+}
+
+inline z3::expr makeZex(size_t depth, size_t atoms) {
+  Ptr<BoolExpr> expr = BoolExprGenerator::make(depth, atoms);
+  return boolSereToZex(*expr);
 }
 
 #endif // TESTBOOLEXPR_HPP

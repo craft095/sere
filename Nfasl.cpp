@@ -1,44 +1,52 @@
-#ifndef NFASL_HPP
-#define NFASL_HPP
-
 #include <set>
 #include <vector>
 #include <string>
 #include <sstream>
 #include <nlohmann/json.hpp>
-#include "c++/z3++.h"
+#include "Z3.hpp"
+#include "Nfasl.hpp"
+#include "TestTools.hpp"
+#include "TestBoolExpr.hpp"
 
 using json = nlohmann::json;
 
-namespace z3 {
-  void to_json(json& j, const expr& e) {
-    j = e.get_string();
-  }
-}
-
 namespace nfasl {
+  static State makeState(size_t states) {
+    return choose((State)0, states - 1);
+  }
 
-  typedef z3::expr Predicate;
-  typedef size_t State;
-  typedef std::set<State> States;
-  struct TransitionRule {
-    Predicate phi;
-    State state;
-  };
-  typedef std::vector<TransitionRule> Transitions;
+  static States makeStates(size_t mn, size_t mx, size_t states) {
+    auto f = [states]() { return makeState(states); };
+    return set_of<State>(mn, mx, f);
+  }
 
-  void to_json(json& j, const TransitionRule& p) {
+  static TransitionRule makeRule(size_t depth, size_t atoms, size_t states) {
+    return { makeZex(depth, atoms), makeState(states) };
+  }
+
+  static TransitionRules
+  makeTransitionRules(size_t depth, size_t atoms, size_t states, size_t maxTrs) {
+    auto g = [depth, atoms, states]() { return makeRule(depth, atoms, states); };
+    return vector_of<TransitionRule>(0, maxTrs, g);
+  }
+
+  Nfasl
+  makeNfasl(size_t depth, size_t atoms, size_t states, size_t maxTrs) {
+    Nfasl a;
+    a.atomicCount = atoms;
+    a.stateCount = states;
+    a.initial = makeState(states);
+    a.finals = makeStates(0, states, states);
+    a.transitions.reserve(states);
+    for (size_t s = 0; s < states; ++s) {
+      a.transitions.push_back(makeTransitionRules(depth, atoms, states, maxTrs));
+    }
+    return a;
+  }
+
+  static void to_json(json& j, const TransitionRule& p) {
     j = json{{"phi", p.phi}, {"state", p.state}};
   }
-
-  class Nfasl {
-  public:
-    size_t atomicCount;
-    size_t stateCount;
-    State initial;
-    States finals;
-    std::vector<Transitions> transitions;
-  };
 
   void to_json(json& j, const Nfasl& a) {
     j = json{
@@ -52,36 +60,9 @@ namespace nfasl {
 
   std::string pretty(const Nfasl& a) {
     std::ostringstream s;
-    // serialization with pretty printing
-    // pass in the amount of spaces to indent
-    s << json(a).dump(4) << std::endl;
+    constexpr int spaces = 4;
+    s << json(a).dump(spaces) << std::endl;
     return s.str();
   }
 
 } // namespace nfasl
-
-unsigned int Factorial( unsigned int number ) {
-    return number <= 1 ? number : Factorial(number-1)*number;
-}
-
-#define CATCH_CONFIG_RUNNER
-#include "catch2/catch.hpp"
-
-TEST_CASE( "Factorials are computed", "[factorial]" ) {
-    REQUIRE( Factorial(1) == 1 );
-    REQUIRE( Factorial(2) == 2 );
-    REQUIRE( Factorial(3) == 6 );
-    REQUIRE( Factorial(10) == 3628800 );
-}
-
-
-int main( int argc, char* argv[] ) {
-  // global setup...
-
-  int result = Catch::Session().run( argc, argv );
-
-  // global clean-up...
-
-  return result;
-}
-#endif // NFASL_HPP

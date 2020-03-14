@@ -2,9 +2,18 @@
 #define Z3_HPP
 
 #include "c++/z3++.h"
+#include <nlohmann/json.hpp>
 
 namespace z3 {
   class expr;
+}
+
+using json = nlohmann::json;
+
+namespace z3 {
+  inline void to_json(json& j, const expr& e) {
+    j = e.get_string();
+  }
 }
 
 class Letter;
