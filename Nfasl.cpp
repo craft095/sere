@@ -31,19 +31,19 @@ namespace nfasl {
     return vector_of<TransitionRule>(0, maxTrs, g);
   }
 
-  Nfasl
+  Ptr<Nfasl>
   makeNfasl(size_t depth, size_t atoms, size_t states, size_t maxTrs) {
-    Nfasl a;
+    Ptr<Nfasl> a = std::make_shared<Nfasl>();
     for (size_t ix = 0; ix < atoms; ++ix) {
-      a.atomics.insert(std::string(char('a' + ix), 1));
+      a->atomics.insert(std::string(char('a' + ix), 1));
     }
-    a.atomicCount = atoms;
-    a.stateCount = states;
-    a.initial = makeState(states);
-    a.finals = makeStates(0, states, states);
-    a.transitions.reserve(states);
+    a->atomicCount = atoms;
+    a->stateCount = states;
+    a->initial = makeState(states);
+    a->finals = makeStates(0, states, states);
+    a->transitions.reserve(states);
     for (size_t s = 0; s < states; ++s) {
-      a.transitions.push_back(makeTransitionRules(depth, atoms, states, maxTrs));
+      a->transitions.push_back(makeTransitionRules(depth, atoms, states, maxTrs));
     }
     return a;
   }
@@ -70,7 +70,7 @@ namespace nfasl {
     return s.str();
   }
 
-  Nfasl intersect(const Nfasl& a0, const Nfasl& a1) {
+  Nfasl intersects(const Nfasl& a0, const Nfasl& a1) {
     Nfasl a;
     a.atomics = set_unions(a0.atomics, a1.atomics);
     a.atomicCount = a.atomics.size();
@@ -85,7 +85,7 @@ namespace nfasl {
       for (State s1 = 0; s1 < a1.stateCount; ++s1) {
         for (auto const& rule0 : a0.transitions[s0]) {
           for (auto const& rule1 : a1.transitions[s1]) {
-            TransitionRule rule = { rule0.phi && rule1.phi, remap(s0, s1) };
+            TransitionRule rule = { rule0.phi && rule1.phi, remap(rule0.state, rule1.state) };
             a.transitions[remap(s0,s1)].push_back(rule);
           }
         }

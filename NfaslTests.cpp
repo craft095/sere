@@ -5,11 +5,12 @@
 #include "Nfasl.hpp"
 #include "Letter.hpp"
 #include "EvalSere.hpp"
+#include "TestLetter.hpp"
 #include "Algo.hpp"
 
 using namespace nfasl;
 
-Match evalNfasl(Nfasl& a, const Word& word) {
+Match evalNfasl(const Nfasl& a, const Word& word) {
   States curr, next;
 
   curr.insert(a.initial);
@@ -38,6 +39,37 @@ Match evalNfasl(Nfasl& a, const Word& word) {
   }
 }
 
+class NfaslGenerator : public Catch2::IGenerator <Ptr<Nfasl>> {
+public:
+  NfaslGenerator(size_t depth, size_t atoms_, size_t states_, size_t maxTrs_)
+    : maxDepth(depth), atoms(atoms_), states(states_), maxTrs(maxTrs_) {
+    next();
+  }
+
+  Ptr<Nfasl> const& get() const override {
+    return value;
+  }
+
+  bool next() override {
+    value = makeNfasl(maxDepth, atoms, states, maxTrs);
+    return true;
+  }
+
+private:
+  size_t maxDepth;
+  size_t atoms;
+  size_t states;
+  size_t maxTrs;
+  Ptr<Nfasl> value;
+};
+
+inline Catch2::GeneratorWrapper<Ptr<Nfasl>>
+genNfasl(size_t depth, size_t atomics, size_t states, size_t maxTrs) {
+  return Catch2::GeneratorWrapper<Ptr<Nfasl>>
+    (std::make_unique<NfaslGenerator>
+     (depth, atomics, states, maxTrs));
+}
+
 TEST_CASE("Nfasl") {
   State s0{0}, s1{1};
   TransitionRule r00 = { boolSereToZex(*RE_VAR("a")),
@@ -57,6 +89,45 @@ TEST_CASE("Nfasl") {
   CHECK(evalNfasl(a, {{"", "ab"}}) == Match_Failed);
   CHECK(evalNfasl(a, {{"a", "b"}}) == Match_Ok);
   CHECK(evalNfasl(a, {{"a", "b"}, {"a", "b"}}) == Match_Partial);
+}
+
+#define CHECK_IF(premise, cond) if ((premise)) { CHECK(cond); }
+
+TEST_CASE("Nfasl, operations") {
+  constexpr size_t atoms = 2;
+  constexpr size_t states = 3;
+  constexpr size_t maxTrs = 2;
+
+  auto expr0 = GENERATE(Catch2::take(10, genNfasl(3, atoms, states, maxTrs)));
+  auto expr1 = GENERATE(Catch2::take(10, genNfasl(2, atoms, states, maxTrs)));
+  auto word = GENERATE(Catch2::take(10, genWord(atoms, 0, 3)));
+
+  Match r0 = evalNfasl(*expr0, word);
+  Match r1 = evalNfasl(*expr1, word);
+
+  SECTION("intersect") {
+    Match r = evalNfasl(intersects(*expr0, *expr1), word);
+
+    if (r0 == Match_Ok && r1 == Match_Ok) {
+      CHECK(r == Match_Ok);
+    } else if (r0 == Match_Failed || r1 == Match_Failed) {
+      CHECK(r == Match_Failed);
+    } else {
+      CHECK(r == Match_Partial);
+    }
+  }
+
+  SECTION("union") {
+    Match r = evalNfasl(unions(*expr0, *expr1), word);
+
+    if (r0 == Match_Ok || r1 == Match_Ok) {
+      CHECK(r == Match_Ok);
+    } else if (r0 == Match_Failed && r1 == Match_Failed) {
+      CHECK(r == Match_Failed);
+    } else {
+      CHECK(r == Match_Partial);
+    }
+  }
 }
 
 int main(int argc, char **argv) {

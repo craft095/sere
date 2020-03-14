@@ -2,11 +2,13 @@
 #define NFASL_HPP
 
 #include <set>
+#include <memory>
 #include <vector>
 #include <string>
 #include <sstream>
 #include <nlohmann/json.hpp>
 #include "Z3.hpp"
+#include "Language.hpp"
 #include "TestTools.hpp"
 #include "TestBoolExpr.hpp"
 
@@ -35,7 +37,10 @@ namespace nfasl {
     std::vector<TransitionRules> transitions;
   };
 
-  extern Nfasl makeNfasl(size_t depth, size_t atoms, size_t states, size_t maxTrs);
+  extern Nfasl unions(const Nfasl& a0, const Nfasl& a1);
+  extern Nfasl intersects(const Nfasl& a0, const Nfasl& a1);
+
+  extern Ptr<Nfasl> makeNfasl(size_t depth, size_t atoms, size_t states, size_t maxTrs);
   extern void to_json(json& j, const Nfasl& a);
   extern std::string pretty(const Nfasl& a);
 } // namespace nfasl
