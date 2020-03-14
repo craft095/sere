@@ -100,32 +100,51 @@ TEST_CASE("Nfasl, operations") {
 
   auto expr0 = GENERATE(Catch2::take(10, genNfasl(3, atoms, states, maxTrs)));
   auto expr1 = GENERATE(Catch2::take(10, genNfasl(2, atoms, states, maxTrs)));
-  auto word = GENERATE(Catch2::take(10, genWord(atoms, 0, 3)));
 
-  Match r0 = evalNfasl(*expr0, word);
-  Match r1 = evalNfasl(*expr1, word);
+  SECTION("intersect/union") {
+    auto word = GENERATE(Catch2::take(3, genWord(atoms, 0, 3)));
 
-  SECTION("intersect") {
-    Match r = evalNfasl(intersects(*expr0, *expr1), word);
+    Match r0 = evalNfasl(*expr0, word);
+    Match r1 = evalNfasl(*expr1, word);
+
+    SECTION("intersect") {
+      Match r = evalNfasl(intersects(*expr0, *expr1), word);
+
+      if (r0 == Match_Ok && r1 == Match_Ok) {
+        CHECK(r == Match_Ok);
+      } else if (r0 == Match_Failed || r1 == Match_Failed) {
+        CHECK(r == Match_Failed);
+      } else {
+        CHECK(r == Match_Partial);
+      }
+    }
+
+    SECTION("union") {
+      Match r = evalNfasl(unions(*expr0, *expr1), word);
+
+      if (r0 == Match_Ok || r1 == Match_Ok) {
+        CHECK(r == Match_Ok);
+      } else if (r0 == Match_Failed && r1 == Match_Failed) {
+        CHECK(r == Match_Failed);
+      } else {
+        CHECK(r == Match_Partial);
+      }
+    }
+  }
+  SECTION("concat") {
+    auto word0 = GENERATE(Catch2::take(3, genWord(atoms, 0, 3)));
+    auto word1 = GENERATE(Catch2::take(3, genWord(atoms, 0, 3)));
+
+    Match r0 = evalNfasl(*expr0, word0);
+    Match r1 = evalNfasl(*expr1, word1);
+
+    auto word{word0};
+    word.insert(word.end(), word1.begin(), word1.end());
+
+    Match r = evalNfasl(concat(*expr0, *expr1), word);
 
     if (r0 == Match_Ok && r1 == Match_Ok) {
       CHECK(r == Match_Ok);
-    } else if (r0 == Match_Failed || r1 == Match_Failed) {
-      CHECK(r == Match_Failed);
-    } else {
-      CHECK(r == Match_Partial);
-    }
-  }
-
-  SECTION("union") {
-    Match r = evalNfasl(unions(*expr0, *expr1), word);
-
-    if (r0 == Match_Ok || r1 == Match_Ok) {
-      CHECK(r == Match_Ok);
-    } else if (r0 == Match_Failed && r1 == Match_Failed) {
-      CHECK(r == Match_Failed);
-    } else {
-      CHECK(r == Match_Partial);
     }
   }
 }

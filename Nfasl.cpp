@@ -137,4 +137,46 @@ namespace nfasl {
     return a;
   }
 
+  Nfasl concat(const Nfasl& a0, const Nfasl& a1) {
+    Nfasl a;
+    a.atomics = set_unions(a0.atomics, a1.atomics);
+    a.atomicCount = a.atomics.size();
+    a.stateCount = a0.stateCount + a1.stateCount;
+
+    auto remap0 = [](State s0) { return s0; };
+    auto remap1 = [a0](State s1) { return a0.stateCount + s1; };
+
+    a.initial = remap0(a0.initial);
+
+    if (set_member(a1.finals, a1.initial)) {
+      for (auto s0 : a0.finals) {
+        a.finals.insert(remap0(s0));
+      }
+    }
+    for (auto s1 : a1.finals) {
+      a.finals.insert(remap1(s1));
+    }
+
+    a.transitions.resize(a.stateCount);
+
+    for (State s0 = 0; s0 < a0.stateCount; ++s0) {
+      for (auto const& rule : a0.transitions[s0]) {
+        a.transitions[remap0(s0)].push_back({ rule.phi, remap0(rule.state) });
+      }
+      if (set_member(a0.finals, s0)) {
+        for (auto const& rule : a1.transitions[a1.initial]) {
+          a.transitions[remap0(s0)].push_back({ rule.phi, remap1(rule.state) });
+        }
+      }
+    }
+
+    for (State s1 = 0; s1 < a1.stateCount; ++s1) {
+      for (auto const& rule : a1.transitions[s1]) {
+        a.transitions[remap1(s1)].push_back({ rule.phi, remap1(rule.state) });
+      }
+    }
+
+    return a;
+  }
+
 } // namespace nfasl

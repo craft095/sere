@@ -39,6 +39,7 @@ namespace nfasl {
 
   extern Nfasl unions(const Nfasl& a0, const Nfasl& a1);
   extern Nfasl intersects(const Nfasl& a0, const Nfasl& a1);
+  extern Nfasl concat(const Nfasl& a0, const Nfasl& a1);
 
   extern Ptr<Nfasl> makeNfasl(size_t depth, size_t atoms, size_t states, size_t maxTrs);
   extern void to_json(json& j, const Nfasl& a);
