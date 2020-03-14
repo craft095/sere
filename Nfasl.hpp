@@ -13,6 +13,7 @@
 using json = nlohmann::json;
 
 namespace nfasl {
+  typedef std::string AtomicName;
   typedef z3::expr Predicate;
   typedef size_t State;
   typedef std::set<State> States;
@@ -26,6 +27,7 @@ namespace nfasl {
 
   class Nfasl {
   public:
+    std::set<AtomicName> atomics;
     size_t atomicCount;
     size_t stateCount;
     State initial;

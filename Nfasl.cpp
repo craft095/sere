@@ -7,6 +7,7 @@
 #include "Nfasl.hpp"
 #include "TestTools.hpp"
 #include "TestBoolExpr.hpp"
+#include "Algo.hpp"
 
 using json = nlohmann::json;
 
@@ -33,6 +34,9 @@ namespace nfasl {
   Nfasl
   makeNfasl(size_t depth, size_t atoms, size_t states, size_t maxTrs) {
     Nfasl a;
+    for (size_t ix = 0; ix < atoms; ++ix) {
+      a.atomics.insert(std::string(char('a' + ix), 1));
+    }
     a.atomicCount = atoms;
     a.stateCount = states;
     a.initial = makeState(states);
@@ -50,6 +54,7 @@ namespace nfasl {
 
   void to_json(json& j, const Nfasl& a) {
     j = json{
+      {"atomics",     a.atomics},
       {"atomicCount", a.atomicCount},
       {"stateCount",  a.stateCount},
       {"initial",     a.initial},
@@ -63,6 +68,73 @@ namespace nfasl {
     constexpr int spaces = 4;
     s << json(a).dump(spaces) << std::endl;
     return s.str();
+  }
+
+  Nfasl intersect(const Nfasl& a0, const Nfasl& a1) {
+    Nfasl a;
+    a.atomics = set_unions(a0.atomics, a1.atomics);
+    a.atomicCount = a.atomics.size();
+    a.stateCount = a0.stateCount * a1.stateCount;
+
+    std::function<State(State,State)> remap = [a1](State s0, State s1) { return s0*a1.stateCount + s1; };
+
+    a.initial = remap(a0.initial, a1.initial);
+    a.finals = set_cross_with(a0.finals, a1.finals, remap);
+    a.transitions.resize(a.stateCount);
+    for (State s0 = 0; s0 < a0.stateCount; ++s0) {
+      for (State s1 = 0; s1 < a1.stateCount; ++s1) {
+        for (auto const& rule0 : a0.transitions[s0]) {
+          for (auto const& rule1 : a1.transitions[s1]) {
+            TransitionRule rule = { rule0.phi && rule1.phi, remap(s0, s1) };
+            a.transitions[remap(s0,s1)].push_back(rule);
+          }
+        }
+      }
+    }
+    return a;
+  }
+
+  Nfasl unions(const Nfasl& a0, const Nfasl& a1) {
+    Nfasl a;
+    a.atomics = set_unions(a0.atomics, a1.atomics);
+    a.atomicCount = a.atomics.size();
+    a.stateCount = a0.stateCount + a1.stateCount + 1;
+
+    auto remap0 = [](State s0) { return s0; };
+    auto remap1 = [a0](State s1) { return a0.stateCount + s1; };
+
+    a.initial = a.stateCount - 1;
+
+    for (auto s0 : a0.finals) {
+      a.finals.insert(remap0(s0));
+    }
+    for (auto s1 : a1.finals) {
+      a.finals.insert(remap1(s1));
+    }
+    if (set_member(a0.finals, a0.initial) || set_member(a1.finals, a1.initial)) {
+      a.finals.insert(a.initial);
+    }
+
+    a.transitions.resize(a.stateCount);
+
+    for (State s0 = 0; s0 < a0.stateCount; ++s0) {
+      for (auto const& rule : a0.transitions[s0]) {
+        a.transitions[remap0(s0)].push_back({ rule.phi, remap0(rule.state) });
+      }
+    }
+    for (State s1 = 0; s1 < a1.stateCount; ++s1) {
+      for (auto const& rule : a1.transitions[s1]) {
+        a.transitions[remap1(s1)].push_back({ rule.phi, remap1(rule.state) });
+      }
+    }
+
+    for (auto const& rule : a0.transitions[a0.initial]) {
+      a.transitions[a.initial].push_back({ rule.phi, remap0(rule.state) });
+    }
+    for (auto const& rule : a1.transitions[a1.initial]) {
+      a.transitions[a.initial].push_back({ rule.phi, remap1(rule.state) });
+    }
+    return a;
   }
 
 } // namespace nfasl
