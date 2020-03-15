@@ -39,8 +39,7 @@ private:
       terms.push_back(RE_TRUE);
       terms.push_back(RE_FALSE);
       for (size_t i = 0; i < atoms; ++i) {
-        char varName[] = { (char)('a' + i), 0 };
-        terms.push_back(RE_VAR(varName));
+        terms.push_back(RE_VAR(i));
       }
     }
     return any_of(terms);

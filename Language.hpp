@@ -12,7 +12,16 @@
 #include "Located.hpp"
 
 typedef std::string String;
-typedef std::string VarName;
+struct VarName {
+  size_t ix;
+
+  std::string pretty() const {
+    return (boost::format("x%d") % int(ix)).str();
+  }
+
+  friend bool operator== (VarName x, VarName y) { return x.ix == y.ix; }
+  friend bool operator< (VarName x, VarName y) { return x.ix < y.ix; }
+};
 
 class SereExpr;
 
@@ -128,7 +137,9 @@ public:
   Variable (const Located& loc, const VarName& n) : Literal(loc), name (n) {}
   void accept(BoolVisitor& v) override { v.visit(*this); }
   const String pretty() const override {
-    return name;
+    std::ostringstream st;
+    st << "x" << name.ix;
+    return st.str();
   }
 
   const VarName& getName() const { return name; }
@@ -219,5 +230,7 @@ public:
 
   Ptr<SereExpr> getArg() const { return arg; }
 };
+
+extern std::set<VarName> boolExprGetAtomics(BoolExpr& expr);
 
 #endif // LANGUAGE_HPP

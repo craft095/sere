@@ -7,14 +7,14 @@ std::string Letter::pretty() const {
   std::ostringstream strm;
   strm << "[";
 
-  for (auto& i : pos) {
-    strm << i;
+  for (auto i : pos) {
+    strm << i.pretty();
   }
 
   strm << "!";
 
-  for (auto& i : neg) {
-    strm << i;
+  for (auto i : neg) {
+    strm << i.pretty();
   }
 
   strm << "]";

@@ -33,10 +33,10 @@ TEST_CASE("Sere") {
     CHECK(evalSere(*RE_TRUE, {{"y", "x"}}) == Match_Ok);
     CHECK(evalSere(*RE_FALSE, {{"y", "x"}}) == Match_Failed);
     CHECK(evalSere(*RE_NOT(RE_TRUE), {{"y", "x"}}) == Match_Failed);
-    CHECK(evalSere(*RE_VAR("y"), {{"y", "x"}}) == Match_Ok);
-    CHECK(evalSere(*RE_VAR("x"), {{"y", "x"}}) == Match_Failed);
+    CHECK(evalSere(*RE_VAR('y'), {{"y", "x"}}) == Match_Ok);
+    CHECK(evalSere(*RE_VAR('x'), {{"y", "x"}}) == Match_Failed);
 
-    SereChildPtr tc = RE_AND(RE_TRUE, RE_NOT(RE_VAR("x")));
+    SereChildPtr tc = RE_AND(RE_TRUE, RE_NOT(RE_VAR('x')));
     CHECK(evalSere(*tc, {{"y", "x"}}) == Match_Ok);
     CHECK(evalSere(*tc, {{"x", "y"}}) == Match_Failed);
     CHECK(evalSere(*tc, {{"y", "x"}, {"y", "x"}}) == Match_Failed);
@@ -46,32 +46,32 @@ TEST_CASE("Sere") {
 
   SECTION("concat") {
     CHECK(evalSere(*RE_CONCAT
-                   (RE_VAR("x"),
-                    RE_VAR("y")),
+                   (RE_VAR('x'),
+                    RE_VAR('y')),
                    {}) == Match_Partial);
     CHECK(evalSere(*RE_CONCAT
-                   (RE_VAR("x"),
-                    RE_VAR("y")),
+                   (RE_VAR('x'),
+                    RE_VAR('y')),
                    {{"x",""},{"y",""}}) == Match_Ok);
     CHECK(evalSere(*RE_CONCAT
-                   (RE_VAR("x"),
-                    RE_VAR("y")),
+                   (RE_VAR('x'),
+                    RE_VAR('y')),
                    {{"xy",""},{"x","y"}}) == Match_Failed);
     CHECK(evalSere
           (*RE_CONCAT
            (RE_CONCAT
-            (RE_VAR("x"),
-             RE_VAR("y")
+            (RE_VAR('x'),
+             RE_VAR('y')
              ),
-            RE_VAR("x")),
+            RE_VAR('x')),
            {{"x","y"}}) == Match_Partial);
     CHECK(evalSere
           (*RE_CONCAT
            (RE_CONCAT
-            (RE_VAR("x"),
-             RE_VAR("y")
+            (RE_VAR('x'),
+             RE_VAR('y')
              ),
-            RE_VAR("x")),
+            RE_VAR('x')),
            {{"x","y"},{"x","y"}}) == Match_Failed);
   }
 }

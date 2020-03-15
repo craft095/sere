@@ -9,11 +9,11 @@ z3::context theContext;
 
 z3::expr letterToZex(const Letter& l) {
   z3::expr e(theContext.bool_val(true));
-  for (const auto& n : l.pos) {
-    e = e && theContext.bool_const(n.c_str());
+  for (const auto& p : l.pos) {
+    e = e && theContext.bool_const(p.pretty().c_str());
   }
   for (const auto& n : l.neg) {
-    e = e && !theContext.bool_const(n.c_str());
+    e = e && !theContext.bool_const(n.pretty().c_str());
   }
   return e;
 }
@@ -29,7 +29,7 @@ public:
   z3::expr getExpr() const { return expr; }
 
   void visit(Variable& v) override {
-    expr = theContext.bool_const(v.getName().c_str());
+    expr = theContext.bool_const(v.getName().pretty().c_str());
   }
 
   void visit(BoolValue& v) override {

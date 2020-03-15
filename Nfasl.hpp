@@ -15,7 +15,7 @@
 using json = nlohmann::json;
 
 namespace nfasl {
-  typedef std::string AtomicName;
+  typedef VarName AtomicName;
   typedef z3::expr Predicate;
   typedef size_t State;
   typedef std::set<State> States;
@@ -37,9 +37,13 @@ namespace nfasl {
     std::vector<TransitionRules> transitions;
   };
 
+  extern Nfasl eps();
   extern Nfasl unions(const Nfasl& a0, const Nfasl& a1);
   extern Nfasl intersects(const Nfasl& a0, const Nfasl& a1);
   extern Nfasl concat(const Nfasl& a0, const Nfasl& a1);
+  extern Nfasl fuse(const Nfasl& a0, const Nfasl& a1);
+  extern Nfasl kleeneStar(const Nfasl& a0);
+  extern Nfasl kleenePlus(const Nfasl& a0);
 
   extern Ptr<Nfasl> makeNfasl(size_t depth, size_t atoms, size_t states, size_t maxTrs);
   extern void to_json(json& j, const Nfasl& a);

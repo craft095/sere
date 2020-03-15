@@ -5,7 +5,10 @@
 #include <vector>
 #include <string>
 
-typedef std::string VarName;
+#include "Language.hpp"
+
+inline VarName make_varName(size_t ix) { return VarName {ix}; }
+inline VarName make_varName(char x) { return VarName {size_t(x - 'a')}; }
 
 class Letter {
 public:
@@ -13,8 +16,8 @@ public:
   std::set<VarName> neg;
 
   Letter(const std::string& p, const std::string& n) {
-    for (auto vp : p) pos.insert(VarName(&vp,1));
-    for (auto vn : n) neg.insert(VarName(&vn,1));
+    for (auto vp : p) pos.insert({size_t(vp - 'a')});
+    for (auto vn : n) neg.insert({size_t(vn - 'a')});
   }
 
   std::string pretty() const;

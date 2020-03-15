@@ -72,12 +72,12 @@ genNfasl(size_t depth, size_t atomics, size_t states, size_t maxTrs) {
 
 TEST_CASE("Nfasl") {
   State s0{0}, s1{1};
-  TransitionRule r00 = { boolSereToZex(*RE_VAR("a")),
+  TransitionRule r00 = { boolSereToZex(*RE_VAR('a')),
                          s1 };
-  TransitionRule r10 = { boolSereToZex(*RE_NOT(RE_VAR("b"))),
+  TransitionRule r10 = { boolSereToZex(*RE_NOT(RE_VAR('b'))),
                          s0 };
   Nfasl a = {
-    { "a", "b" },
+    { {0}, {1} },
     2,  // atomic count
     2,  // state count
     s0, // initial
@@ -99,52 +99,94 @@ TEST_CASE("Nfasl, operations") {
   constexpr size_t maxTrs = 2;
 
   auto expr0 = GENERATE(Catch2::take(10, genNfasl(3, atoms, states, maxTrs)));
-  auto expr1 = GENERATE(Catch2::take(10, genNfasl(2, atoms, states, maxTrs)));
+  auto word0 = GENERATE(Catch2::take(3, genWord(atoms, 0, 3)));
 
-  SECTION("intersect/union") {
-    auto word = GENERATE(Catch2::take(3, genWord(atoms, 0, 3)));
+  Match r0 = evalNfasl(*expr0, word0);
 
-    Match r0 = evalNfasl(*expr0, word);
-    Match r1 = evalNfasl(*expr1, word);
+  SECTION("unary ops") {
+    auto wordMult2 {word0};
+    wordMult2.insert(wordMult2.end(), word0.begin(), word0.end());
 
-    SECTION("intersect") {
-      Match r = evalNfasl(intersects(*expr0, *expr1), word);
-
-      if (r0 == Match_Ok && r1 == Match_Ok) {
-        CHECK(r == Match_Ok);
-      } else if (r0 == Match_Failed || r1 == Match_Failed) {
-        CHECK(r == Match_Failed);
-      } else {
-        CHECK(r == Match_Partial);
+    SECTION("kleene star") {
+      Match r_1 = evalNfasl(kleeneStar(*expr0), word0);
+      if (word0.size() == 0) {
+        CHECK(r_1 == Match_Ok);
+      } else if (r0 == Match_Ok) {
+        Match r_2 = evalNfasl(kleeneStar(*expr0), wordMult2);
+        CHECK(r_1 == Match_Ok);
+        CHECK(r_2 == Match_Ok);
       }
     }
 
-    SECTION("union") {
-      Match r = evalNfasl(unions(*expr0, *expr1), word);
-
-      if (r0 == Match_Ok || r1 == Match_Ok) {
-        CHECK(r == Match_Ok);
-      } else if (r0 == Match_Failed && r1 == Match_Failed) {
-        CHECK(r == Match_Failed);
-      } else {
-        CHECK(r == Match_Partial);
+    SECTION("kleene plus") {
+      if (r0 == Match_Ok) {
+        Match r_1 = evalNfasl(kleenePlus(*expr0), word0);
+        Match r_2 = evalNfasl(kleeneStar(*expr0), wordMult2);
+        CHECK(r_1 == Match_Ok);
+        CHECK(r_2 == Match_Ok);
       }
     }
   }
-  SECTION("concat") {
-    auto word0 = GENERATE(Catch2::take(3, genWord(atoms, 0, 3)));
-    auto word1 = GENERATE(Catch2::take(3, genWord(atoms, 0, 3)));
 
-    Match r0 = evalNfasl(*expr0, word0);
-    Match r1 = evalNfasl(*expr1, word1);
+  SECTION("binary ops") {
+    auto expr1 = GENERATE(Catch2::take(10, genNfasl(2, atoms, states, maxTrs)));
 
-    auto word{word0};
-    word.insert(word.end(), word1.begin(), word1.end());
+    SECTION("intersect/union") {
+      Match r1 = evalNfasl(*expr1, word0);
 
-    Match r = evalNfasl(concat(*expr0, *expr1), word);
+      SECTION("intersect") {
+        Match r = evalNfasl(intersects(*expr0, *expr1), word0);
 
-    if (r0 == Match_Ok && r1 == Match_Ok) {
-      CHECK(r == Match_Ok);
+        if (r0 == Match_Ok && r1 == Match_Ok) {
+          CHECK(r == Match_Ok);
+        } else if (r0 == Match_Failed || r1 == Match_Failed) {
+          CHECK(r == Match_Failed);
+        } else {
+          CHECK(r == Match_Partial);
+        }
+      }
+
+      SECTION("union") {
+        Match r = evalNfasl(unions(*expr0, *expr1), word0);
+
+        if (r0 == Match_Ok || r1 == Match_Ok) {
+          CHECK(r == Match_Ok);
+        } else if (r0 == Match_Failed && r1 == Match_Failed) {
+          CHECK(r == Match_Failed);
+        } else {
+          CHECK(r == Match_Partial);
+        }
+      }
+    }
+    SECTION("concat") {
+      // auto word0 = GENERATE(Catch2::take(3, genWord(atoms, 0, 3)));
+      auto word1 = GENERATE(Catch2::take(3, genWord(atoms, 0, 3)));
+
+      Match r1 = evalNfasl(*expr1, word1);
+
+      SECTION("concat") {
+        auto word{word0};
+        word.insert(word.end(), word1.begin(), word1.end());
+
+        Match r = evalNfasl(concat(*expr0, *expr1), word);
+
+        if (r0 == Match_Ok && r1 == Match_Ok) {
+          CHECK(r == Match_Ok);
+        }
+      }
+
+      SECTION("fuse") {
+        if (word0.size() > 0 && word1.size() > 0) {
+          auto word{word0};
+          word.insert(word.end(), word1.begin() + 1, word1.end());
+
+          Match r = evalNfasl(fuse(*expr0, *expr1), word);
+
+          if (r0 == Match_Ok && r1 == Match_Ok) {
+            CHECK(r == Match_Ok);
+          }
+        }
+      }
     }
   }
 }
