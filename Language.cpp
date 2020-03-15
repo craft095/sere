@@ -1,4 +1,8 @@
+#include "Letter.hpp"
 #include "Language.hpp"
+#include "Nfasl.hpp"
+
+using Nfasl = nfasl::Nfasl;
 
 class GetAtomics : public BoolVisitor {
 private:
@@ -30,4 +34,69 @@ public:
 std::set<VarName> boolExprGetAtomics(BoolExpr& expr) {
   GetAtomics ga{expr};
   return ga.getResult();
+}
+
+
+class SereToNfasl : public SereVisitor {
+private:
+  Nfasl result;
+public:
+  SereToNfasl(SereExpr& expr) {
+    expr.accept(*this);
+  }
+
+  Nfasl getResult() const {
+    return result;
+  }
+
+  void visit(Variable& v) override {
+    result = nfasl::phi(v);
+  }
+
+  void visit(BoolValue& v) override {
+    result = nfasl::phi(v);
+  }
+
+  void visit(BoolNot& v) override {
+    result = nfasl::phi(v);
+  }
+
+  void visit(BoolAnd& v) override {
+    result = nfasl::phi(v);
+  }
+
+  void visit(SereEmpty& ) override {
+    result = nfasl::eps();
+  }
+
+  void visit(Union& v) override {
+    Nfasl lhs = sereToNfasl(*v.getLhs());
+    Nfasl rhs = sereToNfasl(*v.getRhs());
+
+    result = nfasl::unions(lhs, rhs);
+  }
+
+  void visit(Intersect& v) override {
+    Nfasl lhs = sereToNfasl(*v.getLhs());
+    Nfasl rhs = sereToNfasl(*v.getRhs());
+
+    result = nfasl::intersects(lhs, rhs);
+  }
+
+  void visit(Concat& v) override {
+    Nfasl lhs = sereToNfasl(*v.getLhs());
+    Nfasl rhs = sereToNfasl(*v.getRhs());
+
+    result = nfasl::concat(lhs, rhs);
+  }
+
+  void visit(KleeneStar& v) override {
+    Nfasl arg = sereToNfasl(*v.getArg());
+
+    result = nfasl::kleeneStar(arg);
+  }
+};
+
+Nfasl sereToNfasl(SereExpr& expr) {
+  return SereToNfasl(expr).getResult();
 }

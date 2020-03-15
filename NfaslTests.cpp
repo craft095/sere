@@ -1,7 +1,7 @@
 #include <iostream>
 #include <memory>
 
-#define CATCH_CONFIG_RUNNER
+// #define CATCH_CONFIG_RUNNER
 #include "Nfasl.hpp"
 #include "Letter.hpp"
 #include "EvalSere.hpp"
@@ -191,7 +191,7 @@ TEST_CASE("Nfasl, operations") {
   }
 }
 
-int main(int argc, char **argv) {
-  int result = Catch::Session().run( argc, argv );
-  return result;
-}
+// int main(int argc, char **argv) {
+//   int result = Catch::Session().run( argc, argv );
+//   return result;
+// }

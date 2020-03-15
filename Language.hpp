@@ -231,6 +231,11 @@ public:
   Ptr<SereExpr> getArg() const { return arg; }
 };
 
+namespace nfasl {
+  class Nfasl;
+}
+
 extern std::set<VarName> boolExprGetAtomics(BoolExpr& expr);
+extern nfasl::Nfasl sereToNfasl(SereExpr& expr);
 
 #endif // LANGUAGE_HPP

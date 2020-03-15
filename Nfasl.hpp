@@ -38,6 +38,7 @@ namespace nfasl {
   };
 
   extern Nfasl eps();
+  extern Nfasl phi(BoolExpr& expr);
   extern Nfasl unions(const Nfasl& a0, const Nfasl& a1);
   extern Nfasl intersects(const Nfasl& a0, const Nfasl& a1);
   extern Nfasl concat(const Nfasl& a0, const Nfasl& a1);

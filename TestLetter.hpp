@@ -38,7 +38,7 @@ public:
   }
 };
 
-Catch2::GeneratorWrapper<Letter> genLetter(size_t atoms) {
+inline Catch2::GeneratorWrapper<Letter> genLetter(size_t atoms) {
   return Catch2::GeneratorWrapper<Letter>(std::make_unique<LetterGenerator>(atoms));
 }
 
@@ -69,7 +69,7 @@ public:
   }
 };
 
-Catch2::GeneratorWrapper<Word> genWord(size_t atoms, size_t mn, size_t mx) {
+inline Catch2::GeneratorWrapper<Word> genWord(size_t atoms, size_t mn, size_t mx) {
   return Catch2::GeneratorWrapper<Word>(std::make_unique<WordGenerator>(atoms, mn, mx));
 }
 

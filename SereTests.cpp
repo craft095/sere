@@ -3,13 +3,23 @@
 
 // #include "gtest/gtest.h"
 
-#include "Language.hpp"
-#include "EvalSere.hpp"
-
 #define CATCH_CONFIG_RUNNER
-#include "TestTools.hpp"
+
+#include "Language.hpp"
+
+#include "Nfasl.hpp"
+#include "Letter.hpp"
+#include "EvalSere.hpp"
 #include "TestLetter.hpp"
-#include "TestBoolExpr.hpp"
+#include "Algo.hpp"
+
+
+// #include "catch2/catch.hpp"
+
+// #include "TestTools.hpp"
+#include "NfaslTests.hpp"
+// #include "TestLetter.hpp"
+// #include "TestBoolExpr.hpp"
 
 // std::shared_ptr<SereExpr> test0() {
 //   return
@@ -82,6 +92,15 @@ TEST_CASE("Bool to Z3") {
   auto letter = GENERATE(Catch2::take(10, genLetter(atoms)));
 
   REQUIRE(evalBool(*expr, letter) == evalBoolZ3(*expr, letter));
+}
+
+TEST_CASE("Sere vs Nfasl") {
+  constexpr size_t atoms = 3;
+  auto expr = GENERATE(Catch2::take(10, genBoolExpr(3, atoms)));
+  auto word = GENERATE(Catch2::take(3, genWord(atoms, 0, 3)));
+  auto nfasl = sereToNfasl(*expr);
+
+  REQUIRE(evalSere(*expr, word) == evalNfasl(nfasl, word));
 }
 
 int main(int argc, char **argv) {
