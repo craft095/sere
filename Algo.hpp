@@ -2,13 +2,22 @@
 #define ALGO_HPP
 
 #include <algorithm>
+#include <functional>
 #include <iterator>
 #include <set>
+#include <map>
+#include <optional>
 
 template <class T, class CMP = std::less<T>, class ALLOC = std::allocator<T> >
 bool set_member (const std::set<T, CMP, ALLOC> &s, T v)
 {
   return s.find(v) != s.end();
+}
+
+template <class K, class T, class CMP = std::less<T>, class ALLOC = std::allocator<T> >
+bool map_member (const std::map<K, T, CMP, ALLOC> &s, K k)
+{
+  return s.find(k) != s.end();
 }
 
 template <class T, class CMP = std::less<T>, class ALLOC = std::allocator<T> >
@@ -69,5 +78,16 @@ bool set_non_empty_intersection (
 {
   return set_intersects(s1, s2).size() > 0;
 }
+
+template <typename K, typename T, typename ... Ts>
+std::optional<T> get(const std::map<K,T,Ts...>& m, K k) {
+  auto i = m.find(k);
+  if (i == m.end()) {
+    return std::nullopt;
+  } else {
+    return std::make_optional(i->second);
+  }
+}
+
 
 #endif //ALGO_HPP

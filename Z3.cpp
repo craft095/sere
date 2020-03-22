@@ -62,6 +62,12 @@ bool prove(const z3::expr& e) {
   return s.check() == z3::unsat;
 }
 
+bool satisfiable(const z3::expr& e) {
+  z3::solver s(theContext);
+  s.add(e);
+  return s.check() != z3::unsat;
+}
+
 bool evalWithImply(const z3::expr& vars_, const z3::expr& expr_) {
   z3::expr r = implies(vars_, expr_);
   return prove(r);
