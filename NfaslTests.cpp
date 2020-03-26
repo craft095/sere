@@ -2,6 +2,7 @@
 #include <memory>
 
 #include "Nfasl.hpp"
+#include "BisimNfasl.hpp"
 #include "Letter.hpp"
 #include "EvalSere.hpp"
 #include "TestLetter.hpp"
@@ -101,6 +102,21 @@ TEST_CASE("Nfasl, operations") {
   auto word0 = GENERATE(Catch2::take(3, genWord(atoms, 0, 3)));
 
   Match r0 = evalNfasl(*expr0, word0);
+
+  SECTION("clean") {
+    Nfasl cleaned;
+    clean(*expr0, cleaned);
+    Match r1 = evalNfasl(cleaned, word0);
+    // *expr may conatin partial execution traces
+    // which have no chance to succeed, because
+    // final states are not always reachable.
+    // so it is required to exclude such cases
+    if (r0 == Match_Partial) {
+      CHECK(r1 != Match_Ok);
+    } else {
+      CHECK(r0 == r1);
+    }
+  }
 
   SECTION("unary ops") {
     auto wordMult2 {word0};

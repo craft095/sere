@@ -25,7 +25,8 @@ namespace nfasl {
     auto remapF = [&remap](State s) { return get(remap, s); };
 
     cleaned.atomics = nfasl.atomics;
-    cleaned.atomicCount = states.size();
+    cleaned.atomicCount = nfasl.atomicCount;
+    cleaned.stateCount = states.size();
     cleaned.initial = *remapF(nfasl.initial);
     for (auto q : nfasl.finals) {
       auto v = remapF(q);
