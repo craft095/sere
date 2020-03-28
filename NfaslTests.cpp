@@ -18,10 +18,10 @@ Match evalNfasl(const Nfasl& a, const Word& word) {
 
   for (auto const& letter : word) {
     next.clear();
-    z3::expr lexpr = letterToZex(letter);
+    //z3::expr lexpr = letterToZex(letter);
     for (auto const& s : curr) {
       for (auto const& rule : a.transitions[s]) {
-        if (evalWithImply(lexpr, rule.phi)) {
+        if (evalWithImply0(letter, rule.phi)) {
           next.insert(rule.state);
         }
       }
@@ -146,6 +146,7 @@ TEST_CASE("Nfasl, operations") {
   SECTION("binary ops") {
     auto expr1 = GENERATE(Catch2::take(10, genNfasl(2, atoms, states, maxTrs)));
 
+#if 1
     SECTION("intersect/union") {
       Match r1 = evalNfasl(*expr1, word0);
 
@@ -173,10 +174,12 @@ TEST_CASE("Nfasl, operations") {
         }
       }
     }
+#endif
     SECTION("concat") {
       // auto word0 = GENERATE(Catch2::take(3, genWord(atoms, 0, 3)));
       auto word1 = GENERATE(Catch2::take(3, genWord(atoms, 0, 3)));
 
+#if 1
       Match r1 = evalNfasl(*expr1, word1);
 
       SECTION("concat") {
@@ -202,6 +205,7 @@ TEST_CASE("Nfasl, operations") {
           }
         }
       }
+#endif
     }
   }
 }

@@ -27,5 +27,6 @@ extern bool prove(const z3::expr& e);
 extern bool satisfiable(const z3::expr& e);
 
 extern bool evalWithImply(const z3::expr& vars_, const z3::expr& expr_);
+extern bool evalWithImply0(const Letter& l, const z3::expr& expr_);
 
 #endif //Z3_HPP

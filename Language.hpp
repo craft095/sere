@@ -13,10 +13,12 @@
 
 typedef std::string String;
 struct VarName {
+  static const char* names[26];
+
   size_t ix;
 
-  std::string pretty() const {
-    return (boost::format("x%d") % int(ix)).str();
+  const char* pretty() const {
+    return names[ix];
   }
 
   friend bool operator== (VarName x, VarName y) { return x.ix == y.ix; }

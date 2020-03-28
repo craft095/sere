@@ -62,7 +62,7 @@ TAR := tar
 # C flags
 CFLAGS :=
 # C++ flags
-CXXFLAGS := -std=c++17 -I$(JSON) -I$(Z3)/src/api -I$(AUTOCHECK) -I$(CATCH2)
+CXXFLAGS :=  -std=c++17 -I$(JSON) -I$(Z3)/src/api -I$(AUTOCHECK) -I$(CATCH2)
 # C/C++ flags
 CPPFLAGS := -g -Wall -Wextra -pedantic  -lpthread
 # linker flags
