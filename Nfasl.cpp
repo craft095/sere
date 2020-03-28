@@ -5,49 +5,11 @@
 #include <nlohmann/json.hpp>
 #include "Z3.hpp"
 #include "Nfasl.hpp"
-#include "TestTools.hpp"
-#include "TestBoolExpr.hpp"
 #include "Algo.hpp"
 
 using json = nlohmann::json;
 
 namespace nfasl {
-  static State makeState(size_t states) {
-    return choose((State)0, states - 1);
-  }
-
-  static States makeStates(size_t mn, size_t mx, size_t states) {
-    auto f = [states]() { return makeState(states); };
-    return set_of<State>(mn, mx, f);
-  }
-
-  static TransitionRule makeRule(size_t depth, size_t atoms, size_t states) {
-    return { BoolExprGenerator::make(depth, atoms), makeState(states) };
-  }
-
-  static TransitionRules
-  makeTransitionRules(size_t depth, size_t atoms, size_t states, size_t maxTrs) {
-    auto g = [depth, atoms, states]() { return makeRule(depth, atoms, states); };
-    return vector_of<TransitionRule>(0, maxTrs, g);
-  }
-
-  Ptr<Nfasl>
-  makeNfasl(size_t depth, size_t atoms, size_t states, size_t maxTrs) {
-    Ptr<Nfasl> a = std::make_shared<Nfasl>();
-    for (size_t ix = 0; ix < atoms; ++ix) {
-      a->atomics.insert(make_varName(ix));
-    }
-    a->atomicCount = atoms;
-    a->stateCount = states;
-    a->initial = makeState(states);
-    a->finals = makeStates(0, states, states);
-    a->transitions.reserve(states);
-    for (size_t s = 0; s < states; ++s) {
-      a->transitions.push_back(makeTransitionRules(depth, atoms, states, maxTrs));
-    }
-    return a;
-  }
-
   static void to_json(json& j, const VarName& var) {
     j = json{{"var", var.ix}};
   }

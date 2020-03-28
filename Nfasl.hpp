@@ -9,8 +9,6 @@
 #include <nlohmann/json.hpp>
 #include "Z3.hpp"
 #include "Language.hpp"
-#include "TestTools.hpp"
-#include "TestBoolExpr.hpp"
 
 using json = nlohmann::json;
 

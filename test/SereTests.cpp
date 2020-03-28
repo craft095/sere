@@ -12,27 +12,14 @@
 #include "EvalSere.hpp"
 #include "TestLetter.hpp"
 #include "Algo.hpp"
+#include "Z3.hpp"
 
+#include "catch2/catch.hpp"
 
-// #include "catch2/catch.hpp"
-
-// #include "TestTools.hpp"
+#include "TestTools.hpp"
+#include "TestBoolExpr.hpp"
+#include "TestZ3.hpp"
 #include "NfaslTests.hpp"
-// #include "TestLetter.hpp"
-// #include "TestBoolExpr.hpp"
-
-// std::shared_ptr<SereExpr> test0() {
-//   return
-//     RE_INTERSECT
-//     (RE_STAR
-//      (RE_UNION
-//       (RE_EMPTY,
-//        RE_TRUE)),
-//      (RE_AND
-//       (RE_FALSE,
-//        (RE_NOT
-//         (RE_VAR("x"))))));
-// }
 
 TEST_CASE("Sere") {
   SECTION("empty") {

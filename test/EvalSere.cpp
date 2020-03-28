@@ -3,6 +3,7 @@
 #include "EvalSere.hpp"
 
 #include "Z3.hpp"
+#include "TestZ3.hpp"
 
 class EvalBool : public BoolVisitor {
 private:

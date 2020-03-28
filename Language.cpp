@@ -1,4 +1,3 @@
-#include "Letter.hpp"
 #include "Language.hpp"
 #include "Nfasl.hpp"
 
