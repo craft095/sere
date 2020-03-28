@@ -38,11 +38,12 @@ private:
     if (terms.size() == 0) {
       terms.push_back(RE_TRUE);
       terms.push_back(RE_FALSE);
-      for (size_t i = 0; i < atoms; ++i) {
+      for (size_t i = 0; i < maxAtoms; ++i) {
         terms.push_back(RE_VAR(i));
       }
     }
-    return any_of(terms);
+    size_t ix = choose((size_t)0, 2 + atoms - 1);
+    return terms[ix];
   }
 
   static Ptr<BoolExpr> makeNot(size_t d, size_t atoms) {

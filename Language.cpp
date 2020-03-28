@@ -79,19 +79,19 @@ public:
   }
 
   void visit(Variable& v) override {
-    result = nfasl::phi(v);
+    result = nfasl::phi(std::make_shared<Variable>(v));
   }
 
   void visit(BoolValue& v) override {
-    result = nfasl::phi(v);
+    result = nfasl::phi(std::make_shared<BoolValue>(v));
   }
 
   void visit(BoolNot& v) override {
-    result = nfasl::phi(v);
+    result = nfasl::phi(std::make_shared<BoolNot>(v));
   }
 
   void visit(BoolAnd& v) override {
-    result = nfasl::phi(v);
+    result = nfasl::phi(std::make_shared<BoolAnd>(v));
   }
 
   void visit(SereEmpty& ) override {

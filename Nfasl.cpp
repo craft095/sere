@@ -22,7 +22,7 @@ namespace nfasl {
   }
 
   static TransitionRule makeRule(size_t depth, size_t atoms, size_t states) {
-    return { makeZex(depth, atoms), makeState(states) };
+    return { BoolExprGenerator::make(depth, atoms), makeState(states) };
   }
 
   static TransitionRules
@@ -53,7 +53,7 @@ namespace nfasl {
   }
 
   static void to_json(json& j, const TransitionRule& p) {
-    j = json{{"phi", p.phi}, {"state", p.state}};
+    j = json{{"phi", p.phi->pretty()}, {"state", p.state}};
   }
 
   void to_json(json& j, const Nfasl& a) {
@@ -84,12 +84,12 @@ namespace nfasl {
     return a;
   }
 
-  Nfasl phi(BoolExpr& expr) {
+  Nfasl phi(Ptr<BoolExpr> expr) {
     Nfasl a;
     constexpr State ini = 0;
     constexpr State fin = 1;
 
-    std::set<VarName> vars = boolExprGetAtomics(expr);
+    std::set<VarName> vars = boolExprGetAtomics(*expr);
     size_t atomicCount = 0;
     for (auto const& var : vars) {
       atomicCount = std::max(atomicCount, var.ix + 1);
@@ -103,7 +103,7 @@ namespace nfasl {
     a.initial = ini;
     a.finals.insert(fin);
     a.transitions.resize(a.stateCount);
-    a.transitions[ini].push_back({ boolSereToZex(expr), fin });
+    a.transitions[ini].push_back({ expr, fin });
 
     return a;
   }
@@ -123,7 +123,7 @@ namespace nfasl {
       for (State s1 = 0; s1 < a1.stateCount; ++s1) {
         for (auto const& rule0 : a0.transitions[s0]) {
           for (auto const& rule1 : a1.transitions[s1]) {
-            TransitionRule rule = { rule0.phi && rule1.phi, remap(rule0.state, rule1.state) };
+            TransitionRule rule = { RE_AND(rule0.phi, rule1.phi), remap(rule0.state, rule1.state) };
             a.transitions[remap(s0,s1)].push_back(rule);
           }
         }
@@ -243,7 +243,7 @@ namespace nfasl {
         // from a1
         if (set_member(a0.finals, rule.state)) {
           for (auto const& rule1 : a1.transitions[a1.initial]) {
-            a.transitions[remap0(s0)].push_back({ rule.phi && rule1.phi, remap1(rule1.state) });
+            a.transitions[remap0(s0)].push_back({ RE_AND(rule.phi, rule1.phi), remap1(rule1.state) });
           }
 
         }

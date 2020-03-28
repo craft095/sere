@@ -50,6 +50,16 @@ set_cross_with(
 }
 
 template <class T, class CMP = std::less<T>, class ALLOC = std::allocator<T> >
+std::set<T, CMP, ALLOC> set_difference (
+  const std::set<T, CMP, ALLOC> &s1, const std::set<T, CMP, ALLOC> &s2)
+{
+  std::set<T, CMP, ALLOC> s;
+  std::set_difference(s1.begin(), s1.end(), s2.begin(), s2.end(),
+    std::inserter(s, s.begin()));
+  return s;
+}
+
+template <class T, class CMP = std::less<T>, class ALLOC = std::allocator<T> >
 std::set<T, CMP, ALLOC> set_intersects (
   const std::set<T, CMP, ALLOC> &s1, const std::set<T, CMP, ALLOC> &s2)
 {

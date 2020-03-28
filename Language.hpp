@@ -11,6 +11,8 @@
 
 #include "Located.hpp"
 
+constexpr size_t maxAtoms = 64;
+
 typedef std::string String;
 struct VarName {
   static const char* names[26];
@@ -98,6 +100,7 @@ typedef std::shared_ptr<BoolExpr> BoolExprPtr;
 
 class BoolNot : public BoolExpr {
 public:
+  BoolNot(BoolNot& nt) : BoolExpr(nt.getLoc()), arg(nt.getArg()) {}
   BoolNot(const Located& loc_, BoolExprPtr arg_) : BoolExpr(loc_), arg(arg_) {}
   void accept(BoolVisitor& v) override { v.visit(*this); }
   const String pretty() const override {
@@ -112,6 +115,7 @@ private:
 
 class BoolAnd : public BoolExpr {
 public:
+  BoolAnd(BoolAnd& a) : BoolExpr(a.getLoc()), lhs(a.getLhs()), rhs(a.getRhs()) {}
   BoolAnd(const Located& loc_, BoolExprPtr lhs_, BoolExprPtr rhs_)
     : BoolExpr(loc_), lhs(lhs_), rhs(rhs_) {}
   void accept(BoolVisitor& v) override { v.visit(*this); }
@@ -136,7 +140,8 @@ class Variable : public Literal {
 private:
   VarName name;
 public:
-  Variable (const Located& loc, const VarName& n) : Literal(loc), name (n) {}
+  Variable(Variable& v) : Literal(v.getLoc()), name(v.getName()) {}
+  Variable(const Located& loc, const VarName& n) : Literal(loc), name (n) {}
   void accept(BoolVisitor& v) override { v.visit(*this); }
   const String pretty() const override {
     std::ostringstream st;
@@ -152,6 +157,7 @@ class BoolValue : public Literal {
 private:
   bool value;
 public:
+  BoolValue (BoolValue& v) : Literal(v.getLoc()), value(v.getValue()) {}
   BoolValue (const Located& loc, bool v) : Literal(loc), value (v) {}
 
   void accept(BoolVisitor& v) override { v.visit(*this); }

@@ -65,7 +65,7 @@ namespace nfasl {
 
     for (State s = 0; s < nfasl.stateCount; ++s) {
       for (auto const& rule : nfasl.transitions[s]) {
-        if (satisfiable(rule.phi)) {
+        if (satisfiable(boolSereToZex(*rule.phi))) {
           forward.arcs[s].insert(rule.state);
           backward.arcs[rule.state].insert(s);
         }
@@ -91,7 +91,7 @@ namespace nfasl {
     for (auto& trs : cleaned.transitions) {
       TransitionRules filtered_rules;
       for (auto& rule : trs) {
-        if (satisfiable(rule.phi)) {
+        if (satisfiable(boolSereToZex(*rule.phi))) {
           filtered_rules.push_back(rule);
         }
       }
@@ -99,7 +99,135 @@ namespace nfasl {
     }
   }
 
-  // Nfasl minimize() {
-  // }
+  static void joinStates(const Nfasl& a, const std::set<States>& partition, Nfasl& b) {
+    b.atomics = a.atomics;
+    b.atomicCount = a.atomicCount;
+    b.stateCount = partition.size();
+
+    std::map<State, State> remap;
+
+    State newQ = 0;
+    for (auto const& qs : partition) {
+      for (auto q : qs) {
+        remap[q] = newQ;
+      }
+      newQ += 1;
+    }
+
+    assert(newQ == b.stateCount);
+
+    auto remapF = [&remap](State q) { return remap[q]; };
+
+    b.initial = remapF(a.initial);
+    b.transitions.resize(b.stateCount);
+    for (State q = 0; q < a.stateCount; ++q) {
+      for (auto const& rule : a.transitions[q]) {
+        b.transitions[q].push_back({ rule.phi, remapF(rule.state) });
+      }
+    }
+
+    for (auto q : a.finals) {
+      b.finals.insert(remapF(q));
+    }
+  }
+
+  static Ptr<BoolExpr> delta(const Nfasl& a, State q, State r) {
+    assert(q < a.stateCount);
+    assert(r < a.stateCount);
+
+    Ptr<BoolExpr> ret = RE_FALSE;
+    for (auto const& rule : a.transitions[q]) {
+      if (rule.state == r) {
+        ret = RE_OR(ret, rule.phi);
+      }
+    }
+
+    return ret;
+  }
+
+  static Ptr<BoolExpr> delta(const Nfasl& a, State q, States R) {
+    Ptr<BoolExpr> ret = RE_FALSE;
+    for (auto const& r : R) {
+      ret = RE_OR(ret, delta(a, q, r));
+    }
+
+    return ret;
+  }
+
+  static void simpleBisim(const Nfasl& a, std::set<States>& partition) {
+    std::set<States> P, W;
+    States Q;
+
+    for (State q = 0; q < a.stateCount; ++q) {
+      Q.insert(q);
+    }
+
+    P.insert(a.finals);
+    P.insert(set_difference(Q, a.finals));
+
+    W = P;
+
+    while (!W.empty()) {
+      States R;
+      R = *W.begin();
+      W.erase(W.begin());
+
+      for (auto const& B : P) {
+        State q, r;
+        bool found = false;
+        Ptr<BoolExpr> DqNotDr;
+
+        for (auto qx : B) {
+          for (auto rx : B) {
+            if (qx != rx) {
+              q = qx;
+              r = rx;
+
+              DqNotDr = RE_AND(delta(a, q, R), RE_NOT(delta(a, r, R)));
+
+              if (satisfiable(boolSereToZex(*DqNotDr))) {
+                found = true;
+                break;
+              }
+            }
+          }
+          if (found) { break; }
+        }
+        if (found) {
+          States D, B_dif_D;
+
+          for (auto p : B) {
+            if (satisfiable(boolSereToZex(*RE_AND(delta(a, p, R), DqNotDr)))) {
+              D.insert(p);
+            } else {
+              B_dif_D.insert(p);
+            }
+          }
+          P.erase(B);
+          P.insert(D);
+          P.insert(B_dif_D);
+          W.erase(B);
+          W.insert(D);
+          W.insert(B_dif_D);
+          break;
+        }
+      }
+    }
+
+    std::swap(P, partition);
+  }
+
+  void minimize(const Nfasl& a, Nfasl& b) {
+    Nfasl c;
+    clean(a, c);
+
+    std::set<States> partition;
+    simpleBisim(c, partition);
+
+    Nfasl d;
+    joinStates(c, partition, d);
+
+    clean(d, b);
+  }
 
 }

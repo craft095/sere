@@ -21,7 +21,7 @@ Match evalNfasl(const Nfasl& a, const Word& word) {
     //z3::expr lexpr = letterToZex(letter);
     for (auto const& s : curr) {
       for (auto const& rule : a.transitions[s]) {
-        if (evalWithImply0(letter, rule.phi)) {
+        if (evalBool(*rule.phi, letter)) {
           next.insert(rule.state);
         }
       }
@@ -72,9 +72,9 @@ genNfasl(size_t depth, size_t atomics, size_t states, size_t maxTrs) {
 
 TEST_CASE("Nfasl") {
   State s0{0}, s1{1};
-  TransitionRule r00 = { boolSereToZex(*RE_VAR('a')),
+  TransitionRule r00 = { RE_VAR('a'),
                          s1 };
-  TransitionRule r10 = { boolSereToZex(*RE_NOT(RE_VAR('b'))),
+  TransitionRule r10 = { RE_NOT(RE_VAR('b')),
                          s0 };
   Nfasl a = {
     { {0}, {1} },
@@ -116,6 +116,17 @@ TEST_CASE("Nfasl, operations") {
     } else {
       CHECK(r0 == r1);
     }
+  }
+
+  SECTION("minimize") {
+    Nfasl cleaned, minimal;
+    clean(*expr0, cleaned);
+    minimize(*expr0, minimal);
+
+    Match r0 = evalNfasl(cleaned, word0);
+    Match r1 = evalNfasl(minimal, word0);
+
+    CHECK(r0 == r1);
   }
 
   SECTION("unary ops") {
@@ -177,14 +188,14 @@ TEST_CASE("Nfasl, operations") {
 #endif
     SECTION("concat") {
       // auto word0 = GENERATE(Catch2::take(3, genWord(atoms, 0, 3)));
-      auto word1 = GENERATE(Catch2::take(3, genWord(atoms, 0, 3)));
 
 #if 1
-      Match r1 = evalNfasl(*expr1, word1);
-
       SECTION("concat") {
+        auto word1 = GENERATE(Catch2::take(3, genWord(atoms, 0, 3)));
         auto word{word0};
         word.insert(word.end(), word1.begin(), word1.end());
+
+        Match r1 = evalNfasl(*expr1, word1);
 
         Match r = evalNfasl(concat(*expr0, *expr1), word);
 
@@ -194,10 +205,14 @@ TEST_CASE("Nfasl, operations") {
       }
 
       SECTION("fuse") {
+        auto word1 = GENERATE(Catch2::take(3, genWord(atoms, 1, 2)));
+
         if (word0.size() > 0 && word1.size() > 0) {
           auto word{word0};
+          word1[0] = word0[word0.size() - 1];
           word.insert(word.end(), word1.begin() + 1, word1.end());
 
+          Match r1 = evalNfasl(*expr1, word1);
           Match r = evalNfasl(fuse(*expr0, *expr1), word);
 
           if (r0 == Match_Ok && r1 == Match_Ok) {

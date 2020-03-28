@@ -175,7 +175,7 @@ public:
   }
 
 private:
-  void calcBool0(BoolExpr& boolExpr) {
+  void calcBool(BoolExpr& boolExpr) {
     switch (word.size()) {
     case 0:
       result = Match_Partial;
@@ -192,7 +192,7 @@ private:
     }
   }
 
-  void calcBool(BoolExpr& boolExpr) {
+  void calcBool0(BoolExpr& boolExpr) {
     switch (word.size()) {
     case 0:
       result = Match_Partial;
