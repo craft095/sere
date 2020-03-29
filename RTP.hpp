@@ -96,8 +96,7 @@ namespace rtp {
   }
 
   extern void toRTP(BoolExpr& expr,
-                    std::vector<uint8_t>& data,
-                    std::map<VarName, rtp::Offset>& remap);
+                    std::vector<uint8_t>& data);
 }
 
 #endif // RTP_HPP

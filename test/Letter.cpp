@@ -30,12 +30,11 @@ std::string prettyWord(const Word& word) {
 }
 
 void letterToBitSet(const Letter& letter,
-                    const std::map<VarName, rtp::Offset>& remap,
                     rtp::BitSet& bs) {
   for (auto n : letter.pos) {
-    bs.set(remap.at(n), 1);
+    bs.set(n.ix, 1);
   }
   for (auto n : letter.neg) {
-    bs.set(remap.at(n), 0);
+    bs.set(n.ix, 0);
   }
 }

@@ -26,7 +26,6 @@ typedef std::vector<Letter> Word;
 
 extern std::string prettyWord(const Word& word);
 extern void letterToBitSet(const Letter& letter,
-                           const std::map<VarName, rtp::Offset>& remap,
                            rtp::BitSet& bs);
 
 #endif //LETTER_HPP

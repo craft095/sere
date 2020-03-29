@@ -3,17 +3,11 @@
 namespace rtp {
   class FromBoolExpr : public BoolVisitor {
   private:
-    std::map<VarName, rtp::Offset> remap;
     std::vector<uint8_t> data;
   public:
     FromBoolExpr(BoolExpr& expr) {
-      std::set<VarName> vars = boolExprGetAtomics(expr);
-      rtp::Offset c = 0;
-      for (auto const& v : vars) {
-        remap[v] = c++;
-      }
-      expr.accept(*this);
       writeValue(rtp::magic);
+      expr.accept(*this);
     }
 
     template <typename T>
@@ -23,11 +17,10 @@ namespace rtp {
     }
 
     const std::vector<uint8_t>& getData() const { return data; }
-    const std::map<VarName, rtp::Offset>& getRemap() const { return remap; }
 
     void visit(Variable& v) override {
       writeValue(rtp::Code::Name);
-      writeValue(remap[v.getName()]);
+      writeValue(rtp::Offset{v.getName().ix});
     }
 
     void visit(BoolValue& v) override {
@@ -51,11 +44,9 @@ namespace rtp {
   };
 
   void toRTP(BoolExpr& expr,
-             std::vector<uint8_t>& data,
-             std::map<VarName, rtp::Offset>& remap) {
+             std::vector<uint8_t>& data) {
     FromBoolExpr be{expr};
     data = be.getData();
-    remap = be.getRemap();
   }
 
 }
