@@ -122,7 +122,7 @@ namespace nfasl {
     b.transitions.resize(b.stateCount);
     for (State q = 0; q < a.stateCount; ++q) {
       for (auto const& rule : a.transitions[q]) {
-        b.transitions[q].push_back({ rule.phi, remapF(rule.state) });
+        b.transitions[remapF(q)].push_back({ rule.phi, remapF(rule.state) });
       }
     }
 
@@ -209,7 +209,6 @@ namespace nfasl {
           W.erase(B);
           W.insert(D);
           W.insert(B_dif_D);
-          break;
         }
       }
     }
@@ -224,10 +223,7 @@ namespace nfasl {
     std::set<States> partition;
     simpleBisim(c, partition);
 
-    Nfasl d;
-    joinStates(c, partition, d);
-
-    clean(d, b);
+    joinStates(c, partition, b);
   }
 
 }

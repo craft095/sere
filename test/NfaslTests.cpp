@@ -130,6 +130,43 @@ TEST_CASE("Nfasl") {
   CHECK(evalNfasl(a, {{"a", "b"}, {"a", "b"}}) == Match_Partial);
 }
 
+TEST_CASE("Nfasl, minimal") {
+  State s0{0}, s1{1}, s2{2}, s3{3}, s4{4};
+  TransitionRule r01 = { RE_VAR('a'),
+                         s1 };
+  TransitionRule r03 = { RE_VAR('a'),
+                         s3 };
+  TransitionRule r12 = { RE_NOT(RE_VAR('b')),
+                         s2 };
+  TransitionRule r34 = { RE_NOT(RE_VAR('b')),
+                         s4 };
+  Nfasl a = {
+    { {0}, {1} },
+    2,  // atomic count
+    5,  // state count
+    s0, // initial
+    { s2, s4 }, // finals
+    { { r01, r03 },
+      { r12 },
+      {},
+      { r34 },
+      {}
+    } // transitions
+  };
+
+  Nfasl b;
+  minimize(a, b);
+
+  CHECK(b.stateCount == 3);
+  CHECK(b.finals.size() == 1);
+
+  CHECK(evalNfasl(b, {}) == Match_Partial);
+  CHECK(evalNfasl(b, {{"", "ab"}}) == Match_Failed);
+  CHECK(evalNfasl(b, {{"a", "b"}}) == Match_Partial);
+  CHECK(evalNfasl(b, {{"a", "b"}, {"a", "b"}}) == Match_Ok);
+  CHECK(evalNfasl(b, {{"a", "b"}, {"a", "b"}, {"a", "b"}}) == Match_Failed);
+}
+
 #define CHECK_IF(premise, cond) if ((premise)) { CHECK(cond); }
 
 TEST_CASE("Nfasl, operations") {
