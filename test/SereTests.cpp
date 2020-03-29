@@ -73,12 +73,23 @@ TEST_CASE("Sere") {
   }
 }
 
-TEST_CASE("Bool to Z3") {
+TEST_CASE("Bool Expressions") {
   constexpr size_t atoms = 3;
   auto expr = GENERATE(Catch2::take(10, genBoolExpr(3, atoms)));
   auto letter = GENERATE(Catch2::take(10, genLetter(atoms)));
 
-  REQUIRE(evalBool(*expr, letter) == evalBoolZ3(*expr, letter));
+  SECTION("Z3") {
+    CHECK(evalBool(*expr, letter) == evalBoolZ3(*expr, letter));
+  }
+
+  SECTION("RTP") {
+    std::vector<uint8_t> data;
+    std::map<VarName, rtp::Offset> remap;
+    rtp::toRTP(*expr, data, remap);
+    rtp::BitSet names;
+    letterToBitSet(letter, remap, names);
+    CHECK(evalBool(*expr, letter) == rtp::eval(names, &data[0], data.size()));
+  }
 }
 
 TEST_CASE("Sere vs Nfasl") {

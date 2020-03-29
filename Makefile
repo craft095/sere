@@ -14,6 +14,7 @@ TESTS := sere_tests #nfasl_tests
 SERE_SRCS :=       \
     Language.cpp   \
 	Z3.cpp         \
+	RTP.cpp        \
 	Nfasl.cpp      \
 	BisimNfasl.cpp
 

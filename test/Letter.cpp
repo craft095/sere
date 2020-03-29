@@ -28,3 +28,14 @@ std::string prettyWord(const Word& word) {
   strm << "}";
   return strm.str();
 }
+
+void letterToBitSet(const Letter& letter,
+                    const std::map<VarName, rtp::Offset>& remap,
+                    rtp::BitSet& bs) {
+  for (auto n : letter.pos) {
+    bs.set(remap.at(n), 1);
+  }
+  for (auto n : letter.neg) {
+    bs.set(remap.at(n), 0);
+  }
+}

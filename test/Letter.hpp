@@ -2,10 +2,12 @@
 #define LETTER_HPP
 
 #include <set>
+#include <map>
 #include <vector>
 #include <string>
 
 #include "Language.hpp"
+#include "RTP.hpp"
 
 class Letter {
 public:
@@ -23,5 +25,8 @@ public:
 typedef std::vector<Letter> Word;
 
 extern std::string prettyWord(const Word& word);
+extern void letterToBitSet(const Letter& letter,
+                           const std::map<VarName, rtp::Offset>& remap,
+                           rtp::BitSet& bs);
 
 #endif //LETTER_HPP
