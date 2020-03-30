@@ -9,23 +9,38 @@
 #include "Language.hpp"
 #include "RTP.hpp"
 
-class Letter {
-public:
-  std::set<VarName> pos;
-  std::set<VarName> neg;
+typedef rtp::Names Letter;
 
-  Letter(const std::string& p, const std::string& n) {
-    for (auto vp : p) pos.insert({size_t(vp - 'a')});
-    for (auto vn : n) neg.insert({size_t(vn - 'a')});
+inline std::string prettyName(size_t k) {
+  std::ostringstream str;
+  str << 'x';
+  str << k;
+  return str.str();
+}
+
+inline rtp::Names makeNames(const std::vector<size_t>& pos, const std::vector<size_t>& neg) {
+  rtp::Names names;
+  names.resize(pos.size() + neg.size());
+  for (auto vp : pos) names.set(vp, 1);
+  for (auto vn : neg) names.set(vn, 0);
+  return names;
+}
+
+inline std::string prettyNames(const rtp::Names& names) {
+  std::ostringstream str;
+
+  for (size_t k = 0; k < names.size(); ++k) {
+    if (!names.test(k)) {
+      str << '!';
+    }
+    str << prettyName(k);
   }
 
-  std::string pretty() const;
-};
+  return str.str();
+}
 
-typedef std::vector<Letter> Word;
+typedef std::vector<rtp::Names> Word;
 
 extern std::string prettyWord(const Word& word);
-extern void letterToBitSet(const Letter& letter,
-                           rtp::Names& bs);
 
 #endif //LETTER_HPP

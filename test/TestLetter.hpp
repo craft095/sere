@@ -1,40 +1,32 @@
 #ifndef TESTLETTER_HPP
 #define TESTLETTER_HPP
 
-#include "Letter.hpp"
+#include "RTP.hpp"
 #include "TestTools.hpp"
 
-class LetterGenerator : public Catch2::IGenerator <Letter> {
+class LetterGenerator : public Catch2::IGenerator <rtp::Names> {
 private:
-  size_t atoms;
-  Letter value;
+  rtp::Names names;
 public:
-  LetterGenerator(size_t atoms_) : atoms(atoms_), value("","") {
-    next();
+  LetterGenerator(size_t atoms) {
+    names.resize(atoms);
   }
-  Letter const& get() const override {
-    return value;
+  const rtp::Names& get() const override {
+    return names;
   }
 
   bool next() override {
-    value = make(atoms);
+    make(names.size(), names);
     return true;
   }
 
-  static Letter make(size_t atoms) {
-    std::string p, n;
+  static void make(size_t atoms, rtp::Names& names) {
+    names.resize(atoms);
 
-    for (size_t i = 0; i < atoms; ++i) {
+    for (size_t k = 0; k < names.size(); ++k) {
       size_t c = Catch2::random(0, 1).get();
-      if (c == 1) {
-        p.push_back(char('a' + i));
-      } else {
-        n.push_back(char('a' + i));
-      }
+      names.set(k, c);
     }
-
-    // return Letter(std::move(p), std::move(n));
-    return Letter(p, n);
   }
 };
 
@@ -64,8 +56,8 @@ public:
   }
 
   static Word make(size_t atoms, size_t mn, size_t mx) {
-    auto g = [atoms] () { return LetterGenerator::make(atoms); };
-    return vector_of<Letter>(mn, mx, g);
+    auto g = [atoms] () { rtp::Names names; LetterGenerator::make(atoms, names); return names; };
+    return vector_of<rtp::Names>(mn, mx, g);
   }
 };
 

@@ -6,13 +6,16 @@
 #include "Z3.hpp"
 #include "TestZ3.hpp"
 
-z3::expr letterToZex(const Letter& l) {
+z3::expr letterToZex(const rtp::Names& names) {
   z3::expr e(theContext.bool_val(true));
-  for (const auto& p : l.pos) {
-    e = e && theContext.bool_const(p.pretty());
-  }
-  for (const auto& n : l.neg) {
-    e = e && !theContext.bool_const(n.pretty());
+
+  for (size_t k = 0; k < names.size(); ++k) {
+    z3::expr e1 = theContext.bool_const(prettyName(k).c_str());
+    if (names.test(k)) {
+      e = e && e1;
+    } else {
+      e = e && !e1;
+    }
   }
   return e;
 }
@@ -22,6 +25,7 @@ bool evalWithImply(const z3::expr& vars_, const z3::expr& expr_) {
   return prove(r);
 }
 
+#if 0
 bool evalWithImply0(const Letter& l, const z3::expr& expr_) {
   z3::solver s(theContext);
   s.add(expr_);
@@ -33,3 +37,4 @@ bool evalWithImply0(const Letter& l, const z3::expr& expr_) {
   }
   return s.check() == z3::sat;
 }
+#endif

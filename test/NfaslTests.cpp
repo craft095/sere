@@ -111,9 +111,9 @@ genNfasl(size_t depth, size_t atomics, size_t states, size_t maxTrs) {
 
 TEST_CASE("Nfasl") {
   State s0{0}, s1{1};
-  TransitionRule r00 = { RE_VAR('a'),
+  TransitionRule r00 = { RE_VAR(0),
                          s1 };
-  TransitionRule r10 = { RE_NOT(RE_VAR('b')),
+  TransitionRule r10 = { RE_NOT(RE_VAR(1)),
                          s0 };
   Nfasl a = {
     { {0}, {1} },
@@ -125,20 +125,20 @@ TEST_CASE("Nfasl") {
   };
 
   CHECK(evalNfasl(a, {}) == Match_Partial);
-  CHECK(evalNfasl(a, {{"", "ab"}}) == Match_Failed);
-  CHECK(evalNfasl(a, {{"a", "b"}}) == Match_Ok);
-  CHECK(evalNfasl(a, {{"a", "b"}, {"a", "b"}}) == Match_Partial);
+  CHECK(evalNfasl(a, {makeNames({}, {0,1})}) == Match_Failed);
+  CHECK(evalNfasl(a, {makeNames({0}, {1})}) == Match_Ok);
+  CHECK(evalNfasl(a, {makeNames({0}, {1}), makeNames({0}, {1})}) == Match_Partial);
 }
 
 TEST_CASE("Nfasl, minimal") {
   State s0{0}, s1{1}, s2{2}, s3{3}, s4{4};
-  TransitionRule r01 = { RE_VAR('a'),
+  TransitionRule r01 = { RE_VAR(0),
                          s1 };
-  TransitionRule r03 = { RE_VAR('a'),
+  TransitionRule r03 = { RE_VAR(0),
                          s3 };
-  TransitionRule r12 = { RE_NOT(RE_VAR('b')),
+  TransitionRule r12 = { RE_NOT(RE_VAR(1)),
                          s2 };
-  TransitionRule r34 = { RE_NOT(RE_VAR('b')),
+  TransitionRule r34 = { RE_NOT(RE_VAR(1)),
                          s4 };
   Nfasl a = {
     { {0}, {1} },
@@ -161,10 +161,10 @@ TEST_CASE("Nfasl, minimal") {
   CHECK(b.finals.size() == 1);
 
   CHECK(evalNfasl(b, {}) == Match_Partial);
-  CHECK(evalNfasl(b, {{"", "ab"}}) == Match_Failed);
-  CHECK(evalNfasl(b, {{"a", "b"}}) == Match_Partial);
-  CHECK(evalNfasl(b, {{"a", "b"}, {"a", "b"}}) == Match_Ok);
-  CHECK(evalNfasl(b, {{"a", "b"}, {"a", "b"}, {"a", "b"}}) == Match_Failed);
+  CHECK(evalNfasl(b, {makeNames({}, {0,1})}) == Match_Failed);
+  CHECK(evalNfasl(b, {makeNames({0}, {1})}) == Match_Partial);
+  CHECK(evalNfasl(b, {makeNames({0}, {1}), makeNames({0}, {1})}) == Match_Ok);
+  CHECK(evalNfasl(b, {makeNames({0}, {1}), makeNames({0}, {1}), makeNames({0}, {1})}) == Match_Failed);
 }
 
 #define CHECK_IF(premise, cond) if ((premise)) { CHECK(cond); }

@@ -28,7 +28,6 @@ struct VarName {
 };
 
 inline VarName make_varName(size_t ix) { return VarName {ix}; }
-inline VarName make_varName(char x) { return VarName {size_t(x - 'a')}; }
 
 class SereExpr;
 

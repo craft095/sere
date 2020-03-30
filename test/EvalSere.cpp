@@ -7,23 +7,17 @@
 
 class EvalBool : public BoolVisitor {
 private:
-  Letter letter;
+  rtp::Names letter;
   bool result;
 public:
-  EvalBool(BoolExpr& expr, Letter letter_) : letter(letter_) {
+  EvalBool(BoolExpr& expr, const rtp::Names& letter_) : letter(letter_) {
     expr.accept(*this);
   }
 
   bool getResult() const { return result; }
 
   void visit(Variable& v) override {
-    if (letter.pos.find(v.getName()) != letter.pos.end()) {
-      result = true;
-    } else if (letter.neg.find(v.getName()) != letter.neg.end()) {
-      result = false;
-    } else {
-      assert(false);
-    }
+    result = letter.test(v.getName().ix);
   }
 
   void visit(BoolValue& v) override {
@@ -218,11 +212,11 @@ Match evalSere(SereExpr& expr, const Word& word) {
   return EvalSere::eval(expr, word);
 }
 
-bool evalBool(BoolExpr& expr, const Letter& letter) {
+bool evalBool(BoolExpr& expr, const rtp::Names& letter) {
   return EvalBool(expr, letter).getResult();
 }
 
-bool evalBoolZ3(BoolExpr& expr, const Letter& letter) {
+bool evalBoolZ3(BoolExpr& expr, const rtp::Names& letter) {
   z3::expr l = letterToZex(letter);
   z3::expr b = boolSereToZex(expr);
 

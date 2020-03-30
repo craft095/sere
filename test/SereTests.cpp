@@ -24,52 +24,52 @@
 TEST_CASE("Sere") {
   SECTION("empty") {
     CHECK(evalSere(*RE_EMPTY, {}) == Match_Ok);
-    CHECK(evalSere(*RE_EMPTY, {{"",""}}) == Match_Failed);
+    CHECK(evalSere(*RE_EMPTY, {makeNames({},{})}) == Match_Failed);
   }
   SECTION("boolean") {
-    CHECK(evalSere(*RE_TRUE, {{"y", "x"}}) == Match_Ok);
-    CHECK(evalSere(*RE_FALSE, {{"y", "x"}}) == Match_Failed);
-    CHECK(evalSere(*RE_NOT(RE_TRUE), {{"y", "x"}}) == Match_Failed);
-    CHECK(evalSere(*RE_VAR('y'), {{"y", "x"}}) == Match_Ok);
-    CHECK(evalSere(*RE_VAR('x'), {{"y", "x"}}) == Match_Failed);
+    CHECK(evalSere(*RE_TRUE, {makeNames({1}, {0})}) == Match_Ok);
+    CHECK(evalSere(*RE_FALSE, {makeNames({1}, {0})}) == Match_Failed);
+    CHECK(evalSere(*RE_NOT(RE_TRUE), {makeNames({1}, {0})}) == Match_Failed);
+    CHECK(evalSere(*RE_VAR(1), {makeNames({1}, {0})}) == Match_Ok);
+    CHECK(evalSere(*RE_VAR(0), {makeNames({1}, {0})}) == Match_Failed);
 
-    SereChildPtr tc = RE_AND(RE_TRUE, RE_NOT(RE_VAR('x')));
-    CHECK(evalSere(*tc, {{"y", "x"}}) == Match_Ok);
-    CHECK(evalSere(*tc, {{"x", "y"}}) == Match_Failed);
-    CHECK(evalSere(*tc, {{"y", "x"}, {"y", "x"}}) == Match_Failed);
+    SereChildPtr tc = RE_AND(RE_TRUE, RE_NOT(RE_VAR(0)));
+    CHECK(evalSere(*tc, {makeNames({1}, {0})}) == Match_Ok);
+    CHECK(evalSere(*tc, {makeNames({0}, {1})}) == Match_Failed);
+    CHECK(evalSere(*tc, {makeNames({1}, {0}), makeNames({1}, {0})}) == Match_Failed);
     CHECK(evalSere(*tc, {}) == Match_Partial);
     // ASSERT_EQ(evalSere(*tc, {{"z", "y"}}), Match_Failed);
   }
 
   SECTION("concat") {
     CHECK(evalSere(*RE_CONCAT
-                   (RE_VAR('x'),
-                    RE_VAR('y')),
+                   (RE_VAR(0),
+                    RE_VAR(1)),
                    {}) == Match_Partial);
     CHECK(evalSere(*RE_CONCAT
-                   (RE_VAR('x'),
-                    RE_VAR('y')),
-                   {{"x",""},{"y",""}}) == Match_Ok);
+                   (RE_VAR(0),
+                    RE_VAR(1)),
+                   {makeNames({0},{1}),makeNames({1},{0})}) == Match_Ok);
     CHECK(evalSere(*RE_CONCAT
-                   (RE_VAR('x'),
-                    RE_VAR('y')),
-                   {{"xy",""},{"x","y"}}) == Match_Failed);
+                   (RE_VAR(0),
+                    RE_VAR(1)),
+                   {makeNames({0,1},{}),makeNames({0},{1})}) == Match_Failed);
     CHECK(evalSere
           (*RE_CONCAT
            (RE_CONCAT
-            (RE_VAR('x'),
-             RE_VAR('y')
+            (RE_VAR(0),
+             RE_VAR(1)
              ),
-            RE_VAR('x')),
-           {{"x","y"}}) == Match_Partial);
+            RE_VAR(0)),
+           {makeNames({0},{1})}) == Match_Partial);
     CHECK(evalSere
           (*RE_CONCAT
            (RE_CONCAT
-            (RE_VAR('x'),
-             RE_VAR('y')
+            (RE_VAR(0),
+             RE_VAR(1)
              ),
-            RE_VAR('x')),
-           {{"x","y"},{"x","y"}}) == Match_Failed);
+            RE_VAR(0)),
+           {makeNames({0},{1}),makeNames({0},{1})}) == Match_Failed);
   }
 }
 
@@ -85,9 +85,7 @@ TEST_CASE("Bool Expressions") {
   SECTION("RTP") {
     std::vector<uint8_t> data;
     rtp::toRTP(*expr, data);
-    rtp::Names names;
-    letterToBitSet(letter, names);
-    CHECK(evalBool(*expr, letter) == rtp::eval(names, &data[0], data.size()));
+    CHECK(evalBool(*expr, letter) == rtp::eval(letter, &data[0], data.size()));
   }
 }
 
