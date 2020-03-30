@@ -20,7 +20,7 @@ namespace rtp {
 
     void visit(Variable& v) override {
       writeValue(rtp::Code::Name);
-      writeValue(rtp::Offset{v.getName().ix});
+      writeValue(static_cast<rtp::Offset>(v.getName().ix));
     }
 
     void visit(BoolValue& v) override {

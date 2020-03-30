@@ -85,7 +85,7 @@ TEST_CASE("Bool Expressions") {
   SECTION("RTP") {
     std::vector<uint8_t> data;
     rtp::toRTP(*expr, data);
-    rtp::BitSet names;
+    rtp::Names names;
     letterToBitSet(letter, names);
     CHECK(evalBool(*expr, letter) == rtp::eval(names, &data[0], data.size()));
   }

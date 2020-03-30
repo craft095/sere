@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <map>
 #include <vector>
+#include <boost/dynamic_bitset.hpp>
 
 #include "Language.hpp"
 
@@ -12,21 +13,7 @@ class BoolExpr;
 
 namespace rtp {
   typedef uint16_t Offset;
-  class BitSet {
-    uint64_t data;
-  public:
-    BitSet() : data{0} {}
-
-    int get(size_t k) const {
-      assert(k < sizeof(data)*8);
-      return (data >> k) & 0x1;
-    }
-
-    void set(size_t k, int v) {
-      uint64_t mask = 1 << k;
-      data = (data & ~mask) | (v << k);
-    }
-  };
+  typedef boost::dynamic_bitset<> Names;
 
   enum class Code : uint8_t {
     False = 0,
@@ -41,7 +28,7 @@ namespace rtp {
 
   class Evaluator {
   public:
-    Evaluator(const BitSet& names_, const uint8_t* data_, size_t len_)
+    Evaluator(const Names& names_, const uint8_t* data_, size_t len_)
       : names(names_), data(data_), len(len_), eip(data_) {}
 
 
@@ -72,7 +59,7 @@ namespace rtp {
       case Code::Name:
         Offset off;
         readValue(off);
-        return names.get(off);
+        return names.test(off);
       case Code::Not:
         return eval0() ^ 1;
       case Code::And:
@@ -84,14 +71,14 @@ namespace rtp {
     }
 
   private:
-    const BitSet& names;
+    const Names& names;
     const uint8_t* data;
     size_t len;
 
     const uint8_t* eip;
   };
 
-  inline bool eval(const BitSet& names, const uint8_t* data, size_t len) {
+  inline bool eval(const Names& names, const uint8_t* data, size_t len) {
     return Evaluator(names, data, len).eval();
   }
 

@@ -30,7 +30,8 @@ std::string prettyWord(const Word& word) {
 }
 
 void letterToBitSet(const Letter& letter,
-                    rtp::BitSet& bs) {
+                    rtp::Names& bs) {
+  bs.resize(letter.pos.size() + letter.neg.size());
   for (auto n : letter.pos) {
     bs.set(n.ix, 1);
   }
