@@ -12,6 +12,10 @@
 
 using json = nlohmann::json;
 
+namespace rtnfasl {
+  class Nfasl;
+}
+
 namespace nfasl {
   typedef VarName AtomicName;
   typedef Ptr<BoolExpr> Predicate;
@@ -47,6 +51,8 @@ namespace nfasl {
   extern Ptr<Nfasl> makeNfasl(size_t depth, size_t atoms, size_t states, size_t maxTrs);
   extern void to_json(json& j, const Nfasl& a);
   extern std::string pretty(const Nfasl& a);
+  extern void toRt(const Nfasl& u, rtnfasl::Nfasl& v);
+
 } // namespace nfasl
 
 #endif // NFASL_HPP

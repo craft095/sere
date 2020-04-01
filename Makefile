@@ -16,6 +16,7 @@ SERE_SRCS :=       \
 	Z3.cpp         \
 	RTP.cpp        \
 	Nfasl.cpp      \
+	RtNfasl.cpp    \
 	BisimNfasl.cpp
 
 SERE_TESTS_SRCS := 		\
