@@ -28,6 +28,7 @@ SERE_TESTS_SRCS :=       \
 	test/Letter.cpp		 \
 	test/Main.cpp		 \
 	test/TestNfasl.cpp	 \
+	test/TestRtNfasl.cpp \
 	test/TestSere.cpp	 \
 	test/ToolsZ3.cpp     \
 	$(SERE_SRCS)

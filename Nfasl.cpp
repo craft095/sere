@@ -273,17 +273,17 @@ namespace nfasl {
   void toRt(const Nfasl& u, rt::Nfasl& v) {
     v.atomicCount = u.atomicCount;
     v.stateCount = u.stateCount;
-    v.initials.resize(1);
+    v.initials.resize(v.stateCount);
     v.initials.set(u.initial);
-    v.finals.resize(u.finals.size());
+    v.finals.resize(v.stateCount);
     for (auto q : u.finals) {
       v.finals.set(q);
     }
     v.transitions.resize(v.stateCount);
     for (State q = 0; q < u.stateCount; ++q) {
       TransitionRules uT = u.transitions[q];
-      auto vRule = v.transitions[q].begin();
       v.transitions[q].resize(uT.size());
+      auto vRule = v.transitions[q].begin();
       for (auto& rule : uT) {
         rt::toRtPredicate(*rule.phi, vRule->phi);
         vRule->state = rule.state;

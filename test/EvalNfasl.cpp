@@ -7,6 +7,12 @@
 
 using namespace nfasl;
 
+/**
+ * This evaluator may produce PARTIAL results
+ * even if there is no chance to match the word.
+ *
+ * It may happen due to presense of unreachable states.
+ */
 Match evalNfasl(const Nfasl& a, const Word& word) {
   States curr, next;
 
@@ -33,4 +39,13 @@ Match evalNfasl(const Nfasl& a, const Word& word) {
   } else {
     return Match_Partial;
   }
+}
+
+Match evalCleanNfasl(const nfasl::Nfasl& a, const Word& word) {
+  // if automaton is cleaned, it is enough to be sure
+  // that it fails on any input
+  if (a.finals.empty()) {
+    return Match_Failed;
+  }
+  return evalNfasl(a, word);
 }
