@@ -1,25 +1,13 @@
-#include <iostream>
-#include <memory>
-
-// #include "gtest/gtest.h"
-
-#define CATCH_CONFIG_RUNNER
-
-#include "Language.hpp"
-
-#include "Nfasl.hpp"
-#include "Letter.hpp"
-#include "EvalSere.hpp"
-#include "TestLetter.hpp"
-#include "Algo.hpp"
-#include "Z3.hpp"
-
 #include "catch2/catch.hpp"
 
-#include "TestTools.hpp"
-#include "TestBoolExpr.hpp"
-#include "TestZ3.hpp"
-#include "NfaslTests.hpp"
+#include "GenLetter.hpp"
+#include "GenBoolExpr.hpp"
+#include "EvalBoolExpr.hpp"
+#include "EvalSere.hpp"
+#include "EvalNfasl.hpp"
+
+#include "Tools.hpp"
+#include "ToolsZ3.hpp"
 
 TEST_CASE("Sere") {
   SECTION("empty") {
@@ -82,10 +70,10 @@ TEST_CASE("Bool Expressions") {
     CHECK(evalBool(*expr, letter) == evalBoolZ3(*expr, letter));
   }
 
-  SECTION("RTP") {
+  SECTION("RtPredicate") {
     std::vector<uint8_t> data;
-    rtp::toRTP(*expr, data);
-    CHECK(evalBool(*expr, letter) == rtp::eval(letter, &data[0], data.size()));
+    rt::toRtPredicate(*expr, data);
+    CHECK(evalBool(*expr, letter) == rt::eval(letter, &data[0], data.size()));
   }
 }
 
@@ -96,16 +84,4 @@ TEST_CASE("Sere vs Nfasl") {
   auto nfasl = sereToNfasl(*expr);
 
   REQUIRE(evalSere(*expr, word) == evalNfasl(nfasl, word));
-}
-
-int main(int argc, char **argv) {
-  // ::testing::InitGoogleTest(&argc, argv);
-  // int result = RUN_ALL_TESTS();
-  // if (result != 0) {
-  //   return result;
-  // }
-
-  int result = Catch::Session().run( argc, argv );
-
-  return result;
 }

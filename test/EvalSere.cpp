@@ -1,46 +1,10 @@
 #include "Letter.hpp"
 #include "Language.hpp"
+#include "EvalBoolExpr.hpp"
 #include "EvalSere.hpp"
 
 #include "Z3.hpp"
-#include "TestZ3.hpp"
-
-class EvalBool : public BoolVisitor {
-private:
-  rtp::Names letter;
-  bool result;
-public:
-  EvalBool(BoolExpr& expr, const rtp::Names& letter_) : letter(letter_) {
-    expr.accept(*this);
-  }
-
-  bool getResult() const { return result; }
-
-  void visit(Variable& v) override {
-    result = letter.test(v.getName().ix);
-  }
-
-  void visit(BoolValue& v) override {
-    result = v.getValue();
-  }
-
-  void visit(BoolNot& v) override {
-    v.getArg()->accept(*this);
-    result = !result;
-  }
-
-  void visit(BoolAnd& v) override {
-    bool lhs, rhs;
-
-    v.getLhs()->accept(*this);
-    lhs = result;
-
-    v.getRhs()->accept(*this);
-    rhs = result;
-
-    result = lhs && rhs;
-  }
-};
+#include "ToolsZ3.hpp"
 
 class EvalSere : public SereVisitor {
 private:
@@ -210,16 +174,4 @@ private:
 
 Match evalSere(SereExpr& expr, const Word& word) {
   return EvalSere::eval(expr, word);
-}
-
-bool evalBool(BoolExpr& expr, const rtp::Names& letter) {
-  return EvalBool(expr, letter).getResult();
-}
-
-bool evalBoolZ3(BoolExpr& expr, const rtp::Names& letter) {
-  z3::expr l = letterToZex(letter);
-  z3::expr b = boolSereToZex(expr);
-
-  bool r = evalWithImply(l,b);
-  return r;
 }

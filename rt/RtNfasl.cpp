@@ -1,8 +1,8 @@
-#include "RtNfasl.hpp"
+#include "rt/RtNfasl.hpp"
 
 #include <memory.h>
 
-namespace rtnfasl {
+namespace rt {
 
   struct Header {
     uint32_t magic;
@@ -146,4 +146,37 @@ namespace rtnfasl {
     Saver(data).save(nfasl);
   }
 
-}
+  void NfaslContext::reset() {
+    if (nfasl.finals.count() == 0) {
+      fail();
+    } else {
+      currentStates = nfasl.initials;
+      checkFinals();
+    }
+  }
+
+  void NfaslContext::advance(const rt::Names& vars) {
+    bool advanced = false;
+    // iterate over current state
+    rt::Names nextStates;
+    nextStates.resize(nfasl.stateCount);
+    for (size_t q = currentStates.find_first();
+         q != States::npos;
+         q = currentStates.find_next(q)) {
+      const StateTransitions& trs = nfasl.transitions[q];
+      for (auto& tr : trs) {
+        if (eval(vars, &tr.phi[0], tr.phi.size())) {
+          advanced = true;
+          nextStates.set(tr.state);
+        }
+      }
+    }
+    std::swap(currentStates, nextStates);
+    if (advanced) {
+      checkFinals();
+    } else {
+      fail();
+    }
+  }
+
+} //namespace rt

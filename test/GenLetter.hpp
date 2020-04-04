@@ -1,17 +1,17 @@
-#ifndef TESTLETTER_HPP
-#define TESTLETTER_HPP
+#ifndef GENLETTER_HPP
+#define GENLETTER_HPP
 
-#include "RTP.hpp"
-#include "TestTools.hpp"
+#include "rt/RtPredicate.hpp"
+#include "test/Tools.hpp"
 
-class LetterGenerator : public Catch2::IGenerator <rtp::Names> {
+class LetterGenerator : public Catch2::IGenerator <rt::Names> {
 private:
-  rtp::Names names;
+  rt::Names names;
 public:
   LetterGenerator(size_t atoms) {
     names.resize(atoms);
   }
-  const rtp::Names& get() const override {
+  const rt::Names& get() const override {
     return names;
   }
 
@@ -20,7 +20,7 @@ public:
     return true;
   }
 
-  static void make(size_t atoms, rtp::Names& names) {
+  static void make(size_t atoms, rt::Names& names) {
     names.resize(atoms);
 
     for (size_t k = 0; k < names.size(); ++k) {
@@ -56,8 +56,8 @@ public:
   }
 
   static Word make(size_t atoms, size_t mn, size_t mx) {
-    auto g = [atoms] () { rtp::Names names; LetterGenerator::make(atoms, names); return names; };
-    return vector_of<rtp::Names>(mn, mx, g);
+    auto g = [atoms] () { rt::Names names; LetterGenerator::make(atoms, names); return names; };
+    return vector_of<rt::Names>(mn, mx, g);
   }
 };
 
@@ -65,4 +65,4 @@ inline Catch2::GeneratorWrapper<Word> genWord(size_t atoms, size_t mn, size_t mx
   return Catch2::GeneratorWrapper<Word>(std::make_unique<WordGenerator>(atoms, mn, mx));
 }
 
-#endif // TESTLETTER_HPP
+#endif // GENLETTER_HPP

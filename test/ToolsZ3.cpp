@@ -4,9 +4,9 @@
 #include "Language.hpp"
 
 #include "Z3.hpp"
-#include "TestZ3.hpp"
+#include "ToolsZ3.hpp"
 
-z3::expr letterToZex(const rtp::Names& names) {
+z3::expr letterToZex(const rt::Names& names) {
   z3::expr e(theContext.bool_val(true));
 
   for (size_t k = 0; k < names.size(); ++k) {

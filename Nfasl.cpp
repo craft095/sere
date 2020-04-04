@@ -4,9 +4,9 @@
 #include <sstream>
 #include <nlohmann/json.hpp>
 #include "Z3.hpp"
-#include "RTP.hpp"
+#include "rt/RtPredicate.hpp"
 #include "Nfasl.hpp"
-#include "RtNfasl.hpp"
+#include "rt/RtNfasl.hpp"
 #include "Algo.hpp"
 
 using json = nlohmann::json;
@@ -270,7 +270,7 @@ namespace nfasl {
     return a;
   }
 
-  void toRt(const Nfasl& u, rtnfasl::Nfasl& v) {
+  void toRt(const Nfasl& u, rt::Nfasl& v) {
     v.atomicCount = u.atomicCount;
     v.stateCount = u.stateCount;
     v.initials.resize(1);
@@ -285,7 +285,7 @@ namespace nfasl {
       auto vRule = v.transitions[q].begin();
       v.transitions[q].resize(uT.size());
       for (auto& rule : uT) {
-        rtp::toRTP(*rule.phi, vRule->phi);
+        rt::toRtPredicate(*rule.phi, vRule->phi);
         vRule->state = rule.state;
         ++vRule;
       }

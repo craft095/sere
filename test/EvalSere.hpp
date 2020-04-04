@@ -2,12 +2,7 @@
 #define EVALSERE_HPP
 
 #include "Letter.hpp"
-
-enum Match {
-  Match_Ok,
-  Match_Partial,
-  Match_Failed,
-};
+#include "Match.hpp"
 
 class SereExpr;
 

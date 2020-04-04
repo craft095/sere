@@ -1,7 +1,7 @@
-#ifndef TESTBOOLEXPR_HPP
-#define TESTBOOLEXPR_HPP
+#ifndef GENBOOLEXPR_HPP
+#define GENBOOLEXPR_HPP
 
-#include "TestTools.hpp"
+#include "Tools.hpp"
 #include "Language.hpp"
 #include "Z3.hpp"
 
@@ -82,4 +82,4 @@ inline z3::expr makeZex(size_t depth, size_t atoms) {
   return boolSereToZex(*expr);
 }
 
-#endif // TESTBOOLEXPR_HPP
+#endif // GENBOOLEXPR_HPP

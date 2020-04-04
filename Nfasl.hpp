@@ -12,7 +12,7 @@
 
 using json = nlohmann::json;
 
-namespace rtnfasl {
+namespace rt {
   class Nfasl;
 }
 
@@ -48,10 +48,9 @@ namespace nfasl {
   extern Nfasl kleeneStar(const Nfasl& a0);
   extern Nfasl kleenePlus(const Nfasl& a0);
 
-  extern Ptr<Nfasl> makeNfasl(size_t depth, size_t atoms, size_t states, size_t maxTrs);
   extern void to_json(json& j, const Nfasl& a);
   extern std::string pretty(const Nfasl& a);
-  extern void toRt(const Nfasl& u, rtnfasl::Nfasl& v);
+  extern void toRt(const Nfasl& u, rt::Nfasl& v);
 
 } // namespace nfasl
 

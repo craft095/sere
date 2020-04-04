@@ -1,12 +1,12 @@
-#include "RTP.hpp"
+#include "RtPredicate.hpp"
 
-namespace rtp {
+namespace rt {
   class FromBoolExpr : public BoolVisitor {
   private:
     std::vector<uint8_t> data;
   public:
     FromBoolExpr(BoolExpr& expr) {
-      writeValue(rtp::magic);
+      // writeValue(rt::magic);
       expr.accept(*this);
     }
 
@@ -19,32 +19,32 @@ namespace rtp {
     const std::vector<uint8_t>& getData() const { return data; }
 
     void visit(Variable& v) override {
-      writeValue(rtp::Code::Name);
-      writeValue(static_cast<rtp::Offset>(v.getName().ix));
+      writeValue(rt::Code::Name);
+      writeValue(static_cast<rt::Offset>(v.getName().ix));
     }
 
     void visit(BoolValue& v) override {
       if (v.getValue()) {
-        writeValue(rtp::Code::True);
+        writeValue(rt::Code::True);
       } else {
-        writeValue(rtp::Code::False);
+        writeValue(rt::Code::False);
       }
     }
 
     void visit(BoolNot& v) override {
-      writeValue(rtp::Code::Not);
+      writeValue(rt::Code::Not);
       v.getArg()->accept(*this);
     }
 
     void visit(BoolAnd& v) override {
-      writeValue(rtp::Code::And);
+      writeValue(rt::Code::And);
       v.getLhs()->accept(*this);
       v.getRhs()->accept(*this);
     }
   };
 
-  void toRTP(BoolExpr& expr,
-             std::vector<uint8_t>& data) {
+  void toRtPredicate(BoolExpr& expr,
+                     std::vector<uint8_t>& data) {
     FromBoolExpr be{expr};
     data = be.getData();
   }

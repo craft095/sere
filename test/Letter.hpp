@@ -7,9 +7,9 @@
 #include <string>
 
 #include "Language.hpp"
-#include "RTP.hpp"
+#include "rt/RtPredicate.hpp"
 
-typedef rtp::Names Letter;
+typedef rt::Names Letter;
 
 inline std::string prettyName(size_t k) {
   std::ostringstream str;
@@ -18,15 +18,15 @@ inline std::string prettyName(size_t k) {
   return str.str();
 }
 
-inline rtp::Names makeNames(const std::vector<size_t>& pos, const std::vector<size_t>& neg) {
-  rtp::Names names;
+inline rt::Names makeNames(const std::vector<size_t>& pos, const std::vector<size_t>& neg) {
+  rt::Names names;
   names.resize(pos.size() + neg.size());
   for (auto vp : pos) names.set(vp, 1);
   for (auto vn : neg) names.set(vn, 0);
   return names;
 }
 
-inline std::string prettyNames(const rtp::Names& names) {
+inline std::string prettyNames(const rt::Names& names) {
   std::ostringstream str;
 
   for (size_t k = 0; k < names.size(); ++k) {
@@ -39,7 +39,7 @@ inline std::string prettyNames(const rtp::Names& names) {
   return str.str();
 }
 
-typedef std::vector<rtp::Names> Word;
+typedef std::vector<rt::Names> Word;
 
 extern std::string prettyWord(const Word& word);
 

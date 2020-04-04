@@ -11,20 +11,26 @@ BIN := sere_tests #nfasl_tests
 TESTS := sere_tests #nfasl_tests
 
 # source files
-SERE_SRCS :=       \
-    Language.cpp   \
-	Z3.cpp         \
-	RTP.cpp        \
-	Nfasl.cpp      \
-	RtNfasl.cpp    \
+SERE_SRCS :=        	\
+    Language.cpp    	\
+	Z3.cpp          	\
+	rt/RtPredicate.cpp 	\
+	rt/RtNfasl.cpp	 	\
+	Nfasl.cpp       	\
 	BisimNfasl.cpp
 
-SERE_TESTS_SRCS := 		\
-	test/EvalSere.cpp   \
-	test/Letter.cpp     \
-	test/TestZ3.cpp     \
-	test/NfaslTests.cpp \
-    test/SereTests.cpp $(SERE_SRCS)
+SERE_TESTS_SRCS :=       \
+	test/EvalBoolExpr.cpp	 \
+	test/EvalNfasl.cpp	 \
+	test/EvalRtNfasl.cpp \
+	test/EvalSere.cpp	 \
+	test/GenNfasl.cpp	 \
+	test/Letter.cpp		 \
+	test/Main.cpp		 \
+	test/TestNfasl.cpp	 \
+	test/TestSere.cpp	 \
+	test/ToolsZ3.cpp     \
+	$(SERE_SRCS)
 
 SRCS := $(SERE_SRCS) $(SERE_TESTS_SRCS)
 

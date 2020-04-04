@@ -1,5 +1,5 @@
-#ifndef TESTTOOLS_HPP
-#define TESTTOOLS_HPP
+#ifndef TOOLS_HPP
+#define TOOLS_HPP
 
 #include "catch2/catch.hpp"
 #include <vector>
@@ -40,4 +40,4 @@ std::set<T> set_of(size_t mn, size_t mx, std::function<T()> g) {
   return v;
 }
 
-#endif // TESTTOOLS_HPP
+#endif // TOOLS_HPP

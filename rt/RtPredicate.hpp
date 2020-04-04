@@ -1,5 +1,5 @@
-#ifndef RTP_HPP
-#define RTP_HPP
+#ifndef RTPREDICATE_HPP
+#define RTPREDICATE_HPP
 
 #include <cassert>
 #include <cstdint>
@@ -11,7 +11,7 @@
 
 class BoolExpr;
 
-namespace rtp {
+namespace rt {
   typedef uint16_t Offset;
   typedef boost::dynamic_bitset<> Names;
 
@@ -24,7 +24,7 @@ namespace rtp {
     Or = 5
   };
 
-  static constexpr uint32_t magic = 0xec342a4f;
+  // static constexpr uint32_t magic = 0xec342a4f;
 
   class Evaluator {
   public:
@@ -33,9 +33,9 @@ namespace rtp {
 
 
     bool eval() {
-      auto m = decltype(magic){0};
-      readValue(m);
-      assert(m == magic);
+      // auto m = decltype(magic){0};
+      // readValue(m);
+      // assert(m == magic);
       return eval0();
     }
 
@@ -82,8 +82,8 @@ namespace rtp {
     return Evaluator(names, data, len).eval();
   }
 
-  extern void toRTP(BoolExpr& expr,
-                    std::vector<uint8_t>& data);
+  extern void toRtPredicate(BoolExpr& expr,
+                            std::vector<uint8_t>& data);
 }
 
-#endif // RTP_HPP
+#endif // RTPREDICATE_HPP
