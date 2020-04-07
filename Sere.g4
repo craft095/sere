@@ -11,17 +11,19 @@ boolExpr : '(' boolExpr ')'                         # boolParens
           ;
 
 sereExpr : boolExpr                                 # sereBoolExpr
-/*          | '(' sereExpr ')'                        # sereParens
+          | '(' sereExpr ')'                        # sereParens
           | EPS                                     # sereEps
           | PERMUTE '(' (elements += sereExpr)
                     (',' elements += sereExpr)* ')' # serePermute
-          | sereExpr INTERSECTION sereExpr          # sereIntersection
-          | sereExpr UNION sereExpr                 # sereUnion
-          | sereExpr KLEENESTAR                     # sereKleenStar
-          | sereExpr KLEENEPLUS                     # sereKleenePlus
-          | sereExpr '{' begin = NUM
-                    (',' end = NUM)? '}'            # sereRange
-  */        ;
+          | lhs=sereExpr INTERSECTION rhs=sereExpr  # sereIntersection
+          | lhs=sereExpr UNION rhs=sereExpr         # sereUnion
+          | lhs=sereExpr CONCAT rhs=sereExpr        # sereConcat
+          | lhs=sereExpr FUSION rhs=sereExpr        # sereFusion
+          | arg=sereExpr KLEENESTAR                 # sereKleeneStar
+          | arg=sereExpr KLEENEPLUS                 # sereKleenePlus
+          | arg=sereExpr '{' begin = NUM
+                        (',' end = NUM)? '}'        # sereRange
+          ;
 
 BOOL_TRUE : 'true' ;
 BOOL_FALSE : 'false' ;
@@ -34,9 +36,10 @@ LBRACE : '{' ;
 RBRACE : '}' ;
 EPS : '()' ;
 PERMUTE : 'PERMUTE' ;
-INTERSECTION : ';' ;
-FUSION : ':' ;
+INTERSECTION : '&' ;
 UNION : '|' ;
+FUSION : ':' ;
+CONCAT : ';' ;
 KLEENESTAR : '[*]' ;
 KLEENEPLUS : '[+]' ;
 STRING      : '"' .*? '"' ;

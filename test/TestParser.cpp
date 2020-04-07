@@ -44,36 +44,30 @@ TEST_CASE("Parsre") {
     checkExpr(RE_AND(RE_VAR(0), RE_NOT(RE_VAR(1))),
               "var0 && !var1");
   }
-#if 0
-  SECTION("concat") {
-    CHECK(evalSere(*RE_CONCAT
-                   (RE_VAR(0),
-                    RE_VAR(1)),
-                   {}) == Match_Partial);
-    CHECK(evalSere(*RE_CONCAT
-                   (RE_VAR(0),
-                    RE_VAR(1)),
-                   {makeNames({0},{1}),makeNames({1},{0})}) == Match_Ok);
-    CHECK(evalSere(*RE_CONCAT
-                   (RE_VAR(0),
-                    RE_VAR(1)),
-                   {makeNames({0,1},{}),makeNames({0},{1})}) == Match_Failed);
-    CHECK(evalSere
-          (*RE_CONCAT
-           (RE_CONCAT
-            (RE_VAR(0),
-             RE_VAR(1)
-             ),
-            RE_VAR(0)),
-           {makeNames({0},{1})}) == Match_Partial);
-    CHECK(evalSere
-          (*RE_CONCAT
-           (RE_CONCAT
-            (RE_VAR(0),
-             RE_VAR(1)
-             ),
-            RE_VAR(0)),
-           {makeNames({0},{1}),makeNames({0},{1})}) == Match_Failed);
+  SECTION("sere") {
+    checkExpr(RE_CONCAT
+              (RE_VAR(0),
+               RE_VAR(1)),
+              "var0 ; var1");
+    checkExpr(RE_UNION
+              (RE_VAR(0),
+               RE_VAR(1)),
+              "var0 | var1");
+    checkExpr(RE_INTERSECT
+              (RE_VAR(0),
+               RE_VAR(1)),
+              "var0 & var1");
+    checkExpr(RE_UNION
+              (RE_VAR(0),
+               RE_VAR(1)),
+              "var0 | var1");
+    checkExpr(RE_UNION
+              (RE_VAR(0),
+               (RE_INTERSECT
+                (RE_VAR(0),
+                 RE_VAR(1)))),
+              "var0 | var0 & var1");
+    checkExpr(RE_STAR(RE_TRUE),
+              "true [*]");
   }
-#endif
 }
