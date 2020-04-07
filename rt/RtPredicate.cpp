@@ -41,6 +41,12 @@ namespace rt {
       v.getLhs()->accept(*this);
       v.getRhs()->accept(*this);
     }
+
+    void visit(BoolOr& v) override {
+      writeValue(rt::Code::Or);
+      v.getLhs()->accept(*this);
+      v.getRhs()->accept(*this);
+    }
   };
 
   void toRtPredicate(BoolExpr& expr,

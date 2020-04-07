@@ -35,6 +35,10 @@ public:
     calcBool(v);
   }
 
+  void visit(BoolOr& v) override {
+    calcBool(v);
+  }
+
   void visit(SereEmpty& ) override {
     if (word.empty()) {
       result = Match_Ok;
@@ -95,6 +99,40 @@ public:
     }
 
     result = r;
+  }
+
+  void visit(Fusion& v) override {
+    if (word.empty()) {
+      result = Match_Partial;
+      return;
+    }
+    Match r = Match_Failed;
+    for (size_t i = 1; i <= word.size(); ++i) {
+      Word lhsW(word.begin(), word.begin() + i);
+      Word rhsW(word.begin() + i - 1, word.end());
+
+      Match lhsR0 = eval(*v.getLhs(), lhsW);
+      Match rhsR0 = eval(*v.getRhs(), rhsW);
+
+      if (lhsR0 == Match_Ok && rhsR0 == Match_Ok) {
+        r = Match_Ok;
+        break;
+      }
+
+      if (lhsR0 == Match_Ok && rhsR0 == Match_Partial) {
+        r = Match_Partial;
+      }
+
+      if (lhsR0 == Match_Partial && rhsW.size() == 0) {
+        r = Match_Partial;
+      }
+    }
+
+    result = r;
+  }
+
+  void visit(KleenePlus& v) override {
+    result = eval(*RE_CONCAT(v.getArg(), RE_STAR(v.getArg())), word);
   }
 
   void visit(KleeneStar& v) override {

@@ -27,6 +27,33 @@ namespace parser {
   };
 
   /**
+   * Make all possible permutation form a given vector of expressions
+   *
+   * @param [in] us vector of expressions
+   * @returns union of all permutations
+   */
+  Ptr<SereExpr> permute(const std::vector<Ptr<SereExpr>>& us) {
+    if (us.empty()) {
+      return RE_EMPTY;
+    } else if (us.size() == 1) {
+      return us[0];
+    }
+
+    assert(us.size() >= 2);
+    Ptr<SereExpr> opt = nullptr;
+    for (size_t ix = 0; ix < us.size(); ix++) {
+      auto tail{us};
+      tail.erase(tail.begin() + ix);
+      auto alt = RE_CONCAT(us[ix], permute(tail));
+      if (opt == nullptr) {
+        opt = alt;
+      } else {
+        opt = RE_UNION(opt, alt);
+      }
+    }
+    return opt;
+  }
+  /**
    * Parse AST traversal class
    */
   class ExprCollector : public SereBaseVisitor {
@@ -69,7 +96,8 @@ namespace parser {
     virtual antlrcpp::Any visitSereFusion(SereParser::SereFusionContext *ctx) override {
       Ptr<SereExpr> lhs = visit(ctx->lhs);
       Ptr<SereExpr> rhs = visit(ctx->rhs);
-      return antlrcpp::Any {}; //RE_FUSION(lhs, rhs);
+      Ptr<SereExpr> result = RE_FUSION(lhs, rhs);
+      return result;
     }
 
     virtual antlrcpp::Any visitSereKleeneStar(SereParser::SereKleeneStarContext *ctx) override {
@@ -80,7 +108,8 @@ namespace parser {
 
     virtual antlrcpp::Any visitSereKleenePlus(SereParser::SereKleenePlusContext *ctx) override {
       Ptr<SereExpr> arg = visit(ctx->arg);
-      return antlrcpp::Any{}; //RE_PLUS(arg);
+      Ptr<SereExpr> result = RE_PLUS(arg);
+      return result;
     }
 
     virtual antlrcpp::Any visitSerePermute(SereParser::SerePermuteContext *ctx) override {
@@ -90,7 +119,10 @@ namespace parser {
         Ptr<SereExpr> expr = visit(e);
         es.push_back(expr);
       }
-      return antlrcpp::Any {}; // std::RE_PLUS(arg);
+
+      Ptr<SereExpr> result = permute(es);
+
+      return result;
     }
 
     virtual antlrcpp::Any visitSereRange(SereParser::SereRangeContext *ctx) override {
@@ -103,7 +135,29 @@ namespace parser {
       } else {
         end = begin;
       }
-      return antlrcpp::Any {};
+
+      Ptr<SereExpr> opt = nullptr;
+      for (size_t ix = 0; ix < begin; ++ix) {
+        if (opt == nullptr) {
+          opt = arg;
+        } else {
+          opt = RE_CONCAT(opt, arg);
+        }
+      }
+
+      // Combine results: opt;(1 + v;(1 + v))
+
+      Ptr<SereExpr> rhs = nullptr;
+      for (size_t ix = begin; ix < end; ++ix) {
+        if (rhs == nullptr) {
+          rhs = arg;
+        } else {
+          rhs = RE_CONCAT(arg, RE_UNION(RE_EMPTY, rhs));
+        }
+      }
+
+      Ptr<SereExpr> result = rhs == nullptr ? opt : RE_CONCAT(opt, rhs);
+      return result;
     }
 
     virtual antlrcpp::Any visitSereBoolExpr(SereParser::SereBoolExprContext *ctx) override {

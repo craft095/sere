@@ -38,6 +38,16 @@ public:
 
     expr = lhs && rhs;
   }
+
+  void visit(BoolOr& v) override {
+    v.getLhs()->accept(*this);
+    z3::expr lhs = expr;
+
+    v.getRhs()->accept(*this);
+    z3::expr rhs = expr;
+
+    expr = lhs || rhs;
+  }
 };
 
 z3::expr boolSereToZex(BoolExpr& be) {

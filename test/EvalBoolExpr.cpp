@@ -40,6 +40,18 @@ public:
 
     result = lhs && rhs;
   }
+
+  void visit(BoolOr& v) override {
+    bool lhs, rhs;
+
+    v.getLhs()->accept(*this);
+    lhs = result;
+
+    v.getRhs()->accept(*this);
+    rhs = result;
+
+    result = lhs || rhs;
+  }
 };
 
 bool evalBool(BoolExpr& expr, const rt::Names& letter) {

@@ -57,6 +57,11 @@ public:
     v.getLhs()->accept(*this);
     v.getRhs()->accept(*this);
   }
+
+  void visit(BoolOr& v) override {
+    v.getLhs()->accept(*this);
+    v.getRhs()->accept(*this);
+  }
 };
 
 std::set<VarName> boolExprGetAtomics(BoolExpr& expr) {
@@ -93,6 +98,10 @@ public:
     result = nfasl::phi(std::make_shared<BoolAnd>(v));
   }
 
+  void visit(BoolOr& v) override {
+    result = nfasl::phi(std::make_shared<BoolOr>(v));
+  }
+
   void visit(SereEmpty& ) override {
     result = nfasl::eps();
   }
@@ -118,10 +127,23 @@ public:
     result = nfasl::concat(lhs, rhs);
   }
 
+  void visit(Fusion& v) override {
+    Nfasl lhs = sereToNfasl(*v.getLhs());
+    Nfasl rhs = sereToNfasl(*v.getRhs());
+
+    result = nfasl::fuse(lhs, rhs);
+  }
+
   void visit(KleeneStar& v) override {
     Nfasl arg = sereToNfasl(*v.getArg());
 
     result = nfasl::kleeneStar(arg);
+  }
+
+  void visit(KleenePlus& v) override {
+    Nfasl arg = sereToNfasl(*v.getArg());
+
+    result = nfasl::kleenePlus(arg);
   }
 };
 
