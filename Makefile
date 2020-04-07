@@ -5,10 +5,14 @@ Z3LIB=$(Z3LIBPATH)/libz3.so
 AUTOCHECK=../autocheck/include
 CATCH2=../Catch2/single_include
 
+ANTLR4=/usr/local/include/antlr4-runtime
+
 # output binary
 BIN := sere_tests #nfasl_tests
 
 TESTS := sere_tests #nfasl_tests
+
+SERE_GRAMMAR := Sere.g4
 
 # source files
 SERE_SRCS :=        	\
@@ -17,7 +21,12 @@ SERE_SRCS :=        	\
 	rt/RtPredicate.cpp 	\
 	rt/RtNfasl.cpp	 	\
 	Nfasl.cpp       	\
-	BisimNfasl.cpp
+	BisimNfasl.cpp		\
+	Parser.cpp			\
+	$(OBJDIR)/SereBaseVisitor.cpp 	\
+	$(OBJDIR)/SereLexer.cpp			\
+	$(OBJDIR)/SereParser.cpp		\
+	$(OBJDIR)/SereVisitor.cpp
 
 SERE_TESTS_SRCS :=       \
 	test/EvalBoolExpr.cpp	 \
@@ -30,6 +39,7 @@ SERE_TESTS_SRCS :=       \
 	test/TestNfasl.cpp	 \
 	test/TestRtNfasl.cpp \
 	test/TestSere.cpp	 \
+	test/TestParser.cpp  \
 	test/ToolsZ3.cpp     \
 	$(SERE_SRCS)
 
@@ -68,16 +78,18 @@ TAR := tar
 # C flags
 CFLAGS :=
 # C++ flags
-CXXFLAGS :=  -std=c++17 -I. -I$(JSON) -I$(Z3)/src/api -I$(AUTOCHECK) -I$(CATCH2)
+CXXFLAGS :=  -std=c++17 -I. -I.o -I$(JSON) -I$(Z3)/src/api -I$(AUTOCHECK) -I$(CATCH2) -I$(ANTLR4)
 # C/C++ flags
-CPPFLAGS := -g -Wall -Wextra -pedantic  -lpthread
+CPPFLAGS := -g -Wall -Wextra -pedantic -Wno-attributes -lpthread
 # linker flags
 LDFLAGS :=
 
-LDLIBS := $(Z3LIB) -lgtest -lpthread -Wl,-rpath,$(Z3LIBPATH)
+LDLIBS := $(Z3LIB) -lgtest -lantlr4-runtime -lpthread -Wl,-rpath,$(Z3LIBPATH)
 # flags required for dependency generation; passed to compilers
 DEPFLAGS = -MT $@ -MD -MP -MF $(DEPDIR)/$*.Td
 
+# compile ANTLR4 source files
+COMPILE.g4 = antlr4 -Dlanguage=Cpp -package parser -no-listener -visitor -o $(OBJDIR)
 # compile C source files
 COMPILE.c = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) -c -o $@
 # compile C++ source files
@@ -122,6 +134,8 @@ gdb: $(BIN)
 help:
 	@echo available targets: all dist clean distclean install uninstall check
 
+Parser.cpp : $(OBJDIR)/SereParser.cpp
+
 sere_tests: $(SERE_TESTS_OBJS)
 	$(LINK.o) $^  $(LDLIBS)
 
@@ -139,6 +153,18 @@ $(OBJDIR)/%.o: %.cpp $(DEPDIR)/%.d
 	$(PRECOMPILE)
 	$(COMPILE.cc) $<
 	$(POSTCOMPILE)
+
+$(OBJDIR)/%.o: $(OBJDIR)/%.cpp
+$(OBJDIR)/%.o: $(OBJDIR)/%.cpp $(DEPDIR)/%.d
+	$(PRECOMPILE)
+	$(COMPILE.cc) $<
+	$(POSTCOMPILE)
+
+$(OBJDIR)/%Parser.cpp: %.g4
+$(OBJDIR)/%Parser.cpp: %.g4 $(DEPDIR)/%.d
+	$(PRECOMPILE)
+	$(COMPILE.g4) $<
+	#$(POSTCOMPILE)
 
 $(OBJDIR)/%.o: %.cc
 $(OBJDIR)/%.o: %.cc $(DEPDIR)/%.d
