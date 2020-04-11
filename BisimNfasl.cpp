@@ -3,6 +3,7 @@
 #include <optional>
 
 #include "Algo.hpp"
+#include "Cnf.hpp"
 #include "DAG.hpp"
 #include "Nfasl.hpp"
 #include "BisimNfasl.hpp"
@@ -65,7 +66,8 @@ namespace nfasl {
 
     for (State s = 0; s < nfasl.stateCount; ++s) {
       for (auto const& rule : nfasl.transitions[s]) {
-        if (satisfiable(boolSereToZex(*rule.phi))) {
+        //if (satisfiable(boolSereToZex(*rule.phi))) {
+        if (sat(*rule.phi)) {
           forward.arcs[s].insert(rule.state);
           backward.arcs[rule.state].insert(s);
         }
@@ -91,7 +93,8 @@ namespace nfasl {
     for (auto& trs : cleaned.transitions) {
       TransitionRules filtered_rules;
       for (auto& rule : trs) {
-        if (satisfiable(boolSereToZex(*rule.phi))) {
+        if (sat(*rule.phi)) {
+          //if (satisfiable(boolSereToZex(*rule.phi))) {
           filtered_rules.push_back(rule);
         }
       }
@@ -185,7 +188,8 @@ namespace nfasl {
 
               DqNotDr = RE_AND(delta(a, q, R), RE_NOT(delta(a, r, R)));
 
-              if (satisfiable(boolSereToZex(*DqNotDr))) {
+              //if (satisfiable(boolSereToZex(*DqNotDr))) {
+              if (sat(*DqNotDr)) {
                 found = true;
                 break;
               }
@@ -197,7 +201,8 @@ namespace nfasl {
           States D, B_dif_D;
 
           for (auto p : B) {
-            if (satisfiable(boolSereToZex(*RE_AND(delta(a, p, R), DqNotDr)))) {
+            //if (satisfiable(boolSereToZex(*RE_AND(delta(a, p, R), DqNotDr)))) {
+            if (sat(*RE_AND(delta(a, p, R), DqNotDr))) {
               D.insert(p);
             } else {
               B_dif_D.insert(p);

@@ -176,6 +176,7 @@ public:
   }
 
   const VarName& getName() const { return name; }
+  VarName& getNameRef() { return name; }
 };
 
 

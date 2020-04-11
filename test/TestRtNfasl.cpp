@@ -30,7 +30,6 @@ TEST_CASE("RtNfasl") {
   Match r0 = evalCleanNfasl(expr1, word0);
 
   rt::Nfasl rtNfasl;
-  extern void clean(const Nfasl& nfasl, Nfasl& cleaned);
   toRt(expr1, rtNfasl);
 
   Match r1 = evalRtNfasl(rtNfasl, word0);

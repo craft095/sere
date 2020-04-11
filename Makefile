@@ -17,6 +17,7 @@ SERE_GRAMMAR := Sere.g4
 # source files
 SERE_SRCS :=        	\
     Language.cpp    	\
+	Cnf.cpp          	\
 	Z3.cpp          	\
 	rt/RtPredicate.cpp 	\
 	rt/RtNfasl.cpp	 	\
@@ -84,7 +85,7 @@ CPPFLAGS := -g -Wall -Wextra -pedantic -Wno-attributes -lpthread
 # linker flags
 LDFLAGS :=
 
-LDLIBS := $(Z3LIB) -lgtest -lantlr4-runtime -lpthread -Wl,-rpath,$(Z3LIBPATH)
+LDLIBS := $(Z3LIB) -lgtest -lantlr4-runtime -lpthread -lminisat -Wl,-rpath,$(Z3LIBPATH)
 # flags required for dependency generation; passed to compilers
 DEPFLAGS = -MT $@ -MD -MP -MF $(DEPDIR)/$*.Td
 

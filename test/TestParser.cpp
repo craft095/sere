@@ -1,7 +1,74 @@
 #include "Parser.hpp"
+#include "Match.hpp"
+#include "Nfasl.hpp"
+#include "BisimNfasl.hpp"
+#include "rt/RtNfasl.hpp"
+#include "Tools.hpp"
+#include "Letter.hpp"
+#include "GenLetter.hpp"
+#include "EvalRtNfasl.hpp"
 
 #include <sstream>
 #include "catch2/catch.hpp"
+
+class RemapVars : public SereVisitor {
+  std::map<size_t, size_t> remap;
+public:
+  RemapVars (parser::ParseResult& self,
+             std::map<std::string, size_t> theirVars) {
+    REQUIRE(self.vars.size() == theirVars.size());
+
+    for (auto& i0 : self.vars) {
+      REQUIRE(theirVars.find(i0.first) != theirVars.end());
+      remap[i0.second] = theirVars[i0.first];
+    }
+
+    self.expr->accept(*this);
+  }
+
+  void visit(Variable& v) override {
+    size_t ix = v.getName().ix;
+    assert(remap.find(ix) != remap.end());
+    v.getNameRef().ix = remap[ix];
+  }
+  void visit(BoolValue& ) override {
+  }
+  void visit(BoolNot& v) override {
+    v.getArg()->accept(*this);
+  }
+  void visit(BoolAnd& v) override {
+    v.getLhs()->accept(*this);
+    v.getRhs()->accept(*this);
+  }
+  void visit(BoolOr& v) override {
+    v.getLhs()->accept(*this);
+    v.getRhs()->accept(*this);
+  }
+  void visit(SereEmpty& ) override {
+  }
+  void visit(Union& v) override {
+    v.getLhs()->accept(*this);
+    v.getRhs()->accept(*this);
+  }
+  void visit(Intersect& v) override {
+    v.getLhs()->accept(*this);
+    v.getRhs()->accept(*this);
+  }
+  void visit(Concat& v) override {
+    v.getLhs()->accept(*this);
+    v.getRhs()->accept(*this);
+  }
+  void visit(Fusion& v) override {
+    v.getLhs()->accept(*this);
+    v.getRhs()->accept(*this);
+  }
+  void visit(KleeneStar& v) override {
+    v.getArg()->accept(*this);
+  }
+  void visit(KleenePlus& v) override {
+    v.getArg()->accept(*this);
+  }
+};
 
 template <typename T>
 void checkAlt(Ptr<SereExpr> u, Ptr<SereExpr> v) {
@@ -19,16 +86,37 @@ void checkEquiv(Ptr<SereExpr> u, Ptr<SereExpr> v) {
   checkAlt<Intersect>(u,v);
   checkAlt<Concat>(u,v);
   checkAlt<KleeneStar>(u,v);
-  //checkAlt<KleenePlus>(u,v);
+  checkAlt<KleenePlus>(u,v);
 }
 
 void checkExpr(Ptr<SereExpr> expr0, const char* text) {
   std::istringstream stream(text);
-  Ptr<SereExpr> expr1 = parser::parse(stream);
+  Ptr<SereExpr> expr1 = parser::parse(stream).expr;
   checkEquiv(expr0, expr1);
 }
 
-TEST_CASE("Parsre") {
+void prepareExpr(Ptr<SereExpr> expr, rt::Nfasl& rtNfasl) {
+  nfasl::Nfasl expr0 = sereToNfasl(*expr);
+  nfasl::Nfasl expr1;
+  nfasl::clean(expr0, expr1);
+  toRt(expr1, rtNfasl);
+}
+
+void prepareExprs(const char* u, const char* v, rt::Nfasl& rtNfasl0, rt::Nfasl& rtNfasl1) {
+  std::istringstream stream0(u);
+  parser::ParseResult r0 = parser::parse(stream0);
+  std::istringstream stream1(v);
+  parser::ParseResult r1 = parser::parse(stream1);
+
+  REQUIRE(r0.vars.size() == r1.vars.size());
+
+  RemapVars remapper{r1, r0.vars};
+
+  prepareExpr(r0.expr, rtNfasl0);
+  prepareExpr(r1.expr, rtNfasl1);
+}
+
+TEST_CASE("Parser") {
   SECTION("empty") {
     checkExpr(RE_EMPTY, "()");
   }
@@ -71,3 +159,35 @@ TEST_CASE("Parsre") {
               "true [*]");
   }
 }
+
+#define COMPARE_EXPRS(u, v)                                           \
+  {                                                                   \
+  rt::Nfasl rtNfasl0, rtNfasl1;                                       \
+  prepareExprs(u, v, rtNfasl0, rtNfasl1);                             \
+                                                                      \
+  auto atoms = rtNfasl0.atomicCount;                                  \
+  auto word0 = GENERATE_COPY(                                         \
+                         Catch2::take(100, genWord(atoms, 0, 8)));    \
+  Match res0 = evalRtNfasl(rtNfasl0, word0);                          \
+  Match res1 = evalRtNfasl(rtNfasl1, word0);                          \
+                                                                      \
+  CHECK(res0 == res1);                                                \
+  }
+
+TEST_CASE("Parser Transforms: PERMUTE0") { COMPARE_EXPRS("PERMUTE(a)", "a"); }
+TEST_CASE("Parser Transforms: PERMUTE1") { COMPARE_EXPRS("PERMUTE(a,b)", "(a;b) | (b;a)"); }
+// TEST_CASE("Parser Transforms: PERMUTE2") { COMPARE_EXPRS("PERMUTE(a,b,c)",
+//                                                          "(a;b;c) | (a;c;b) | (b;a;c) |"
+//                                                          "(b;c;a) | (c;a;b) | (c;b;a)"); }
+
+#if 0
+TEST_CASE("Parser Transforms") {
+  SECTION("permute0") {
+    COMPARE_EXPRS("PERMUTE(a)", "a");
+    COMPARE_EXPRS("PERMUTE(a,b)", "(a;b) | (b;a)");
+    COMPARE_EXPRS("PERMUTE(a,b,c)",
+                  "(a;b;c) | (a;c;b) | (b;a;c) |"
+                  "(b;c;a) | (c;a;b) | (c;b;a)" );
+  }
+}
+#endif

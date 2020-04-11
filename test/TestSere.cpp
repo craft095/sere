@@ -6,6 +6,7 @@
 #include "EvalSere.hpp"
 #include "EvalNfasl.hpp"
 
+#include "Cnf.hpp"
 #include "Tools.hpp"
 #include "ToolsZ3.hpp"
 
@@ -63,18 +64,31 @@ TEST_CASE("Sere") {
 
 TEST_CASE("Bool Expressions") {
   constexpr size_t atoms = 3;
-  auto expr = GENERATE(Catch2::take(10, genBoolExpr(3, atoms)));
-  auto letter = GENERATE(Catch2::take(10, genLetter(atoms)));
 
-  SECTION("Z3") {
-    CHECK(evalBool(*expr, letter) == evalBoolZ3(*expr, letter));
-  }
+  CHECK(!sat(*RE_AND(
+                     RE_VAR(0),
+                     RE_NOT(RE_VAR(0)))));
 
-  SECTION("RtPredicate") {
-    std::vector<uint8_t> data;
-    rt::toRtPredicate(*expr, data);
-    CHECK(evalBool(*expr, letter) == rt::eval(letter, &data[0], data.size()));
+  auto expr = GENERATE(Catch2::take(100, genBoolExpr(3, atoms)));
+
+  SECTION("Minisat") {
+    CHECK(sat(*expr) == satisfiable(boolSereToZex(*expr)));
   }
+#if 0
+  {
+    auto letter = GENERATE(Catch2::take(10, genLetter(atoms)));
+
+    SECTION("Z3") {
+      CHECK(evalBool(*expr, letter) == evalBoolZ3(*expr, letter));
+    }
+
+    SECTION("RtPredicate") {
+      std::vector<uint8_t> data;
+      rt::toRtPredicate(*expr, data);
+      CHECK(evalBool(*expr, letter) == rt::eval(letter, &data[0], data.size()));
+    }
+  }
+#endif
 }
 
 TEST_CASE("Sere vs Nfasl") {

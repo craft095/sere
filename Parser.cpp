@@ -59,6 +59,8 @@ namespace parser {
   class ExprCollector : public SereBaseVisitor {
     std::map<std::string, size_t> vars;
   public:
+    std::map<std::string, size_t> getVars() const { return vars; }
+
     virtual antlrcpp::Any visitSere(SereParser::SereContext *ctx) override {
       return visit(ctx->sereExpr());
     }
@@ -211,7 +213,7 @@ namespace parser {
    * @throws std::invalid_argument if parse/scan errors occur
    */
 
-  Ptr<SereExpr> parse(std::istream& stream) {
+  ParseResult parse(std::istream& stream) {
     ANTLRInputStream input(stream);
     SereLexer lexer(&input);
     CommonTokenStream tokens(&lexer);
@@ -221,9 +223,11 @@ namespace parser {
     parser.addErrorListener(&errorListner);
     SereParser::SereContext* tree = parser.sere();
     ExprCollector visitor;
-    Ptr<SereExpr> expr = visitor.visitSere(tree);
+    ParseResult result;
+    result.expr = visitor.visitSere(tree);
+    result.vars = visitor.getVars();
 
-    return expr;
+    return result;
   }
 
 } // namespace parser
