@@ -114,6 +114,23 @@ namespace parser {
       return result;
     }
 
+    virtual antlrcpp::Any visitSerePartial(SereParser::SerePartialContext *ctx) override {
+      Ptr<SereExpr> arg = visit(ctx->arg);
+      Ptr<SereExpr> result = RE_PARTIAL(arg);
+      return result;
+    }
+
+    virtual antlrcpp::Any visitSereAbort(SereParser::SereAbortContext *ctx) override {
+      Ptr<SereExpr> arg = visit(ctx->arg);
+      Ptr<SereExpr> err = visit(ctx->err);
+      Ptr<SereExpr> result =
+        RE_UNION(
+                 RE_CONCAT(RE_PARTIAL(arg), err),
+                 arg);
+
+      return result;
+    }
+
     virtual antlrcpp::Any visitSerePermute(SereParser::SerePermuteContext *ctx) override {
       std::vector<Ptr<SereExpr>> es;
       es.reserve(ctx->elements.size());

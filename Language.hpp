@@ -45,6 +45,7 @@ class Concat;
 class Fusion;
 class KleeneStar;
 class KleenePlus;
+class Partial;
 
 template <typename T>
 using Ptr = std::shared_ptr<T>;
@@ -68,6 +69,7 @@ public:
   virtual void visit(Fusion& v) = 0;
   virtual void visit(KleeneStar& v) = 0;
   virtual void visit(KleenePlus& v) = 0;
+  virtual void visit(Partial& v) = 0;
 };
 
 class SereExpr {
@@ -300,6 +302,22 @@ public:
   Ptr<SereExpr> getArg() const { return arg; }
 };
 
+class Partial : public SereExpr {
+private:
+  SereChildPtr arg;
+
+public:
+  Partial(const Located& loc, SereChildPtr arg_) : SereExpr(loc), arg(arg_) {}
+
+  void accept(SereVisitor& v) override { v.visit(*this); }
+
+  const String pretty() const override {
+    return (boost::format("PARTIAL(%1%)") % arg->pretty()).str();
+  }
+
+  Ptr<SereExpr> getArg() const { return arg; }
+};
+
 namespace nfasl {
   class Nfasl;
 }
@@ -322,6 +340,7 @@ extern nfasl::Nfasl sereToNfasl(SereExpr& expr);
 //#define RE_PERMUTE(us) std::make_shared<Fusion>(RE_LOC, us)
 #define RE_STAR(u) std::make_shared<KleeneStar>(RE_LOC, u)
 #define RE_PLUS(u) std::make_shared<KleenePlus>(RE_LOC, u)
+#define RE_PARTIAL(u) std::make_shared<Partial>(RE_LOC, u)
 //#define RE_RANGE(u,mn,mx) std::make_shared<ConcatRange>(RE_LOC, u, mn, mx)
 
 #endif // LANGUAGE_HPP

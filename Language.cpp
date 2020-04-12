@@ -145,6 +145,12 @@ public:
 
     result = nfasl::kleenePlus(arg);
   }
+
+  void visit(Partial& v) override {
+    Nfasl arg = sereToNfasl(*v.getArg());
+
+    result = nfasl::partial(arg);
+  }
 };
 
 Nfasl sereToNfasl(SereExpr& expr) {

@@ -68,6 +68,9 @@ public:
   void visit(KleenePlus& v) override {
     v.getArg()->accept(*this);
   }
+  void visit(Partial& v) override {
+    v.getArg()->accept(*this);
+  }
 };
 
 template <typename T>
@@ -194,4 +197,8 @@ TEST_CASE("Parser Transforms: RANGES") {
   COMPARE_EXPRS("a{1,1}", "a");
   COMPARE_EXPRS("a{0,2}", "() | a | (a;a)");
   COMPARE_EXPRS("a{2,5}", "(a;a) | (a;a;a) | (a;a;a;a) | (a;a;a;a;a)");
+}
+
+TEST_CASE("Parser Transforms: ABORT") {
+  COMPARE_EXPRS("ABORT(!a|b,c)", "(PARTIAL(!a|b) ; c) | (!a|b)");
 }

@@ -87,7 +87,7 @@ TEST_CASE("Nfasl, operations") {
   SECTION("clean") {
     Nfasl cleaned;
     clean(*expr0, cleaned);
-    Match r1 = evalNfasl(cleaned, word0);
+    Match r1 = evalCleanNfasl(cleaned, word0);
     // *expr may conatin partial execution traces
     // which have no chance to succeed, because
     // final states are not always reachable.
@@ -96,6 +96,16 @@ TEST_CASE("Nfasl, operations") {
       CHECK(r1 != Match_Ok);
     } else {
       CHECK(r0 == r1);
+    }
+
+    SECTION("partial") {
+      Nfasl part = partial(cleaned);
+      Match r2 = evalCleanNfasl(part, word0);
+      if (r1 == Match_Failed) {
+        CHECK(r2 == Match_Failed);
+      } else {
+        CHECK(r2 == Match_Ok);
+      }
     }
   }
 

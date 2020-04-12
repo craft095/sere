@@ -47,6 +47,7 @@ namespace nfasl {
   extern Nfasl fuse(const Nfasl& a0, const Nfasl& a1);
   extern Nfasl kleeneStar(const Nfasl& a0);
   extern Nfasl kleenePlus(const Nfasl& a0);
+  extern Nfasl partial(const Nfasl& a0);
 
   extern void to_json(json& j, const Nfasl& a);
   extern std::string pretty(const Nfasl& a);

@@ -13,6 +13,9 @@ boolExpr : '(' boolExpr ')'                         # boolParens
 sereExpr : boolExpr                                 # sereBoolExpr
           | '(' sereExpr ')'                        # sereParens
           | EPS                                     # sereEps
+          | PARTIAL '(' arg=sereExpr ')'            # serePartial
+          | ABORT '(' arg=sereExpr
+                  ',' err=sereExpr ')'              # sereAbort
           | PERMUTE '(' (elements += sereExpr)
                     (',' elements += sereExpr)* ')' # serePermute
           | arg=sereExpr KLEENESTAR                 # sereKleeneStar
@@ -37,6 +40,8 @@ RPAREN : ')' ;
 LBRACE : '{' ;
 RBRACE : '}' ;
 EPS : '()' ;
+ABORT : 'ABORT' ;
+PARTIAL : 'PARTIAL' ;
 PERMUTE : 'PERMUTE' ;
 INTERSECTION : '&' ;
 UNION : '|' ;

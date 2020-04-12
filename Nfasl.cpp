@@ -6,6 +6,7 @@
 #include "Z3.hpp"
 #include "rt/RtPredicate.hpp"
 #include "Nfasl.hpp"
+#include "BisimNfasl.hpp"
 #include "rt/RtNfasl.hpp"
 #include "Algo.hpp"
 
@@ -267,6 +268,26 @@ namespace nfasl {
       }
     }
 
+    return a;
+  }
+
+  /**
+   * `Partial` makes every state as final,
+   * But "every" means only reachable from initial
+   * _and_ from which finals are reachable.
+   * So it is easier to clean automaton first.
+   */
+  Nfasl partial(const Nfasl& a0) {
+    Nfasl a;
+    clean(a0, a);
+
+    if (a.finals.empty()) {
+      return a;
+    }
+
+    for (State q = 0; q < a.stateCount; ++q) {
+      a.finals.insert(q);
+    }
     return a;
   }
 

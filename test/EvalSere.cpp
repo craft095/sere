@@ -167,6 +167,19 @@ public:
     result = r;
   }
 
+  /**
+   * `Partial` turns any partial result into OK.
+   * But this evaluator can yield partial match even for
+   * words which have no matched continuation (because of
+   * not all states have route to finals).
+   * This means that `partial` can make the evaluator
+   * almost completely useless as it start to return
+   * OK for failing words.
+   */
+  void visit(Partial& v) override {
+    result = eval(*RE_CONCAT(v.getArg(), RE_STAR(v.getArg())), word);
+  }
+
   static Match eval(SereExpr& expr, const Word& word) {
     return EvalSere(expr, word).getResult();
   }
