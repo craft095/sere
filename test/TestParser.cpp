@@ -166,28 +166,32 @@ TEST_CASE("Parser") {
   prepareExprs(u, v, rtNfasl0, rtNfasl1);                             \
                                                                       \
   auto atoms = rtNfasl0.atomicCount;                                  \
-  auto word0 = GENERATE_COPY(                                         \
-                         Catch2::take(100, genWord(atoms, 0, 8)));    \
-  Match res0 = evalRtNfasl(rtNfasl0, word0);                          \
-  Match res1 = evalRtNfasl(rtNfasl1, word0);                          \
+  for (size_t cnt = 0; cnt < 100; ++cnt) {                            \
+    auto word0 = WordGenerator::make(atoms, 0, 8);                    \
+    Match res0 = evalRtNfasl(rtNfasl0, word0);                        \
+    Match res1 = evalRtNfasl(rtNfasl1, word0);                        \
                                                                       \
-  CHECK(res0 == res1);                                                \
+    CHECK(res0 == res1);                                              \
+  }                                                                   \
   }
 
-TEST_CASE("Parser Transforms: PERMUTE0") { COMPARE_EXPRS("PERMUTE(a)", "a"); }
-TEST_CASE("Parser Transforms: PERMUTE1") { COMPARE_EXPRS("PERMUTE(a,b)", "(a;b) | (b;a)"); }
-// TEST_CASE("Parser Transforms: PERMUTE2") { COMPARE_EXPRS("PERMUTE(a,b,c)",
-//                                                          "(a;b;c) | (a;c;b) | (b;a;c) |"
-//                                                          "(b;c;a) | (c;a;b) | (c;b;a)"); }
-
-#if 0
-TEST_CASE("Parser Transforms") {
-  SECTION("permute0") {
-    COMPARE_EXPRS("PERMUTE(a)", "a");
-    COMPARE_EXPRS("PERMUTE(a,b)", "(a;b) | (b;a)");
-    COMPARE_EXPRS("PERMUTE(a,b,c)",
-                  "(a;b;c) | (a;c;b) | (b;a;c) |"
-                  "(b;c;a) | (c;a;b) | (c;b;a)" );
-  }
+TEST_CASE("Parser Transforms: PERMUTE") {
+  COMPARE_EXPRS("PERMUTE(a)", "a");
+  COMPARE_EXPRS("PERMUTE(a,b)", "(a;b) | (b;a)");
+  COMPARE_EXPRS("PERMUTE(a,b,c)",
+                "(a;b;c) | (a;c;b) | (b;a;c) |"
+                "(b;c;a) | (c;a;b) | (c;b;a)" );
 }
-#endif
+
+TEST_CASE("Parser Transforms: RANGES") {
+  COMPARE_EXPRS("a{0}", "()");
+  COMPARE_EXPRS("a{1}", "a");
+  COMPARE_EXPRS("a{3}", "a;a;a");
+  COMPARE_EXPRS("(a|b){0,}", "(a|b)[*]");
+  COMPARE_EXPRS("(a|b){3,}", "(a|b);(a|b);(a|b)[+]");
+  COMPARE_EXPRS("a{0,0}", "()");
+  COMPARE_EXPRS("a{0,1}", "() | a");
+  COMPARE_EXPRS("a{1,1}", "a");
+  COMPARE_EXPRS("a{0,2}", "() | a | (a;a)");
+  COMPARE_EXPRS("a{2,5}", "(a;a) | (a;a;a) | (a;a;a;a) | (a;a;a;a;a)");
+}

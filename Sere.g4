@@ -15,14 +15,16 @@ sereExpr : boolExpr                                 # sereBoolExpr
           | EPS                                     # sereEps
           | PERMUTE '(' (elements += sereExpr)
                     (',' elements += sereExpr)* ')' # serePermute
+          | arg=sereExpr KLEENESTAR                 # sereKleeneStar
+          | arg=sereExpr KLEENEPLUS                 # sereKleenePlus
+          | arg=sereExpr '{' begin = NUM
+                         ',' end = NUM '}'          # sereFullRange
+          | arg=sereExpr '{' begin = NUM ',' '}'    # sereMinRange
+          | arg=sereExpr '{' count = NUM '}'        # sereSingleRange
           | lhs=sereExpr INTERSECTION rhs=sereExpr  # sereIntersection
           | lhs=sereExpr UNION rhs=sereExpr         # sereUnion
           | lhs=sereExpr CONCAT rhs=sereExpr        # sereConcat
           | lhs=sereExpr FUSION rhs=sereExpr        # sereFusion
-          | arg=sereExpr KLEENESTAR                 # sereKleeneStar
-          | arg=sereExpr KLEENEPLUS                 # sereKleenePlus
-          | arg=sereExpr '{' begin = NUM
-                        (',' end = NUM)? '}'        # sereRange
           ;
 
 BOOL_TRUE : 'true' ;
@@ -45,6 +47,4 @@ KLEENEPLUS : '[+]' ;
 STRING      : '"' .*? '"' ;
 NUM         : [0-9]+ ;
 NAME        :  [a-zA-Z][a-zA-Z0-9\-_]* ;
-NEWLINE     : ('\r'? '\n' | '\r')+ ;
-TAB         : ('\t' | '        ' | '    ' ) ;
-WHITESPACE  : ' ' -> skip ;
+WHITESPACE  : [ \r\n\t] -> skip ;

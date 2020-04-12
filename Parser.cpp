@@ -127,16 +127,17 @@ namespace parser {
       return result;
     }
 
-    virtual antlrcpp::Any visitSereRange(SereParser::SereRangeContext *ctx) override {
-      Ptr<SereExpr> arg = visit(ctx->arg);
+    virtual antlrcpp::Any visitSereFullRange(SereParser::SereFullRangeContext *ctx) override {
       assert(ctx->begin != nullptr);
+      assert(ctx->end != nullptr);
       size_t begin = std::stoi(ctx->begin->getText());
-      size_t end;
-      if (ctx->end != nullptr) {
-        end = std::stoi(ctx->end->getText());
-      } else {
-        end = begin;
+      size_t end = std::stoi(ctx->end->getText());
+
+      if (begin == 0 && end == 0) {
+        return Ptr<SereExpr>{RE_EMPTY};
       }
+
+      Ptr<SereExpr> arg = visit(ctx->arg);
 
       Ptr<SereExpr> opt = nullptr;
       for (size_t ix = 0; ix < begin; ++ix) {
@@ -152,14 +153,59 @@ namespace parser {
       Ptr<SereExpr> rhs = nullptr;
       for (size_t ix = begin; ix < end; ++ix) {
         if (rhs == nullptr) {
-          rhs = arg;
+          rhs = RE_UNION(RE_EMPTY, arg);
         } else {
-          rhs = RE_CONCAT(arg, RE_UNION(RE_EMPTY, rhs));
+          rhs = RE_UNION(RE_EMPTY, RE_CONCAT(arg, rhs));
         }
       }
 
-      Ptr<SereExpr> result = rhs == nullptr ? opt : RE_CONCAT(opt, rhs);
+      Ptr<SereExpr> result =
+        rhs == nullptr
+        ? (opt == nullptr
+           ? RE_EMPTY
+           : opt)
+        : (opt == nullptr
+           ? rhs
+           : RE_CONCAT(opt, rhs));
       return result;
+    }
+
+    virtual antlrcpp::Any visitSereMinRange(SereParser::SereMinRangeContext *ctx) override {
+      Ptr<SereExpr> arg = visit(ctx->arg);
+      assert(ctx->begin != nullptr);
+      size_t begin = std::stoi(ctx->begin->getText());
+
+      switch (begin) {
+      case 0: return Ptr<SereExpr>{RE_STAR(arg)};
+      case 1: return Ptr<SereExpr>{RE_PLUS(arg)};
+      }
+      Ptr<SereExpr> opt = arg;
+      for (size_t ix = 1; ix < begin; ++ix) {
+        opt = RE_CONCAT(opt, arg);
+      }
+      opt = RE_CONCAT(opt, RE_STAR(arg));
+      return opt;
+    }
+
+    virtual antlrcpp::Any visitSereSingleRange(SereParser::SereSingleRangeContext *ctx) override {
+      assert(ctx->count != nullptr);
+      size_t count = std::stoi(ctx->count->getText());
+
+      if (count == 0) {
+        return Ptr<SereExpr>{RE_EMPTY};
+      }
+
+      // traverse the expression only if it is not discarded
+      Ptr<SereExpr> arg = visit(ctx->arg);
+
+      if (count == 1) {
+        return arg;
+      }
+      Ptr<SereExpr> opt = arg;
+      for (size_t ix = 1; ix < count; ++ix) {
+        opt = RE_CONCAT(opt, arg);
+      }
+      return opt;
     }
 
     virtual antlrcpp::Any visitSereBoolExpr(SereParser::SereBoolExprContext *ctx) override {
