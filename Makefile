@@ -17,6 +17,7 @@ SERE_GRAMMAR := Sere.g4
 # source files
 SERE_SRCS :=        	\
     Language.cpp    	\
+	BoolExpr.cpp            \
 	Cnf.cpp          	\
 	Z3.cpp          	\
 	rt/RtPredicate.cpp 	\
