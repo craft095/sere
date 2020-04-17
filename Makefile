@@ -32,6 +32,7 @@ SERE_SRCS :=        	\
 
 SERE_TESTS_SRCS :=       \
 	test/EvalBoolExpr.cpp	 \
+	test/EvalExpr.cpp	 \
 	test/EvalNfasl.cpp	 \
 	test/EvalRtNfasl.cpp \
 	test/EvalSere.cpp	 \

@@ -1,4 +1,4 @@
-#include "EvalBoolExpr.hpp"
+#include "EvalExpr.hpp"
 #include "EvalNfasl.hpp"
 
 #include "Algo.hpp"
@@ -23,7 +23,7 @@ Match evalNfasl(const Nfasl& a, const Word& word) {
     next.clear();
     for (auto const& s : curr) {
       for (auto const& rule : a.transitions[s]) {
-        if (evalBool(*rule.phi, letter)) {
+        if (evalBool(rule.phi, letter)) {
           next.insert(rule.state);
         }
       }

@@ -16,12 +16,11 @@ using namespace nfasl;
 
 TEST_CASE("Nfasl") {
   State s0{0}, s1{1};
-  TransitionRule r00 = { RE_VAR(0),
+  TransitionRule r00 = { Predicate::var(0),
                          s1 };
-  TransitionRule r10 = { RE_NOT(RE_VAR(1)),
+  TransitionRule r10 = { !Predicate::var(1),
                          s0 };
   Nfasl a = {
-    { {0}, {1} },
     2,  // atomic count
     2,  // state count
     s0, // initial
@@ -37,16 +36,15 @@ TEST_CASE("Nfasl") {
 
 TEST_CASE("Nfasl, minimal") {
   State s0{0}, s1{1}, s2{2}, s3{3}, s4{4};
-  TransitionRule r01 = { RE_VAR(0),
+  TransitionRule r01 = { Predicate::var(0),
                          s1 };
-  TransitionRule r03 = { RE_VAR(0),
+  TransitionRule r03 = { Predicate::var(0),
                          s3 };
-  TransitionRule r12 = { RE_NOT(RE_VAR(1)),
+  TransitionRule r12 = { !Predicate::var(1),
                          s2 };
-  TransitionRule r34 = { RE_NOT(RE_VAR(1)),
+  TransitionRule r34 = { !Predicate::var(1),
                          s4 };
   Nfasl a = {
-    { {0}, {1} },
     2,  // atomic count
     5,  // state count
     s0, // initial

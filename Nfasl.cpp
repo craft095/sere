@@ -18,12 +18,11 @@ namespace nfasl {
   }
 
   static void to_json(json& j, const TransitionRule& p) {
-    j = json{{"phi", p.phi->pretty()}, {"state", p.state}};
+    j = json{{"phi", p.phi.pretty()}, {"state", p.state}};
   }
 
   void to_json(json& j, const Nfasl& a) {
     j = json{
-      // {"atomics",     a.atomics},
       {"atomicCount", a.atomicCount},
       {"stateCount",  a.stateCount},
       {"initial",     a.initial},
@@ -49,21 +48,12 @@ namespace nfasl {
     return a;
   }
 
-  Nfasl phi(Ptr<BoolExpr> expr) {
+  Nfasl phi(Predicate expr) {
     Nfasl a;
     constexpr State ini = 0;
     constexpr State fin = 1;
 
-    std::set<VarName> vars = boolExprGetAtomics(*expr);
-    size_t atomicCount = 0;
-    for (auto const& var : vars) {
-      atomicCount = std::max(atomicCount, var.ix + 1);
-    }
-    for (size_t i = 0; i < atomicCount; ++i) {
-      a.atomics.insert(make_varName(i));
-    }
-
-    a.atomicCount = a.atomics.size();
+    a.atomicCount = expr.var_count();
     a.stateCount = 2;
     a.initial = ini;
     a.finals.insert(fin);
@@ -75,8 +65,7 @@ namespace nfasl {
 
   Nfasl intersects(const Nfasl& a0, const Nfasl& a1) {
     Nfasl a;
-    a.atomics = set_unions(a0.atomics, a1.atomics);
-    a.atomicCount = a.atomics.size();
+    a.atomicCount = std::max(a0.atomicCount, a1.atomicCount);
     a.stateCount = a0.stateCount * a1.stateCount;
 
     std::function<State(State,State)> remap = [a1](State s0, State s1) { return s0*a1.stateCount + s1; };
@@ -88,7 +77,8 @@ namespace nfasl {
       for (State s1 = 0; s1 < a1.stateCount; ++s1) {
         for (auto const& rule0 : a0.transitions[s0]) {
           for (auto const& rule1 : a1.transitions[s1]) {
-            TransitionRule rule = { RE_AND(rule0.phi, rule1.phi), remap(rule0.state, rule1.state) };
+            TransitionRule rule = { rule0.phi && rule1.phi,
+                                    remap(rule0.state, rule1.state) };
             a.transitions[remap(s0,s1)].push_back(rule);
           }
         }
@@ -99,8 +89,7 @@ namespace nfasl {
 
   Nfasl unions(const Nfasl& a0, const Nfasl& a1) {
     Nfasl a;
-    a.atomics = set_unions(a0.atomics, a1.atomics);
-    a.atomicCount = a.atomics.size();
+    a.atomicCount = std::max(a0.atomicCount, a1.atomicCount);
     a.stateCount = a0.stateCount + a1.stateCount + 1;
 
     auto remap0 = [](State s0) { return s0; };
@@ -142,8 +131,7 @@ namespace nfasl {
 
   Nfasl concat(const Nfasl& a0, const Nfasl& a1) {
     Nfasl a;
-    a.atomics = set_unions(a0.atomics, a1.atomics);
-    a.atomicCount = a.atomics.size();
+    a.atomicCount = std::max(a0.atomicCount, a1.atomicCount);
     a.stateCount = a0.stateCount + a1.stateCount;
 
     auto remap0 = [](State s0) { return s0; };
@@ -184,8 +172,7 @@ namespace nfasl {
 
   Nfasl fuse(const Nfasl& a0, const Nfasl& a1) {
     Nfasl a;
-    a.atomics = set_unions(a0.atomics, a1.atomics);
-    a.atomicCount = a.atomics.size();
+    a.atomicCount = std::max(a0.atomicCount, a1.atomicCount);
     a.stateCount = a0.stateCount + a1.stateCount;
 
     auto remap0 = [](State s0) { return s0; };
@@ -208,7 +195,8 @@ namespace nfasl {
         // from a1
         if (set_member(a0.finals, rule.state)) {
           for (auto const& rule1 : a1.transitions[a1.initial]) {
-            a.transitions[remap0(s0)].push_back({ RE_AND(rule.phi, rule1.phi), remap1(rule1.state) });
+            a.transitions[remap0(s0)].push_back({ rule.phi && rule1.phi,
+                                                  remap1(rule1.state) });
           }
 
         }
@@ -226,8 +214,7 @@ namespace nfasl {
 
   Nfasl kleeneStar(const Nfasl& a0) {
     Nfasl a;
-    a.atomics = a0.atomics;
-    a.atomicCount = a.atomics.size();
+    a.atomicCount = a0.atomicCount;
     a.stateCount = a0.stateCount;
 
     a.initial = a0.initial;
@@ -250,8 +237,7 @@ namespace nfasl {
 
   Nfasl kleenePlus(const Nfasl& a0) {
     Nfasl a;
-    a.atomics = a0.atomics;
-    a.atomicCount = a.atomics.size();
+    a.atomicCount = a0.atomicCount;
     a.stateCount = a0.stateCount;
 
     a.initial = a0.initial;
@@ -306,7 +292,7 @@ namespace nfasl {
       v.transitions[q].resize(uT.size());
       auto vRule = v.transitions[q].begin();
       for (auto& rule : uT) {
-        rt::toRtPredicate(*rule.phi, vRule->phi);
+        rt::toRtPredicate(rule.phi, vRule->phi);
         vRule->state = rule.state;
         ++vRule;
       }

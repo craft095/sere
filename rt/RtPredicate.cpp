@@ -1,13 +1,13 @@
 #include "RtPredicate.hpp"
 
 namespace rt {
-  class FromBoolExpr : public BoolVisitor {
+  class FromBoolExpr {
   private:
     std::vector<uint8_t> data;
   public:
-    FromBoolExpr(BoolExpr& expr) {
+    FromBoolExpr(expr::Expr expr) {
       // writeValue(rt::magic);
-      expr.accept(*this);
+      write(expr);
     }
 
     template <typename T>
@@ -18,41 +18,50 @@ namespace rt {
 
     const std::vector<uint8_t>& getData() const { return data; }
 
-    void visit(Variable& v) override {
-      writeValue(rt::Code::Name);
-      writeValue(static_cast<rt::Offset>(v.getName().ix));
-    }
+    void write(expr::Expr expr) {
+      bool tf;
+      uint32_t v;
+      expr::Expr lhs, rhs;
 
-    void visit(BoolValue& v) override {
-      if (v.getValue()) {
-        writeValue(rt::Code::True);
-      } else {
-        writeValue(rt::Code::False);
+      if (expr.get_value(tf)) {
+        writeValue(tf ? rt::Code::True : rt::Code::False);
+        return;
       }
-    }
-
-    void visit(BoolNot& v) override {
-      writeValue(rt::Code::Not);
-      v.getArg()->accept(*this);
-    }
-
-    void visit(BoolAnd& v) override {
-      writeValue(rt::Code::And);
-      v.getLhs()->accept(*this);
-      v.getRhs()->accept(*this);
-    }
-
-    void visit(BoolOr& v) override {
-      writeValue(rt::Code::Or);
-      v.getLhs()->accept(*this);
-      v.getRhs()->accept(*this);
+      if (expr.get_var(v)) {
+        writeValue(rt::Code::Name);
+        writeValue(static_cast<rt::Offset>(v));
+        return;
+      }
+      if (expr.not_arg(lhs)) {
+        writeValue(rt::Code::Not);
+        write(lhs);
+        return;
+      }
+      if (expr.and_args(lhs, rhs)) {
+        writeValue(rt::Code::And);
+        write(lhs);
+        write(rhs);
+        return;
+      }
+      if (expr.or_args(lhs, rhs)) {
+        writeValue(rt::Code::Or);
+        write(lhs);
+        write(rhs);
+        return;
+      }
+      assert(false); // unreachable code
     }
   };
 
-  void toRtPredicate(BoolExpr& expr,
+  void toRtPredicate(expr::Expr expr,
                      std::vector<uint8_t>& data) {
     FromBoolExpr be{expr};
     data = be.getData();
+  }
+
+  void toRtPredicate(BoolExpr& expr,
+                     std::vector<uint8_t>& data) {
+    toRtPredicate(boolExprToExpr(expr), data);
   }
 
 }

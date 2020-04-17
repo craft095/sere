@@ -8,7 +8,7 @@
 #include <sstream>
 #include <nlohmann/json.hpp>
 #include "Z3.hpp"
-#include "Language.hpp"
+#include "BoolExpr.hpp"
 
 using json = nlohmann::json;
 
@@ -17,8 +17,7 @@ namespace rt {
 }
 
 namespace nfasl {
-  typedef VarName AtomicName;
-  typedef Ptr<BoolExpr> Predicate;
+  typedef expr::Expr Predicate;
   typedef size_t State;
   typedef std::set<State> States;
 
@@ -31,7 +30,6 @@ namespace nfasl {
 
   class Nfasl {
   public:
-    std::set<AtomicName> atomics;
     size_t atomicCount;
     size_t stateCount;
     State initial;
@@ -40,7 +38,7 @@ namespace nfasl {
   };
 
   extern Nfasl eps();
-  extern Nfasl phi(Ptr<BoolExpr> expr);
+  extern Nfasl phi(Predicate expr);
   extern Nfasl unions(const Nfasl& a0, const Nfasl& a1);
   extern Nfasl intersects(const Nfasl& a0, const Nfasl& a1);
   extern Nfasl concat(const Nfasl& a0, const Nfasl& a1);

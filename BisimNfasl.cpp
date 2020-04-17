@@ -25,7 +25,6 @@ namespace nfasl {
 
     auto remapF = [&remap](State s) { return get(remap, s); };
 
-    cleaned.atomics = nfasl.atomics;
     cleaned.atomicCount = nfasl.atomicCount;
     cleaned.stateCount = states.size();
     cleaned.initial = *remapF(nfasl.initial);
@@ -66,8 +65,7 @@ namespace nfasl {
 
     for (State s = 0; s < nfasl.stateCount; ++s) {
       for (auto const& rule : nfasl.transitions[s]) {
-        //if (satisfiable(boolSereToZex(*rule.phi))) {
-        if (sat(*rule.phi)) {
+        if (sat(rule.phi)) {
           forward.arcs[s].insert(rule.state);
           backward.arcs[rule.state].insert(s);
         }
@@ -93,8 +91,7 @@ namespace nfasl {
     for (auto& trs : cleaned.transitions) {
       TransitionRules filtered_rules;
       for (auto& rule : trs) {
-        if (sat(*rule.phi)) {
-          //if (satisfiable(boolSereToZex(*rule.phi))) {
+        if (sat(rule.phi)) {
           filtered_rules.push_back(rule);
         }
       }
@@ -103,7 +100,6 @@ namespace nfasl {
   }
 
   static void joinStates(const Nfasl& a, const std::set<States>& partition, Nfasl& b) {
-    b.atomics = a.atomics;
     b.atomicCount = a.atomicCount;
     b.stateCount = partition.size();
 
@@ -134,24 +130,24 @@ namespace nfasl {
     }
   }
 
-  static Ptr<BoolExpr> delta(const Nfasl& a, State q, State r) {
+  static Predicate delta(const Nfasl& a, State q, State r) {
     assert(q < a.stateCount);
     assert(r < a.stateCount);
 
-    Ptr<BoolExpr> ret = RE_FALSE;
+    Predicate ret = Predicate::value(false);
     for (auto const& rule : a.transitions[q]) {
       if (rule.state == r) {
-        ret = RE_OR(ret, rule.phi);
+        ret = ret || rule.phi;
       }
     }
 
     return ret;
   }
 
-  static Ptr<BoolExpr> delta(const Nfasl& a, State q, States R) {
-    Ptr<BoolExpr> ret = RE_FALSE;
+  static Predicate delta(const Nfasl& a, State q, States R) {
+    Predicate ret = Predicate::value(false);
     for (auto const& r : R) {
-      ret = RE_OR(ret, delta(a, q, r));
+      ret = ret || delta(a, q, r);
     }
 
     return ret;
@@ -178,7 +174,7 @@ namespace nfasl {
       for (auto const& B : P) {
         State q, r;
         bool found = false;
-        Ptr<BoolExpr> DqNotDr;
+        Predicate DqNotDr;
 
         for (auto qx : B) {
           for (auto rx : B) {
@@ -186,10 +182,9 @@ namespace nfasl {
               q = qx;
               r = rx;
 
-              DqNotDr = RE_AND(delta(a, q, R), RE_NOT(delta(a, r, R)));
+              DqNotDr = delta(a, q, R) && !delta(a, r, R);
 
-              //if (satisfiable(boolSereToZex(*DqNotDr))) {
-              if (sat(*DqNotDr)) {
+              if (sat(DqNotDr)) {
                 found = true;
                 break;
               }
@@ -201,8 +196,7 @@ namespace nfasl {
           States D, B_dif_D;
 
           for (auto p : B) {
-            //if (satisfiable(boolSereToZex(*RE_AND(delta(a, p, R), DqNotDr)))) {
-            if (sat(*RE_AND(delta(a, p, R), DqNotDr))) {
+            if (sat(delta(a, p, R) && DqNotDr)) {
               D.insert(p);
             } else {
               B_dif_D.insert(p);

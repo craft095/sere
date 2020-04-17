@@ -32,6 +32,51 @@ const char* VarName::names[] = {
   "x25",
 };
 
+class ToExpr : public BoolVisitor {
+private:
+  expr::Expr result;
+public:
+  ToExpr(BoolExpr& expr) {
+    expr.accept(*this);
+  }
+
+  expr::Expr getResult() const { return result; }
+
+  void visit(Variable& v) override {
+    result = expr::Expr::var(v.getName().ix);
+  }
+
+  void visit(BoolValue& e) override {
+    result = expr::Expr::value(e.getValue());
+  }
+
+  void visit(BoolNot& v) override {
+    v.getArg()->accept(*this);
+    expr::Expr arg = result;
+    result = !arg;
+  }
+
+  void visit(BoolAnd& v) override {
+    v.getLhs()->accept(*this);
+    expr::Expr lhs = result;
+    v.getRhs()->accept(*this);
+    expr::Expr rhs = result;
+    result = lhs && rhs;
+  }
+
+  void visit(BoolOr& v) override {
+    v.getLhs()->accept(*this);
+    expr::Expr lhs = result;
+    v.getRhs()->accept(*this);
+    expr::Expr rhs = result;
+    result = lhs || rhs;
+  }
+};
+
+expr::Expr boolExprToExpr(BoolExpr& expr) {
+  return ToExpr(expr).getResult();
+}
+
 class GetAtomics : public BoolVisitor {
 private:
   std::set<VarName> vars;
@@ -83,23 +128,23 @@ public:
   }
 
   void visit(Variable& v) override {
-    result = nfasl::phi(std::make_shared<Variable>(v));
+    result = nfasl::phi(boolExprToExpr(v));
   }
 
   void visit(BoolValue& v) override {
-    result = nfasl::phi(std::make_shared<BoolValue>(v));
+    result = nfasl::phi(boolExprToExpr(v));
   }
 
   void visit(BoolNot& v) override {
-    result = nfasl::phi(std::make_shared<BoolNot>(v));
+    result = nfasl::phi(boolExprToExpr(v));
   }
 
   void visit(BoolAnd& v) override {
-    result = nfasl::phi(std::make_shared<BoolAnd>(v));
+    result = nfasl::phi(boolExprToExpr(v));
   }
 
   void visit(BoolOr& v) override {
-    result = nfasl::phi(std::make_shared<BoolOr>(v));
+    result = nfasl::phi(boolExprToExpr(v));
   }
 
   void visit(SereEmpty& ) override {

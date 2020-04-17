@@ -2,7 +2,7 @@
 
 #include "Nfasl.hpp"
 #include "Letter.hpp"
-#include "GenBoolExpr.hpp"
+#include "GenExpr.hpp"
 #include "Algo.hpp"
 
 #include "GenNfasl.hpp"
@@ -20,7 +20,7 @@ namespace nfasl {
   }
 
   static TransitionRule makeRule(size_t depth, size_t atoms, size_t states) {
-    return { BoolExprGenerator::make(depth, atoms), makeState(states) };
+    return { ExprGenerator::make(depth, atoms), makeState(states) };
   }
 
   static TransitionRules
@@ -34,9 +34,6 @@ namespace nfasl {
 Ptr<Nfasl>
 makeNfasl(size_t depth, size_t atoms, size_t states, size_t maxTrs) {
   Ptr<Nfasl> a = std::make_shared<Nfasl>();
-  for (size_t ix = 0; ix < atoms; ++ix) {
-    a->atomics.insert(make_varName(ix));
-  }
   a->atomicCount = atoms;
   a->stateCount = states;
   a->initial = makeState(states);

@@ -12,8 +12,10 @@
 
 #include "Located.hpp"
 
+namespace expr {
+
 struct Expr0 {
-  enum {
+  enum Op {
     Const = 0,
     Var = 1,
     Not = 2,
@@ -22,9 +24,10 @@ struct Expr0 {
   };
 
   typedef uint32_t Kind;
+  typedef uint32_t Ref;
 
   Kind kind;
-  uint32_t ref;
+  Ref ref;
 
   bool operator== (Expr0 u) const {
     return u.kind == kind && u.ref == ref;
@@ -42,6 +45,7 @@ class Context {
 
   static constexpr Expr0 trueExpr0{Expr0::Const, 1};
   static constexpr Expr0 falseExpr0{Expr0::Const, 0};
+
 public:
   Context() {
     exprs.reserve(1024);
@@ -90,7 +94,11 @@ public:
 
 class Expr {
 public:
+  Expr() {}
+  Expr(const Expr& expr1) : expr(expr1.expr) {}
   Expr(Expr0 expr0) : expr(expr0) {}
+
+  Expr& operator=(const Expr& expr1) { expr = expr1.expr; return *this; }
 
   bool is_const() const { return expr.kind == Expr0::Const; }
   bool is_var() const { return expr.kind == Expr0::Var; }
@@ -128,7 +136,7 @@ public:
     }
     auto [lhs0, rhs0] = context.get_args(expr);
     lhs = Expr{lhs0};
-    rhs = Expr{lhs0};
+    rhs = Expr{rhs0};
     return true;
   }
 
@@ -138,9 +146,29 @@ public:
     }
     auto [lhs0, rhs0] = context.get_args(expr);
     lhs = Expr{lhs0};
-    rhs = Expr{lhs0};
+    rhs = Expr{rhs0};
     return true;
   }
+
+  uint32_t var_count() const {
+    uint32_t v;
+    Expr lhs, rhs;
+    if (get_var(v)) {
+      return v + 1;
+    }
+    if (not_arg(lhs)) {
+      return lhs.var_count();
+    }
+    if (and_args(lhs, rhs)) {
+      return std::max(lhs.var_count(), rhs.var_count());
+    }
+    if (or_args(lhs, rhs)) {
+      return std::max(lhs.var_count(), rhs.var_count());
+    }
+    return 0;
+  }
+
+  std::string pretty() const { assert(false); return ""; } // not implemented
 
   static Expr value (bool v) { return Expr{context.new_value(v)}; }
   static Expr var (uint32_t v) { return Expr{context.new_var(v)}; }
@@ -158,5 +186,6 @@ private:
   static Context context;
 };
 
+} // expr
 
 #endif // BOOLEXPR_HPP

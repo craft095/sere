@@ -84,6 +84,8 @@ namespace rt {
 
   extern void toRtPredicate(BoolExpr& expr,
                             std::vector<uint8_t>& data);
+  extern void toRtPredicate(expr::Expr expr,
+                            std::vector<uint8_t>& data);
 }
 
 #endif // RTPREDICATE_HPP

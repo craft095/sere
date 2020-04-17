@@ -10,6 +10,7 @@
 #include <boost/format.hpp>
 
 #include "Located.hpp"
+#include "BoolExpr.hpp"
 
 constexpr size_t maxAtoms = 64;
 
@@ -322,7 +323,22 @@ namespace nfasl {
   class Nfasl;
 }
 
+/**
+ * Convert BoolExpr into equivalent compact representaion expr::Expr
+ *
+ * @param expr BoolExpr object
+ * @return expr::Expr object
+ */
+extern expr::Expr boolExprToExpr(BoolExpr& expr);
+
+/**
+ * Get all variables in BoolExpr
+ */
 extern std::set<VarName> boolExprGetAtomics(BoolExpr& expr);
+
+/**
+ * Convert SERE into NFASL
+ */
 extern nfasl::Nfasl sereToNfasl(SereExpr& expr);
 
 #define RE_LOC Located(Pos(__FILE__, __LINE__, 0))
