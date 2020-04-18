@@ -1,7 +1,7 @@
 #include <sstream>
 #include <string>
 
-#include "Letter.hpp"
+#include "test/Letter.hpp"
 
 std::string prettyWord(const Word& word) {
   std::ostringstream strm;

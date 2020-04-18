@@ -1,5 +1,5 @@
-#ifndef LOCATED_HPP
-#define LOCATED_HPP
+#ifndef AST_LOCATED_HPP
+#define AST_LOCATED_HPP
 
 #include <string>
 #include <boost/format.hpp>
@@ -50,4 +50,6 @@ private:
   Pos to;
 };
 
-#endif //LOCATED_HPP
+#define RE_LOC Located(Pos(__FILE__, __LINE__, 0))
+
+#endif //AST_LOCATED_HPP

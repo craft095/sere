@@ -1,4 +1,4 @@
-#include "Letter.hpp"
+#include "test/Letter.hpp"
 #include "BoolExpr.hpp"
 
 bool evalBool(expr::Expr expr, const rt::Names& letter) {

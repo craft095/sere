@@ -1,10 +1,10 @@
+#include "test/Letter.hpp"
+#include "test/ToolsZ3.hpp"
+
+#include "ast/Common.hpp"
+#include "sat/Z3.hpp"
+
 #include "c++/z3++.h"
-
-#include "Letter.hpp"
-#include "Language.hpp"
-
-#include "Z3.hpp"
-#include "ToolsZ3.hpp"
 
 z3::expr letterToZex(const rt::Names& names) {
   z3::expr e(theContext.bool_val(true));

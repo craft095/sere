@@ -1,16 +1,17 @@
 #include "catch2/catch.hpp"
 
-#include "GenBoolExpr.hpp"
-#include "GenNfasl.hpp"
-#include "GenLetter.hpp"
-#include "EvalBoolExpr.hpp"
-#include "EvalNfasl.hpp"
+#include "test/GenBoolExpr.hpp"
+#include "test/GenNfasl.hpp"
+#include "test/GenLetter.hpp"
+#include "test/EvalBoolExpr.hpp"
+#include "test/EvalNfasl.hpp"
 
-#include "Tools.hpp"
-#include "ToolsZ3.hpp"
+#include "test/Tools.hpp"
+#include "test/ToolsZ3.hpp"
 
-#include "BisimNfasl.hpp"
-#include "Letter.hpp"
+#include "test/Letter.hpp"
+
+#include "nfaslBisimNfasl.hpp"
 
 using namespace nfasl;
 

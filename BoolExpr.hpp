@@ -4,13 +4,9 @@
 #include <unordered_map>
 #include <map>
 #include <vector>
-#include <sstream>
 #include <string>
 #include <memory>
 #include <cassert>
-#include <boost/format.hpp>
-
-#include "Located.hpp"
 
 namespace expr {
 

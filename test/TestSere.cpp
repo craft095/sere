@@ -1,14 +1,15 @@
 #include "catch2/catch.hpp"
 
-#include "GenLetter.hpp"
-#include "GenBoolExpr.hpp"
-#include "EvalBoolExpr.hpp"
-#include "EvalSere.hpp"
-#include "EvalNfasl.hpp"
+#include "test/GenLetter.hpp"
+#include "test/GenBoolExpr.hpp"
+#include "test/EvalBoolExpr.hpp"
+#include "test/EvalSere.hpp"
+#include "test/EvalNfasl.hpp"
 
-#include "Cnf.hpp"
-#include "Tools.hpp"
-#include "ToolsZ3.hpp"
+#include "test/Tools.hpp"
+#include "test/ToolsZ3.hpp"
+
+#include "sat/Cnf.hpp"
 
 TEST_CASE("Sere") {
   SECTION("empty") {

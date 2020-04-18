@@ -6,7 +6,7 @@
 #include <vector>
 #include <string>
 
-#include "Language.hpp"
+#include "ast/Common.hpp"
 #include "rt/RtPredicate.hpp"
 
 typedef rt::Names Letter;

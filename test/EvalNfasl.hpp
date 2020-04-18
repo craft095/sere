@@ -2,8 +2,8 @@
 #define EVALNFASL_HPP
 
 #include "Match.hpp"
-#include "Nfasl.hpp"
-#include "Letter.hpp"
+#include "nfasl/Nfasl.hpp"
+#include "test/Letter.hpp"
 
 /**
  * This evaluator may produce PARTIAL results

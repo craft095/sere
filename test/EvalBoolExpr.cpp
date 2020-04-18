@@ -1,9 +1,9 @@
-#include "Letter.hpp"
-#include "Language.hpp"
-#include "EvalBoolExpr.hpp"
+#include "test/Letter.hpp"
+#include "ast/BoolExpr.hpp"
+#include "sat/Z3.hpp"
 
-#include "Z3.hpp"
-#include "ToolsZ3.hpp"
+#include "test/EvalBoolExpr.hpp"
+#include "test/ToolsZ3.hpp"
 
 class EvalBool : public BoolVisitor {
 private:

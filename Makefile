@@ -15,35 +15,51 @@ TESTS := sere_tests #nfasl_tests
 SERE_GRAMMAR := Sere.g4
 
 # source files
-SERE_SRCS :=        	\
-    Language.cpp    	\
-	BoolExpr.cpp            \
-	Cnf.cpp          	\
-	Z3.cpp          	\
+RT_SRCS :=                      \
 	rt/RtPredicate.cpp 	\
 	rt/RtNfasl.cpp	 	\
-	Nfasl.cpp       	\
-	BisimNfasl.cpp		\
-	Parser.cpp			\
-	$(OBJDIR)/SereBaseVisitor.cpp 	\
-	$(OBJDIR)/SereLexer.cpp			\
-	$(OBJDIR)/SereParser.cpp		\
-	$(OBJDIR)/SereVisitor.cpp
 
-SERE_TESTS_SRCS :=       \
-	test/EvalBoolExpr.cpp	 \
-	test/EvalExpr.cpp	 \
-	test/EvalNfasl.cpp	 \
-	test/EvalRtNfasl.cpp \
-	test/EvalSere.cpp	 \
-	test/GenNfasl.cpp	 \
-	test/Letter.cpp		 \
-	test/Main.cpp		 \
-	test/TestNfasl.cpp	 \
-	test/TestRtNfasl.cpp \
-	test/TestSere.cpp	 \
-	test/TestParser.cpp  \
-	test/ToolsZ3.cpp     \
+AST_SRCS :=                     \
+	ast/BoolExpr.cpp	\
+	ast/SereExpr.cpp	\
+	ast/Parser.cpp		\
+	$(OBJDIR)/ast/SereBaseVisitor.cpp 	\
+	$(OBJDIR)/ast/SereLexer.cpp		\
+	$(OBJDIR)/ast/SereParser.cpp		\
+	$(OBJDIR)/ast/SereVisitor.cpp		\
+
+NFASL_SRCS :=                   \
+        nfasl/Nfasl.cpp 	\
+        nfasl/BisimNfasl.cpp 	\
+
+SAT_SRCS :=                     \
+        sat/Cnf.cpp 		\
+        sat/Z3.cpp 		\
+
+COMMON_SRCS :=                  \
+	BoolExpr.cpp            \
+
+SERE_SRCS :=        		\
+	$(RT_SRCS)		\
+	$(AST_SRCS)		\
+	$(SAT_SRCS)		\
+	$(NFASL_SRCS)		\
+	$(COMMON_SRCS)		\
+
+SERE_TESTS_SRCS :=	       	\
+	test/EvalBoolExpr.cpp	\
+	test/EvalExpr.cpp	\
+	test/EvalNfasl.cpp	\
+	test/EvalRtNfasl.cpp 	\
+	test/EvalSere.cpp	\
+	test/GenNfasl.cpp	\
+	test/Letter.cpp		\
+	test/Main.cpp		\
+	test/TestNfasl.cpp	\
+	test/TestRtNfasl.cpp 	\
+	test/TestSere.cpp	\
+	test/TestParser.cpp  	\
+	test/ToolsZ3.cpp     	\
 	$(SERE_SRCS)
 
 SRCS := $(SERE_SRCS) $(SERE_TESTS_SRCS)
@@ -81,7 +97,7 @@ TAR := tar
 # C flags
 CFLAGS :=
 # C++ flags
-CXXFLAGS :=  -std=c++17 -I. -I.o -I$(JSON) -I$(Z3)/src/api -I$(AUTOCHECK) -I$(CATCH2) -I$(ANTLR4)
+CXXFLAGS :=  -std=c++17 -I. -I$(OBJDIR) -I$(JSON) -I$(Z3)/src/api -I$(AUTOCHECK) -I$(CATCH2) -I$(ANTLR4)
 # C/C++ flags
 CPPFLAGS := -g -Wall -Wextra -pedantic -Wno-attributes -lpthread
 # linker flags

@@ -1,11 +1,11 @@
 #include <memory>
 
-#include "Nfasl.hpp"
-#include "Letter.hpp"
-#include "GenExpr.hpp"
-#include "Algo.hpp"
+#include "test/Letter.hpp"
+#include "test/GenExpr.hpp"
+#include "test/GenNfasl.hpp"
 
-#include "GenNfasl.hpp"
+#include "nfasl/Nfasl.hpp"
+#include "Algo.hpp"
 
 using namespace nfasl;
 

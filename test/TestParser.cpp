@@ -1,12 +1,13 @@
-#include "Parser.hpp"
 #include "Match.hpp"
-#include "Nfasl.hpp"
-#include "BisimNfasl.hpp"
+#include "ast/Parser.hpp"
+#include "nfasl/Nfasl.hpp"
+#include "nfasl/BisimNfasl.hpp"
 #include "rt/RtNfasl.hpp"
-#include "Tools.hpp"
-#include "Letter.hpp"
-#include "GenLetter.hpp"
-#include "EvalRtNfasl.hpp"
+
+#include "test/Tools.hpp"
+#include "test/Letter.hpp"
+#include "test/GenLetter.hpp"
+#include "test/EvalRtNfasl.hpp"
 
 #include <sstream>
 #include "catch2/catch.hpp"

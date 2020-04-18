@@ -1,7 +1,7 @@
 #ifndef GENEXPR_HPP
 #define GENEXPR_HPP
 
-#include "Tools.hpp"
+#include "test/Tools.hpp"
 #include "BoolExpr.hpp"
 
 class ExprGenerator : public Catch2::IGenerator <expr::Expr> {

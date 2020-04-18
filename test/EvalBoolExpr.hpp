@@ -1,7 +1,7 @@
 #ifndef EVALBOOLEXPR_HPP
 #define EVALBOOLEXPR_HPP
 
-#include "Letter.hpp"
+#include "test/Letter.hpp"
 
 class BoolExpr;
 

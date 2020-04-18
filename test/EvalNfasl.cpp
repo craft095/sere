@@ -1,9 +1,9 @@
-#include "EvalExpr.hpp"
-#include "EvalNfasl.hpp"
+#include "test/EvalExpr.hpp"
+#include "test/EvalNfasl.hpp"
 
 #include "Algo.hpp"
-#include "Nfasl.hpp"
-#include "Letter.hpp"
+#include "nfasl/Nfasl.hpp"
+#include "test/Letter.hpp"
 
 using namespace nfasl;
 

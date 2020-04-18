@@ -1,7 +1,7 @@
 #ifndef GENNFASL_HPP
 #define GENNFASL_HPP
 
-#include "Nfasl.hpp"
+#include "nfasl/Nfasl.hpp"
 #include "catch2/catch.hpp"
 
 extern Ptr<nfasl::Nfasl>

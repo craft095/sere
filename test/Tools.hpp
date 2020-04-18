@@ -4,7 +4,7 @@
 #include "catch2/catch.hpp"
 #include <vector>
 
-#include "Letter.hpp"
+#include "test/Letter.hpp"
 
 namespace Catch2 = Catch::Generators;
 

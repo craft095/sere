@@ -1,9 +1,9 @@
 #ifndef GENBOOLEXPR_HPP
 #define GENBOOLEXPR_HPP
 
-#include "Tools.hpp"
-#include "Language.hpp"
-#include "Z3.hpp"
+#include "test/Tools.hpp"
+#include "sat/Z3.hpp"
+#include "ast/BoolExpr.hpp"
 
 class BoolExprGenerator : public Catch2::IGenerator <Ptr<BoolExpr>> {
 private:

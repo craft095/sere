@@ -1,7 +1,7 @@
 #ifndef EVALSERE_HPP
 #define EVALSERE_HPP
 
-#include "Letter.hpp"
+#include "test/Letter.hpp"
 #include "Match.hpp"
 
 class SereExpr;

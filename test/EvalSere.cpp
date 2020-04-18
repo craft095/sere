@@ -1,7 +1,8 @@
-#include "Letter.hpp"
-#include "Language.hpp"
-#include "EvalBoolExpr.hpp"
-#include "EvalSere.hpp"
+#include "test/Letter.hpp"
+#include "test/EvalBoolExpr.hpp"
+#include "test/EvalSere.hpp"
+
+#include "ast/SereExpr.hpp"
 
 class EvalSere : public SereVisitor {
 private:
