@@ -227,7 +227,7 @@ namespace parser {
 
     virtual antlrcpp::Any visitSereBoolExpr(SereParser::SereBoolExprContext *ctx) override {
       Ptr<BoolExpr> expr = visit(ctx->boolExpr());
-      return Ptr<SereExpr>{expr};
+      return Ptr<SereExpr>{RE_SEREBOOL(expr)};
     }
 
     virtual antlrcpp::Any visitBoolVar(SereParser::BoolVarContext *ctx) override {

@@ -127,24 +127,8 @@ public:
     return result;
   }
 
-  void visit(Variable& v) override {
-    result = nfasl::phi(boolExprToExpr(v));
-  }
-
-  void visit(BoolValue& v) override {
-    result = nfasl::phi(boolExprToExpr(v));
-  }
-
-  void visit(BoolNot& v) override {
-    result = nfasl::phi(boolExprToExpr(v));
-  }
-
-  void visit(BoolAnd& v) override {
-    result = nfasl::phi(boolExprToExpr(v));
-  }
-
-  void visit(BoolOr& v) override {
-    result = nfasl::phi(boolExprToExpr(v));
+  void visit(SereBool& v) override {
+    result = nfasl::phi(boolExprToExpr(*v.getExpr()));
   }
 
   void visit(SereEmpty& ) override {
@@ -200,4 +184,10 @@ public:
 
 Nfasl sereToNfasl(SereExpr& expr) {
   return SereToNfasl(expr).getResult();
+}
+
+
+void toRtPredicate(BoolExpr& expr,
+                   std::vector<uint8_t>& data) {
+  toRtPredicate(boolExprToExpr(expr), data);
 }

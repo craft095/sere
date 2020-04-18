@@ -11,7 +11,7 @@
 #include <sstream>
 #include "catch2/catch.hpp"
 
-class RemapVars : public SereVisitor {
+class RemapVars : public SereVisitor, public BoolVisitor {
   std::map<size_t, size_t> remap;
 public:
   RemapVars (parser::ParseResult& self,
@@ -43,6 +43,9 @@ public:
   void visit(BoolOr& v) override {
     v.getLhs()->accept(*this);
     v.getRhs()->accept(*this);
+  }
+  void visit(SereBool& v) override {
+    v.getExpr()->accept(*this);
   }
   void visit(SereEmpty& ) override {
   }
@@ -98,6 +101,10 @@ void checkExpr(Ptr<SereExpr> expr0, const char* text) {
   checkEquiv(expr0, expr1);
 }
 
+void checkBoolExpr(Ptr<BoolExpr> expr, const char* text) {
+  checkExpr(RE_SEREBOOL(expr), text);
+}
+
 void prepareExpr(Ptr<SereExpr> expr, rt::Nfasl& rtNfasl) {
   nfasl::Nfasl expr0 = sereToNfasl(*expr);
   nfasl::Nfasl expr1;
@@ -124,41 +131,41 @@ TEST_CASE("Parser") {
     checkExpr(RE_EMPTY, "()");
   }
   SECTION("boolean") {
-    checkExpr(RE_TRUE,
-              "true");
-    checkExpr(RE_FALSE,
-              "false");
-    checkExpr(RE_VAR(0),
-              "var1");
-    checkExpr(RE_NOT(RE_TRUE),
-              "!true");
-    checkExpr(RE_AND(RE_VAR(0), RE_NOT(RE_VAR(1))),
-              "var0 && !var1");
+    checkBoolExpr(RE_TRUE,
+                  "true");
+    checkBoolExpr(RE_FALSE,
+                  "false");
+    checkBoolExpr(RE_VAR(0),
+                  "var1");
+    checkBoolExpr(RE_NOT(RE_TRUE),
+                  "!true");
+    checkBoolExpr(RE_AND(RE_VAR(0), RE_NOT(RE_VAR(1))),
+                  "var0 && !var1");
   }
   SECTION("sere") {
     checkExpr(RE_CONCAT
-              (RE_VAR(0),
-               RE_VAR(1)),
+              (RE_SEREBOOL(RE_VAR(0)),
+               RE_SEREBOOL(RE_VAR(1))),
               "var0 ; var1");
     checkExpr(RE_UNION
-              (RE_VAR(0),
-               RE_VAR(1)),
+              (RE_SEREBOOL(RE_VAR(0)),
+               RE_SEREBOOL(RE_VAR(1))),
               "var0 | var1");
     checkExpr(RE_INTERSECT
-              (RE_VAR(0),
-               RE_VAR(1)),
+              (RE_SEREBOOL(RE_VAR(0)),
+               RE_SEREBOOL(RE_VAR(1))),
               "var0 & var1");
     checkExpr(RE_UNION
-              (RE_VAR(0),
-               RE_VAR(1)),
+              (RE_SEREBOOL(RE_VAR(0)),
+               RE_SEREBOOL(RE_VAR(1))),
               "var0 | var1");
     checkExpr(RE_UNION
-              (RE_VAR(0),
+              (RE_SEREBOOL(RE_VAR(0)),
                (RE_INTERSECT
-                (RE_VAR(0),
-                 RE_VAR(1)))),
+                (RE_SEREBOOL(RE_VAR(0)),
+                 RE_SEREBOOL(RE_VAR(1))))),
               "var0 | var0 & var1");
-    checkExpr(RE_STAR(RE_TRUE),
+    checkExpr(RE_STAR(RE_SEREBOOL(RE_TRUE)),
               "true [*]");
   }
 }

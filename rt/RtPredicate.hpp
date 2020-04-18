@@ -3,13 +3,7 @@
 
 #include <cassert>
 #include <cstdint>
-#include <map>
-#include <vector>
 #include <boost/dynamic_bitset.hpp>
-
-#include "Language.hpp"
-
-class BoolExpr;
 
 namespace rt {
   typedef uint16_t Offset;
@@ -82,10 +76,6 @@ namespace rt {
     return Evaluator(names, data, len).eval();
   }
 
-  extern void toRtPredicate(BoolExpr& expr,
-                            std::vector<uint8_t>& data);
-  extern void toRtPredicate(expr::Expr expr,
-                            std::vector<uint8_t>& data);
 }
 
 #endif // RTPREDICATE_HPP

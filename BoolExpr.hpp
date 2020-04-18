@@ -186,6 +186,8 @@ private:
   static Context context;
 };
 
+extern void toRtPredicate(expr::Expr expr,
+                          std::vector<uint8_t>& data);
 } // expr
 
 #endif // BOOLEXPR_HPP

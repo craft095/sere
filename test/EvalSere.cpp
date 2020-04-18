@@ -3,9 +3,6 @@
 #include "EvalBoolExpr.hpp"
 #include "EvalSere.hpp"
 
-#include "Z3.hpp"
-#include "ToolsZ3.hpp"
-
 class EvalSere : public SereVisitor {
 private:
   Word word;
@@ -19,24 +16,8 @@ public:
     return result;
   }
 
-  void visit(Variable& v) override {
-    calcBool(v);
-  }
-
-  void visit(BoolValue& v) override {
-    calcBool(v);
-  }
-
-  void visit(BoolNot& v) override {
-    calcBool(v);
-  }
-
-  void visit(BoolAnd& v) override {
-    calcBool(v);
-  }
-
-  void visit(BoolOr& v) override {
-    calcBool(v);
+  void visit(SereBool& v) override {
+    calcBool(*v.getExpr());
   }
 
   void visit(SereEmpty& ) override {
@@ -201,26 +182,6 @@ private:
       result = Match_Failed;
     }
   }
-
-  void calcBool0(BoolExpr& boolExpr) {
-    switch (word.size()) {
-    case 0:
-      result = Match_Partial;
-      break;
-    case 1:
-      {
-        if (evalBoolZ3(boolExpr, word[0])) {
-          result = Match_Ok;
-        } else {
-          result = Match_Failed;
-        }
-      }
-      break;
-    default:
-      result = Match_Failed;
-    }
-  }
-
 };
 
 Match evalSere(SereExpr& expr, const Word& word) {

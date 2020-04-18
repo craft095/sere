@@ -13,9 +13,9 @@
 using json = nlohmann::json;
 
 namespace nfasl {
-  static void to_json(json& j, const VarName& var) {
-    j = json{{"var", var.ix}};
-  }
+  // static void to_json(json& j, const VarName& var) {
+  //   j = json{{"var", var.ix}};
+  // }
 
   static void to_json(json& j, const TransitionRule& p) {
     j = json{{"phi", p.phi.pretty()}, {"state", p.state}};
@@ -292,7 +292,7 @@ namespace nfasl {
       v.transitions[q].resize(uT.size());
       auto vRule = v.transitions[q].begin();
       for (auto& rule : uT) {
-        rt::toRtPredicate(rule.phi, vRule->phi);
+        expr::toRtPredicate(rule.phi, vRule->phi);
         vRule->state = rule.state;
         ++vRule;
       }

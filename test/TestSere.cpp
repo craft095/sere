@@ -16,13 +16,13 @@ TEST_CASE("Sere") {
     CHECK(evalSere(*RE_EMPTY, {makeNames({},{})}) == Match_Failed);
   }
   SECTION("boolean") {
-    CHECK(evalSere(*RE_TRUE, {makeNames({1}, {0})}) == Match_Ok);
-    CHECK(evalSere(*RE_FALSE, {makeNames({1}, {0})}) == Match_Failed);
-    CHECK(evalSere(*RE_NOT(RE_TRUE), {makeNames({1}, {0})}) == Match_Failed);
-    CHECK(evalSere(*RE_VAR(1), {makeNames({1}, {0})}) == Match_Ok);
-    CHECK(evalSere(*RE_VAR(0), {makeNames({1}, {0})}) == Match_Failed);
+    CHECK(evalSere(*RE_SEREBOOL(RE_TRUE), {makeNames({1}, {0})}) == Match_Ok);
+    CHECK(evalSere(*RE_SEREBOOL(RE_FALSE), {makeNames({1}, {0})}) == Match_Failed);
+    CHECK(evalSere(*RE_SEREBOOL(RE_NOT(RE_TRUE)), {makeNames({1}, {0})}) == Match_Failed);
+    CHECK(evalSere(*RE_SEREBOOL(RE_VAR(1)), {makeNames({1}, {0})}) == Match_Ok);
+    CHECK(evalSere(*RE_SEREBOOL(RE_VAR(0)), {makeNames({1}, {0})}) == Match_Failed);
 
-    SereChildPtr tc = RE_AND(RE_TRUE, RE_NOT(RE_VAR(0)));
+    SereChildPtr tc = RE_SEREBOOL(RE_AND(RE_TRUE, RE_NOT(RE_VAR(0))));
     CHECK(evalSere(*tc, {makeNames({1}, {0})}) == Match_Ok);
     CHECK(evalSere(*tc, {makeNames({0}, {1})}) == Match_Failed);
     CHECK(evalSere(*tc, {makeNames({1}, {0}), makeNames({1}, {0})}) == Match_Failed);
@@ -32,32 +32,32 @@ TEST_CASE("Sere") {
 
   SECTION("concat") {
     CHECK(evalSere(*RE_CONCAT
-                   (RE_VAR(0),
-                    RE_VAR(1)),
+                   (RE_SEREBOOL(RE_VAR(0)),
+                    RE_SEREBOOL(RE_VAR(1))),
                    {}) == Match_Partial);
     CHECK(evalSere(*RE_CONCAT
-                   (RE_VAR(0),
-                    RE_VAR(1)),
+                   (RE_SEREBOOL(RE_VAR(0)),
+                    RE_SEREBOOL(RE_VAR(1))),
                    {makeNames({0},{1}),makeNames({1},{0})}) == Match_Ok);
     CHECK(evalSere(*RE_CONCAT
-                   (RE_VAR(0),
-                    RE_VAR(1)),
+                   (RE_SEREBOOL(RE_VAR(0)),
+                    RE_SEREBOOL(RE_VAR(1))),
                    {makeNames({0,1},{}),makeNames({0},{1})}) == Match_Failed);
     CHECK(evalSere
           (*RE_CONCAT
            (RE_CONCAT
-            (RE_VAR(0),
-             RE_VAR(1)
+            (RE_SEREBOOL(RE_VAR(0)),
+             RE_SEREBOOL(RE_VAR(1))
              ),
-            RE_VAR(0)),
+            RE_SEREBOOL(RE_VAR(0))),
            {makeNames({0},{1})}) == Match_Partial);
     CHECK(evalSere
           (*RE_CONCAT
            (RE_CONCAT
-            (RE_VAR(0),
-             RE_VAR(1)
+            (RE_SEREBOOL(RE_VAR(0)),
+             RE_SEREBOOL(RE_VAR(1))
              ),
-            RE_VAR(0)),
+            RE_SEREBOOL(RE_VAR(0))),
            {makeNames({0},{1}),makeNames({0},{1})}) == Match_Failed);
   }
 }
@@ -95,7 +95,7 @@ TEST_CASE("Sere vs Nfasl") {
   constexpr size_t atoms = 3;
   auto expr = GENERATE(Catch2::take(10, genBoolExpr(3, atoms)));
   auto word = GENERATE(Catch2::take(3, genWord(atoms, 0, 3)));
-  auto nfasl = sereToNfasl(*expr);
+  auto nfasl = sereToNfasl(*RE_SEREBOOL(expr));
 
-  REQUIRE(evalSere(*expr, word) == evalNfasl(nfasl, word));
+  REQUIRE(evalSere(*RE_SEREBOOL(expr), word) == evalNfasl(nfasl, word));
 }

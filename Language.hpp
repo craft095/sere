@@ -39,6 +39,8 @@ class BoolValue;
 class BoolNot;
 class BoolAnd;
 class BoolOr;
+
+class SereBool;
 class SereEmpty;
 class Union;
 class Intersect;
@@ -61,8 +63,9 @@ public:
   virtual ~BoolVisitor() = default;
 };
 
-class SereVisitor : public BoolVisitor {
+class SereVisitor {
 public:
+  virtual void visit(SereBool& v) = 0;
   virtual void visit(SereEmpty& v) = 0;
   virtual void visit(Union& v) = 0;
   virtual void visit(Intersect& v) = 0;
@@ -73,7 +76,7 @@ public:
   virtual void visit(Partial& v) = 0;
 };
 
-class SereExpr {
+class LocatedBase {
 public:
   void setLoc(const Located& loc_) {
     loc = loc_;
@@ -83,27 +86,16 @@ public:
     return loc;
   }
 
-  SereExpr(const Located& loc_) : loc(loc_) {}
-  virtual void accept(SereVisitor& v) = 0;
+  LocatedBase(const Located& loc_) : loc(loc_) {}
   virtual const String pretty() const = 0;
-  virtual ~SereExpr() {};
+  virtual ~LocatedBase() {};
 private:
   Located loc;
 };
 
-class SereEmpty : public SereExpr {
+class BoolExpr : public LocatedBase {
 public:
-  SereEmpty(const Located& loc_) : SereExpr(loc_) {}
-  void accept(SereVisitor& v) override { v.visit(*this); }
-  const String pretty() const override {
-    return "()";
-  }
-};
-
-class BoolExpr : public SereExpr {
-public:
-  BoolExpr(const Located& loc_) : SereExpr(loc_) {}
-  void accept(SereVisitor& v) override { accept(static_cast<BoolVisitor&>(v)); }
+  BoolExpr(const Located& loc) : LocatedBase(loc) {}
   virtual void accept(BoolVisitor& v) = 0;
 };
 
@@ -160,17 +152,12 @@ private:
   BoolExprPtr rhs;
 };
 
-class Literal : public BoolExpr {
-public:
-  Literal(const Located& loc_) : BoolExpr(loc_) {}
-};
-
-class Variable : public Literal {
+class Variable : public BoolExpr {
 private:
   VarName name;
 public:
-  Variable(Variable& v) : Literal(v.getLoc()), name(v.getName()) {}
-  Variable(const Located& loc, const VarName& n) : Literal(loc), name (n) {}
+  Variable(Variable& v) : BoolExpr(v.getLoc()), name(v.getName()) {}
+  Variable(const Located& loc, const VarName& n) : BoolExpr(loc), name (n) {}
   void accept(BoolVisitor& v) override { v.visit(*this); }
   const String pretty() const override {
     std::ostringstream st;
@@ -182,13 +169,12 @@ public:
   VarName& getNameRef() { return name; }
 };
 
-
-class BoolValue : public Literal {
+class BoolValue : public BoolExpr {
 private:
   bool value;
 public:
-  BoolValue (BoolValue& v) : Literal(v.getLoc()), value(v.getValue()) {}
-  BoolValue (const Located& loc, bool v) : Literal(loc), value (v) {}
+  BoolValue (BoolValue& v) : BoolExpr(v.getLoc()), value(v.getValue()) {}
+  BoolValue (const Located& loc, bool v) : BoolExpr(loc), value (v) {}
 
   void accept(BoolVisitor& v) override { v.visit(*this); }
 
@@ -197,6 +183,34 @@ public:
   }
 
   bool getValue() const { return value; }
+};
+
+class SereExpr : public LocatedBase {
+public:
+  SereExpr(const Located& loc) : LocatedBase(loc) {}
+  virtual void accept(SereVisitor& v) = 0;
+};
+
+class SereBool : public SereExpr {
+public:
+  SereBool(const Located& loc, Ptr<BoolExpr> expr_)
+    : SereExpr(loc), expr(expr_) {}
+  void accept(SereVisitor& v) override { v.visit(*this); }
+  const String pretty() const override {
+    return expr->pretty();
+  }
+  Ptr<BoolExpr> getExpr() const { return expr; }
+private:
+  Ptr<BoolExpr> expr;
+};
+
+class SereEmpty : public SereExpr {
+public:
+  SereEmpty(const Located& loc_) : SereExpr(loc_) {}
+  void accept(SereVisitor& v) override { v.visit(*this); }
+  const String pretty() const override {
+    return "()";
+  }
 };
 
 class Union : public SereExpr {
@@ -341,22 +355,27 @@ extern std::set<VarName> boolExprGetAtomics(BoolExpr& expr);
  */
 extern nfasl::Nfasl sereToNfasl(SereExpr& expr);
 
+/**
+ * Convert BoolExpr into run time representation
+ */
+extern void toRtPredicate(BoolExpr& expr,
+                          std::vector<uint8_t>& data);
+
 #define RE_LOC Located(Pos(__FILE__, __LINE__, 0))
-#define RE_EMPTY std::make_shared<SereEmpty>(RE_LOC)
 #define RE_TRUE std::make_shared<BoolValue>(RE_LOC, true)
 #define RE_FALSE std::make_shared<BoolValue>(RE_LOC, false)
 #define RE_VAR(n) std::make_shared<Variable>(RE_LOC, make_varName(n))
 #define RE_NOT(n) std::make_shared<BoolNot>(RE_LOC, n)
 #define RE_AND(u,v) std::make_shared<BoolAnd>(RE_LOC, u ,v)
 #define RE_OR(u,v) std::make_shared<BoolOr>(RE_LOC, u ,v)
+#define RE_SEREBOOL(expr) std::make_shared<SereBool>(RE_LOC, expr)
+#define RE_EMPTY std::make_shared<SereEmpty>(RE_LOC)
 #define RE_INTERSECT(u,v) std::make_shared<Intersect>(RE_LOC, u,v)
 #define RE_UNION(u,v) std::make_shared<Union>(RE_LOC, u,v)
 #define RE_CONCAT(u,v) std::make_shared<Concat>(RE_LOC, u,v)
 #define RE_FUSION(u,v) std::make_shared<Fusion>(RE_LOC, u,v)
-//#define RE_PERMUTE(us) std::make_shared<Fusion>(RE_LOC, us)
 #define RE_STAR(u) std::make_shared<KleeneStar>(RE_LOC, u)
 #define RE_PLUS(u) std::make_shared<KleenePlus>(RE_LOC, u)
 #define RE_PARTIAL(u) std::make_shared<Partial>(RE_LOC, u)
-//#define RE_RANGE(u,mn,mx) std::make_shared<ConcatRange>(RE_LOC, u, mn, mx)
 
 #endif // LANGUAGE_HPP
