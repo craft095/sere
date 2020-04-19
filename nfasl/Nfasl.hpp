@@ -7,8 +7,8 @@
 #include <string>
 #include <sstream>
 #include <nlohmann/json.hpp>
-#include "Z3.hpp"
-#include "BoolExpr.hpp"
+#include "sat/Z3.hpp"
+#include "boolean/Expr.hpp"
 
 using json = nlohmann::json;
 
@@ -17,7 +17,7 @@ namespace rt {
 }
 
 namespace nfasl {
-  typedef expr::Expr Predicate;
+  typedef boolean::Expr Predicate;
   typedef size_t State;
   typedef std::set<State> States;
 

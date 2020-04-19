@@ -1,10 +1,10 @@
 #include "test/Letter.hpp"
-#include "BoolExpr.hpp"
+#include "boolean/Expr.hpp"
 
-bool evalBool(expr::Expr expr, const rt::Names& letter) {
+bool evalBool(boolean::Expr expr, const rt::Names& letter) {
   bool tf;
   uint32_t v;
-  expr::Expr lhs, rhs;
+  boolean::Expr lhs, rhs;
 
   if (expr.get_value(tf)) {
     return tf;

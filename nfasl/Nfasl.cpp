@@ -3,10 +3,10 @@
 #include <string>
 #include <sstream>
 #include <nlohmann/json.hpp>
-#include "Z3.hpp"
+#include "sat/Z3.hpp"
 #include "rt/RtPredicate.hpp"
-#include "Nfasl.hpp"
-#include "BisimNfasl.hpp"
+#include "nfasl/Nfasl.hpp"
+#include "nfasl/BisimNfasl.hpp"
 #include "rt/RtNfasl.hpp"
 #include "Algo.hpp"
 
@@ -292,7 +292,7 @@ namespace nfasl {
       v.transitions[q].resize(uT.size());
       auto vRule = v.transitions[q].begin();
       for (auto& rule : uT) {
-        expr::toRtPredicate(rule.phi, vRule->phi);
+        boolean::toRtPredicate(rule.phi, vRule->phi);
         vRule->state = rule.state;
         ++vRule;
       }

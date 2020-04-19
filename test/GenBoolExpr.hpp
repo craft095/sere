@@ -35,6 +35,8 @@ private:
 
   static Ptr<BoolExpr> makeTerm(size_t atoms) {
     static std::vector<Ptr<BoolExpr>> terms;
+    static constexpr size_t maxAtoms = 128;
+    assert(atoms < maxAtoms);
     if (terms.size() == 0) {
       terms.push_back(RE_TRUE);
       terms.push_back(RE_FALSE);

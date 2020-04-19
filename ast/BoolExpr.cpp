@@ -1,76 +1,48 @@
 #include "BoolExpr.hpp"
-
-const char* VarName::names[] = {
-  "x0",
-  "x1",
-  "x2",
-  "x3",
-  "x4",
-  "x5",
-  "x6",
-  "x7",
-  "x8",
-  "x9",
-  "x10",
-  "x11",
-  "x12",
-  "x13",
-  "x14",
-  "x15",
-  "x16",
-  "x17",
-  "x18",
-  "x19",
-  "x20",
-  "x21",
-  "x22",
-  "x23",
-  "x24",
-  "x25",
-};
+#include "boolean/Expr.hpp"
 
 class ToExpr : public BoolVisitor {
 private:
-  expr::Expr result;
+  boolean::Expr result;
 public:
   ToExpr(BoolExpr& expr) {
     expr.accept(*this);
   }
 
-  expr::Expr getResult() const { return result; }
+  boolean::Expr getResult() const { return result; }
 
   void visit(Variable& v) override {
-    result = expr::Expr::var(v.getName().ix);
+    result = boolean::Expr::var(v.getName().ix);
   }
 
   void visit(BoolValue& e) override {
-    result = expr::Expr::value(e.getValue());
+    result = boolean::Expr::value(e.getValue());
   }
 
   void visit(BoolNot& v) override {
     v.getArg()->accept(*this);
-    expr::Expr arg = result;
+    boolean::Expr arg = result;
     result = !arg;
   }
 
   void visit(BoolAnd& v) override {
     v.getLhs()->accept(*this);
-    expr::Expr lhs = result;
+    boolean::Expr lhs = result;
     v.getRhs()->accept(*this);
-    expr::Expr rhs = result;
+    boolean::Expr rhs = result;
     result = lhs && rhs;
   }
 
   void visit(BoolOr& v) override {
     v.getLhs()->accept(*this);
-    expr::Expr lhs = result;
+    boolean::Expr lhs = result;
     v.getRhs()->accept(*this);
-    expr::Expr rhs = result;
+    boolean::Expr rhs = result;
     result = lhs || rhs;
   }
 };
 
-expr::Expr boolExprToExpr(BoolExpr& expr) {
+boolean::Expr boolExprToExpr(BoolExpr& expr) {
   return ToExpr(expr).getResult();
 }
 

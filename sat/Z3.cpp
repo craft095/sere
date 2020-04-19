@@ -1,8 +1,8 @@
 #include "c++/z3++.h"
 
-#include "Language.hpp"
+#include "ast/BoolExpr.hpp"
 
-#include "Z3.hpp"
+#include "sat/Z3.hpp"
 
 z3::context theContext;
 
@@ -17,7 +17,7 @@ public:
   z3::expr getExpr() const { return expr; }
 
   void visit(Variable& v) override {
-    expr = theContext.bool_const(v.getName().pretty());
+    expr = theContext.bool_const(v.getName().pretty().c_str());
   }
 
   void visit(BoolValue& v) override {

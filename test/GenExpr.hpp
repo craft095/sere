@@ -2,20 +2,20 @@
 #define GENEXPR_HPP
 
 #include "test/Tools.hpp"
-#include "BoolExpr.hpp"
+#include "boolean/Expr.hpp"
 
-class ExprGenerator : public Catch2::IGenerator <expr::Expr> {
+class ExprGenerator : public Catch2::IGenerator <boolean::Expr> {
 private:
   size_t maxDepth;
   size_t atoms;
-  expr::Expr value;
+  boolean::Expr value;
 public:
   ExprGenerator(size_t depth, size_t atoms_)
     : maxDepth(depth), atoms(atoms_) {
     next();
   }
 
-  expr::Expr const& get() const override {
+  boolean::Expr const& get() const override {
     return value;
   }
 
@@ -32,40 +32,42 @@ private:
     return d1;
   }
 
-  static expr::Expr makeTerm(size_t atoms) {
-    static std::vector<expr::Expr> terms;
+  static boolean::Expr makeTerm(size_t atoms) {
+    static constexpr size_t maxAtoms = 128;
+    static std::vector<boolean::Expr> terms;
+    assert(atoms < maxAtoms);
     if (terms.size() == 0) {
-      terms.push_back(expr::Expr::value(true));
-      terms.push_back(expr::Expr::value(false));
+      terms.push_back(boolean::Expr::value(true));
+      terms.push_back(boolean::Expr::value(false));
       for (size_t i = 0; i < maxAtoms; ++i) {
-        terms.push_back(expr::Expr::var(i));
+        terms.push_back(boolean::Expr::var(i));
       }
     }
     size_t ix = choose((size_t)0, 2 + atoms - 1);
     return terms[ix];
   }
 
-  static expr::Expr makeNot(size_t d, size_t atoms) {
+  static boolean::Expr makeNot(size_t d, size_t atoms) {
     return !make(d - 1, atoms);
   }
 
-  static expr::Expr makeAnd(size_t d, size_t atoms) {
+  static boolean::Expr makeAnd(size_t d, size_t atoms) {
     return make(d - 1, atoms) && make(d - 1, atoms);
   }
 
-  static expr::Expr makeOr(size_t d, size_t atoms) {
+  static boolean::Expr makeOr(size_t d, size_t atoms) {
     return make(d - 1, atoms) || make(d - 1, atoms);
   }
 
 public:
-  static expr::Expr make(size_t depth, size_t atoms) {
+  static boolean::Expr make(size_t depth, size_t atoms) {
     auto d = guessDepth(depth);
     if (d == 0) {
       return makeTerm(atoms);
     } else {
       auto u = [atoms, d]() { return makeNot(d, atoms); };
       auto v = [atoms, d]() { return makeAnd(d, atoms); };
-      std::vector<std::function<expr::Expr()>> ops(2);
+      std::vector<std::function<boolean::Expr()>> ops(2);
       ops[0] = u;
       ops[1] = v;
       return any_of(ops)();
@@ -73,9 +75,9 @@ public:
   }
 };
 
-inline Catch2::GeneratorWrapper<expr::Expr>
+inline Catch2::GeneratorWrapper<boolean::Expr>
 genBoolExpr(size_t depth, size_t atomics) {
-  return Catch2::GeneratorWrapper<expr::Expr>
+  return Catch2::GeneratorWrapper<boolean::Expr>
     (std::make_unique<ExprGenerator>
      (depth, atomics));
 }

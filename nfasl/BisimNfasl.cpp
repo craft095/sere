@@ -3,10 +3,10 @@
 #include <optional>
 
 #include "Algo.hpp"
-#include "Cnf.hpp"
-#include "DAG.hpp"
-#include "Nfasl.hpp"
-#include "BisimNfasl.hpp"
+#include "sat/Cnf.hpp"
+#include "nfasl/DAG.hpp"
+#include "nfasl/Nfasl.hpp"
+#include "nfasl/BisimNfasl.hpp"
 
 /**
  * Minimize NFASL state count with bisimulation.

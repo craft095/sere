@@ -9,6 +9,8 @@
 #include "test/Tools.hpp"
 #include "test/ToolsZ3.hpp"
 
+#include "ast/BoolExpr.hpp"
+#include "ast/SereExpr.hpp"
 #include "sat/Cnf.hpp"
 
 TEST_CASE("Sere") {
@@ -23,7 +25,7 @@ TEST_CASE("Sere") {
     CHECK(evalSere(*RE_SEREBOOL(RE_VAR(1)), {makeNames({1}, {0})}) == Match_Ok);
     CHECK(evalSere(*RE_SEREBOOL(RE_VAR(0)), {makeNames({1}, {0})}) == Match_Failed);
 
-    SereChildPtr tc = RE_SEREBOOL(RE_AND(RE_TRUE, RE_NOT(RE_VAR(0))));
+    Ptr<SereExpr> tc = RE_SEREBOOL(RE_AND(RE_TRUE, RE_NOT(RE_VAR(0))));
     CHECK(evalSere(*tc, {makeNames({1}, {0})}) == Match_Ok);
     CHECK(evalSere(*tc, {makeNames({0}, {1})}) == Match_Failed);
     CHECK(evalSere(*tc, {makeNames({1}, {0}), makeNames({1}, {0})}) == Match_Failed);

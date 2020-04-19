@@ -62,11 +62,11 @@ public:
 
 class Union : public SereExpr {
 private:
-  SereChildPtr lhs;
-  SereChildPtr rhs;
+  Ptr<SereExpr> lhs;
+  Ptr<SereExpr> rhs;
 
 public:
-  Union(const Located& loc, SereChildPtr lhs_, SereChildPtr rhs_) : SereExpr(loc), lhs(lhs_), rhs(rhs_) {}
+  Union(const Located& loc, Ptr<SereExpr> lhs_, Ptr<SereExpr> rhs_) : SereExpr(loc), lhs(lhs_), rhs(rhs_) {}
 
   void accept(SereVisitor& v) override { v.visit(*this); }
 
@@ -80,11 +80,11 @@ public:
 
 class Intersect : public SereExpr {
 private:
-  SereChildPtr lhs;
-  SereChildPtr rhs;
+  Ptr<SereExpr> lhs;
+  Ptr<SereExpr> rhs;
 
 public:
-  Intersect(const Located& loc, SereChildPtr lhs_, SereChildPtr rhs_) : SereExpr(loc), lhs(lhs_), rhs(rhs_) {}
+  Intersect(const Located& loc, Ptr<SereExpr> lhs_, Ptr<SereExpr> rhs_) : SereExpr(loc), lhs(lhs_), rhs(rhs_) {}
 
   void accept(SereVisitor& v) override { v.visit(*this); }
 
@@ -102,7 +102,7 @@ private:
   Ptr<SereExpr> rhs;
 
 public:
-  Concat(const Located& loc, SereChildPtr lhs_, SereChildPtr rhs_) : SereExpr(loc), lhs(lhs_), rhs(rhs_) {}
+  Concat(const Located& loc, Ptr<SereExpr> lhs_, Ptr<SereExpr> rhs_) : SereExpr(loc), lhs(lhs_), rhs(rhs_) {}
 
   void accept(SereVisitor& v) override { v.visit(*this); }
 
@@ -120,7 +120,7 @@ private:
   Ptr<SereExpr> rhs;
 
 public:
-  Fusion(const Located& loc, SereChildPtr lhs_, SereChildPtr rhs_) : SereExpr(loc), lhs(lhs_), rhs(rhs_) {}
+  Fusion(const Located& loc, Ptr<SereExpr> lhs_, Ptr<SereExpr> rhs_) : SereExpr(loc), lhs(lhs_), rhs(rhs_) {}
 
   void accept(SereVisitor& v) override { v.visit(*this); }
 
@@ -134,10 +134,10 @@ public:
 
 class KleeneStar : public SereExpr {
 private:
-  SereChildPtr arg;
+  Ptr<SereExpr> arg;
 
 public:
-  KleeneStar(const Located& loc, SereChildPtr arg_) : SereExpr(loc), arg(arg_) {}
+  KleeneStar(const Located& loc, Ptr<SereExpr> arg_) : SereExpr(loc), arg(arg_) {}
 
   void accept(SereVisitor& v) override { v.visit(*this); }
 
@@ -150,10 +150,10 @@ public:
 
 class KleenePlus : public SereExpr {
 private:
-  SereChildPtr arg;
+  Ptr<SereExpr> arg;
 
 public:
-  KleenePlus(const Located& loc, SereChildPtr arg_) : SereExpr(loc), arg(arg_) {}
+  KleenePlus(const Located& loc, Ptr<SereExpr> arg_) : SereExpr(loc), arg(arg_) {}
 
   void accept(SereVisitor& v) override { v.visit(*this); }
 
@@ -166,10 +166,10 @@ public:
 
 class Partial : public SereExpr {
 private:
-  SereChildPtr arg;
+  Ptr<SereExpr> arg;
 
 public:
-  Partial(const Located& loc, SereChildPtr arg_) : SereExpr(loc), arg(arg_) {}
+  Partial(const Located& loc, Ptr<SereExpr> arg_) : SereExpr(loc), arg(arg_) {}
 
   void accept(SereVisitor& v) override { v.visit(*this); }
 

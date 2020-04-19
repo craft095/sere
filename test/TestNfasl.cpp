@@ -11,7 +11,7 @@
 
 #include "test/Letter.hpp"
 
-#include "nfaslBisimNfasl.hpp"
+#include "nfasl/BisimNfasl.hpp"
 
 using namespace nfasl;
 

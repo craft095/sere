@@ -1,4 +1,5 @@
-#include "Language.hpp"
+#include "ast/BoolExpr.hpp"
+#include "boolean/Expr.hpp"
 
 #include <map>
 #include <minisat/core/Solver.h>
@@ -143,7 +144,7 @@ private:
 
   using Code = Tseitin::Code;
 public:
-  TseitinExpr(expr::Expr expr) {
+  TseitinExpr(boolean::Expr expr) {
     bool v;
     if (expr.get_value(v)) {
       sat = v;
@@ -160,9 +161,9 @@ public:
     return sat;
   }
 
-  Minisat::Var traverse(expr::Expr expr) {
+  Minisat::Var traverse(boolean::Expr expr) {
     uint32_t v;
-    expr::Expr lhs, rhs;
+    boolean::Expr lhs, rhs;
 
     assert(!expr.is_const());
 
@@ -286,9 +287,9 @@ public:
   }
 };
 
-expr::Expr simplify(expr::Expr expr) {
+boolean::Expr simplify(boolean::Expr expr) {
   bool b;
-  expr::Expr lhs, rhs;
+  boolean::Expr lhs, rhs;
 
   if (expr.is_const()) {
     return expr;
@@ -302,10 +303,10 @@ expr::Expr simplify(expr::Expr expr) {
     auto arg = simplify(lhs);
 
     if (arg.get_value(b)) {
-      return expr::Expr::value(!b);
+      return boolean::Expr::value(!b);
     }
 
-    expr::Expr inner;
+    boolean::Expr inner;
     if (arg.not_arg(inner)) {
       return inner;
     }
@@ -351,7 +352,7 @@ bool sat(BoolExpr& expr) {
   return TseitinBoolExpr(*simplifiedExpr).isSatisfiable();
 }
 
-bool sat(expr::Expr expr) {
+bool sat(boolean::Expr expr) {
   auto simplifiedExpr = simplify(expr);
   return TseitinExpr(simplifiedExpr).isSatisfiable();
 }

@@ -1,9 +1,9 @@
 #ifndef EVALEXPR_HPP
 #define EVALEXPR_HPP
 
-#include "BoolExpr.hpp"
+#include "boolean/Expr.hpp"
 #include "test/Letter.hpp"
 
-extern bool evalBool(expr::Expr expr, const Letter& letter);
+extern bool evalBool(boolean::Expr expr, const Letter& letter);
 
 #endif //EVALEXPR_HPP

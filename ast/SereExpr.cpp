@@ -1,5 +1,5 @@
-#include "SereExpr.hpp"
-#include "Nfasl.hpp"
+#include "ast/SereExpr.hpp"
+#include "nfasl/Nfasl.hpp"
 
 using Nfasl = nfasl::Nfasl;
 

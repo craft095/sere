@@ -19,6 +19,9 @@ RT_SRCS :=                      \
 	rt/RtPredicate.cpp 	\
 	rt/RtNfasl.cpp	 	\
 
+BOOLEAN_SRC :=                  \
+	boolean/Expr.cpp        \
+
 AST_SRCS :=                     \
 	ast/BoolExpr.cpp	\
 	ast/SereExpr.cpp	\
@@ -36,11 +39,11 @@ SAT_SRCS :=                     \
         sat/Cnf.cpp 		\
         sat/Z3.cpp 		\
 
-COMMON_SRCS :=                  \
-	BoolExpr.cpp            \
+COMMON_SRCS :=
 
 SERE_SRCS :=        		\
 	$(RT_SRCS)		\
+	$(BOOLEAN_SRC) 		\
 	$(AST_SRCS)		\
 	$(SAT_SRCS)		\
 	$(NFASL_SRCS)		\
@@ -153,7 +156,7 @@ gdb: $(BIN)
 help:
 	@echo available targets: all dist clean distclean install uninstall check
 
-Parser.cpp : $(OBJDIR)/SereParser.cpp
+ast/Parser.cpp : $(OBJDIR)/ast/SereParser.cpp
 
 sere_tests: $(SERE_TESTS_OBJS)
 	$(LINK.o) $^  $(LDLIBS)
@@ -161,16 +164,16 @@ sere_tests: $(SERE_TESTS_OBJS)
 nfasl_tests: $(NFASL_TESTS_OBJS)
 	$(LINK.o) $^  $(LDLIBS)
 
+$(OBJDIR)/%Parser.cpp: %.g4
+$(OBJDIR)/%Parser.cpp: %.g4 $(DEPDIR)/%.d
+	$(PRECOMPILE)
+	$(COMPILE.g4) $<
+	#$(POSTCOMPILE)
+
 $(OBJDIR)/%.o: %.c
 $(OBJDIR)/%.o: %.c $(DEPDIR)/%.d
 	$(PRECOMPILE)
 	$(COMPILE.c) $<
-	$(POSTCOMPILE)
-
-$(OBJDIR)/%.o: %.cpp
-$(OBJDIR)/%.o: %.cpp $(DEPDIR)/%.d
-	$(PRECOMPILE)
-	$(COMPILE.cc) $<
 	$(POSTCOMPILE)
 
 $(OBJDIR)/%.o: $(OBJDIR)/%.cpp
@@ -179,20 +182,8 @@ $(OBJDIR)/%.o: $(OBJDIR)/%.cpp $(DEPDIR)/%.d
 	$(COMPILE.cc) $<
 	$(POSTCOMPILE)
 
-$(OBJDIR)/%Parser.cpp: %.g4
-$(OBJDIR)/%Parser.cpp: %.g4 $(DEPDIR)/%.d
-	$(PRECOMPILE)
-	$(COMPILE.g4) $<
-	#$(POSTCOMPILE)
-
-$(OBJDIR)/%.o: %.cc
-$(OBJDIR)/%.o: %.cc $(DEPDIR)/%.d
-	$(PRECOMPILE)
-	$(COMPILE.cc) $<
-	$(POSTCOMPILE)
-
-$(OBJDIR)/%.o: %.cxx
-$(OBJDIR)/%.o: %.cxx $(DEPDIR)/%.d
+$(OBJDIR)/%.o: %.cpp
+$(OBJDIR)/%.o: %.cpp $(DEPDIR)/%.d
 	$(PRECOMPILE)
 	$(COMPILE.cc) $<
 	$(POSTCOMPILE)

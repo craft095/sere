@@ -2,18 +2,19 @@
 #define AST_COMMON_HPP
 
 #include <string>
+#include <sstream>
 #include <memory>
 
 #include "Located.hpp"
 
 typedef std::string String;
 struct VarName {
-  static const char* names[26];
-
   size_t ix;
 
-  const char* pretty() const {
-    return names[ix];
+  std::string pretty() const {
+    std::ostringstream stream;
+    stream << 'x' << ix;
+    return stream.str();
   }
 
   friend bool operator== (VarName x, VarName y) { return x.ix == y.ix; }

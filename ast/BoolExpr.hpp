@@ -8,7 +8,7 @@
 #include <memory>
 #include <boost/format.hpp>
 
-#include "BoolExpr.hpp"
+#include "boolean/Expr.hpp"
 #include "ast/Located.hpp"
 #include "ast/Common.hpp"
 
@@ -119,12 +119,12 @@ public:
 };
 
 /**
- * Convert BoolExpr into equivalent compact representaion expr::Expr
+ * Convert BoolExpr into equivalent compact representaion boolean::Expr
  *
  * @param expr BoolExpr object
- * @return expr::Expr object
+ * @return boolean::Expr object
  */
-extern expr::Expr boolExprToExpr(BoolExpr& expr);
+extern boolean::Expr boolExprToExpr(BoolExpr& expr);
 
 /**
  * Get all variables in BoolExpr

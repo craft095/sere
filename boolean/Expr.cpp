@@ -1,18 +1,24 @@
 #include "rt/RtPredicate.hpp"
-#include "BoolExpr.hpp"
+#include "boolean/Expr.hpp"
 
-namespace expr {
+namespace boolean {
 
   Context Expr::context;
 
-  class FromBoolExpr {
-  private:
-    std::vector<uint8_t> data;
+  /**
+   * Serialize expression into runtime representation
+   */
+  class FromExpr {
   public:
-    FromBoolExpr(expr::Expr expr) {
+    FromExpr(Expr expr) {
       // writeValue(rt::magic);
       write(expr);
     }
+
+    const std::vector<uint8_t>& getData() const { return data; }
+
+  private:
+    std::vector<uint8_t> data;
 
     template <typename T>
     void writeValue(T t) {
@@ -20,12 +26,10 @@ namespace expr {
       data.insert(data.end(), eip, eip + sizeof(t));
     }
 
-    const std::vector<uint8_t>& getData() const { return data; }
-
-    void write(expr::Expr expr) {
+    void write(Expr expr) {
       bool tf;
       uint32_t v;
-      expr::Expr lhs, rhs;
+      Expr lhs, rhs;
 
       if (expr.get_value(tf)) {
         writeValue(tf ? rt::Code::True : rt::Code::False);
@@ -57,10 +61,10 @@ namespace expr {
     }
   };
 
-  void toRtPredicate(expr::Expr expr,
+  void toRtPredicate(Expr expr,
                      std::vector<uint8_t>& data) {
-    FromBoolExpr be{expr};
+    FromExpr be{expr};
     data = be.getData();
   }
 
-}
+} // namespace boolean

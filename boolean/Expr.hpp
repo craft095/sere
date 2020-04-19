@@ -1,5 +1,5 @@
-#ifndef BOOLEXPR_HPP
-#define BOOLEXPR_HPP
+#ifndef BOOLEAN_EXPR_HPP
+#define BOOLEAN_EXPR_HPP
 
 #include <unordered_map>
 #include <map>
@@ -8,7 +8,7 @@
 #include <memory>
 #include <cassert>
 
-namespace expr {
+namespace boolean {
 
 struct Expr0 {
   enum Op {
@@ -182,8 +182,8 @@ private:
   static Context context;
 };
 
-extern void toRtPredicate(expr::Expr expr,
+extern void toRtPredicate(Expr expr,
                           std::vector<uint8_t>& data);
-} // expr
+} // boolean
 
-#endif // BOOLEXPR_HPP
+#endif // BOOLEAN_EXPR_HPP
