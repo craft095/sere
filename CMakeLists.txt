@@ -24,6 +24,7 @@ if(NOT extern_minisat_POPULATED)
   message(STATUS "Populating minisat " ${extern_minisat_SOURCE_DIR})
   add_subdirectory(minisat)
 endif()
+message(STATUS "minisat populated " ${extern_minisat_SOURCE_DIR})
 
 # FetchContent_Declare(
 #   extern_z3
@@ -54,6 +55,7 @@ if(NOT extern_json_POPULATED)
     ${extern_json_BINARY_DIR}
     EXCLUDE_FROM_ALL)
 endif()
+message(STATUS "json populated " ${extern_json_SOURCE_DIR})
 
 FetchContent_Declare(
   catch
@@ -68,6 +70,7 @@ if(NOT catch_POPULATED)
   add_library(Catch2::Catch IMPORTED INTERFACE)
   set_property(TARGET Catch2::Catch PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${CATCH_INCLUDE_DIR}")
 endif()
+message(STATUS "catch2 populated " ${extern_catch_SOURCE_DIR})
 
 FetchContent_Declare(
   extern_antlr4
@@ -83,6 +86,8 @@ if(NOT extern_antlr4_POPULATED)
     ${extern_antlr4_BINARY_DIR}
     EXCLUDE_FROM_ALL)
 endif()
+target_compile_options(antlr4_static PRIVATE "-fPIC")
+message(STATUS "antlr4 populated " ${extern_antlr4_SOURCE_DIR})
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 list(APPEND CMAKE_MODULE_PATH ${extern_antlr4_SOURCE_DIR}/runtime/Cpp/cmake)
@@ -92,11 +97,11 @@ configure_file(SereLibConfig.h.in SereLibConfig.h)
 add_subdirectory(lib)
 
 file (GLOB SereTests_files "test/*.cpp")
+
 add_executable(SereTests ${SereTests_files})
-
-target_link_libraries(SereTests PUBLIC libsere)
-
 target_include_directories(SereTests PUBLIC
-                          "${PROJECT_BINARY_DIR}"
+                          "${PROJECT_SOURCE_DIR}"
                           "${PROJECT_SOURCE_DIR}/lib"
+                          "${extern_antlr4_SOURCE_DIR}/single_include"
                           )
+target_link_libraries(SereTests PUBLIC libsere Catch2::Catch nlohmann_json::nlohmann_json)

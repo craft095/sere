@@ -10,7 +10,7 @@ add_library(libminisat STATIC
 )
 
 target_compile_features(libminisat
-    PUBLIC
+    PRIVATE
       cxx_attributes
       cxx_defaulted_functions
       cxx_deleted_functions
