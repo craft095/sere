@@ -192,6 +192,7 @@ public:
       return tseitin.addSlot(Code::Or, lhsE, rhsE);
     }
     assert(false); // unreachable code
+    return Minisat::Var();
   }
 };
 
@@ -345,6 +346,7 @@ boolean::Expr simplify(boolean::Expr expr) {
   }
 
   assert(false); // unreachable code
+  return boolean::Expr();
 }
 
 bool sat(BoolExpr& expr) {

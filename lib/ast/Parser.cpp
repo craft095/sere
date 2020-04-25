@@ -10,6 +10,7 @@
 #include "ast/Parser.hpp"
 
 using namespace antlr4;
+using namespace ast;
 
 namespace parser {
 

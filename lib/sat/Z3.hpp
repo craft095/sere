@@ -1,7 +1,7 @@
 #ifndef Z3_HPP
 #define Z3_HPP
 
-#include "c++/z3++.h"
+#include "z3++.h"
 #include <nlohmann/json.hpp>
 
 namespace z3 {

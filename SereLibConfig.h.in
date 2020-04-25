@@ -1,0 +1,3 @@
+// the configured options and settings for SereLib
+#define SERELIB_VERSION_MAJOR @SereLib_VERSION_MAJOR@
+#define SERELIB_VERSION_MINOR @SereLib_VERSION_MINOR@

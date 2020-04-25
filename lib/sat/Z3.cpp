@@ -1,4 +1,4 @@
-#include "c++/z3++.h"
+#include "z3++.h"
 
 #include "ast/BoolExpr.hpp"
 

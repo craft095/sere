@@ -4,7 +4,7 @@
 #include "ast/Common.hpp"
 #include "sat/Z3.hpp"
 
-#include "c++/z3++.h"
+#include "z3++.h"
 
 z3::expr letterToZex(const rt::Names& names) {
   z3::expr e(theContext.bool_val(true));

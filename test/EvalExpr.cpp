@@ -22,4 +22,5 @@ bool evalBool(boolean::Expr expr, const rt::Names& letter) {
     return evalBool(lhs, letter) || evalBool(rhs, letter);
   }
   assert(false); // unreachable code
+  return false;
 }
