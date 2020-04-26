@@ -22,7 +22,7 @@ if(NOT extern_minisat_POPULATED)
   FetchContent_Populate(extern_minisat)
   set(MINISAT_SOURCE ${extern_minisat_SOURCE_DIR})
   message(STATUS "Populating minisat " ${extern_minisat_SOURCE_DIR})
-  add_subdirectory(minisat)
+  add_subdirectory(minisat EXCLUDE_FROM_ALL)
 endif()
 message(STATUS "minisat populated " ${extern_minisat_SOURCE_DIR})
 
@@ -95,20 +95,4 @@ list(APPEND CMAKE_MODULE_PATH ${extern_antlr4_SOURCE_DIR}/runtime/Cpp/cmake)
 configure_file(SereLibConfig.h.in SereLibConfig.h)
 
 add_subdirectory(lib)
-
-file (GLOB SereTests_files "test/*.cpp")
-
-add_executable(SereTests ${SereTests_files})
-target_include_directories(SereTests PUBLIC
-                          "${PROJECT_SOURCE_DIR}"
-                          "${PROJECT_SOURCE_DIR}/lib"
-                          "${extern_antlr4_SOURCE_DIR}/single_include"
-                          )
-target_link_libraries(
-  SereTests PRIVATE
-  minisat_static
-  libsere_static
-#  antlr4_static
-  z3
-  Catch2::Catch
-  nlohmann_json::nlohmann_json)
+add_subdirectory(test)

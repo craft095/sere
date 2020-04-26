@@ -62,6 +62,7 @@ namespace rt {
         return eval0() || eval0();
       }
       assert(false);
+      return 0;
     }
 
   private:
