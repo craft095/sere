@@ -1,9 +1,9 @@
 #include <iostream>
 #include <sstream>
 #include "antlr4-runtime.h"
-#include "ast/SereLexer.h"
-#include "ast/SereParser.h"
-#include "ast/SereBaseVisitor.h"
+#include "SereLexer.h"
+#include "SereParser.h"
+#include "SereBaseVisitor.h"
 
 #include "ast/BoolExpr.hpp"
 #include "ast/SereExpr.hpp"

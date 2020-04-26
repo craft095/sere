@@ -13,8 +13,8 @@ include(FetchContent)
 
 FetchContent_Declare(
   extern_minisat
-  GIT_REPOSITORY https://github.com/niklasso/minisat
-  GIT_TAG        releases/2.2.0
+  GIT_REPOSITORY https://github.com/agurfinkel/minisat
+  GIT_TAG        master
 )
 FetchContent_GetProperties(extern_minisat)
 
@@ -104,4 +104,11 @@ target_include_directories(SereTests PUBLIC
                           "${PROJECT_SOURCE_DIR}/lib"
                           "${extern_antlr4_SOURCE_DIR}/single_include"
                           )
-target_link_libraries(SereTests PUBLIC libsere Catch2::Catch nlohmann_json::nlohmann_json)
+target_link_libraries(
+  SereTests PRIVATE
+  minisat_static
+  libsere_static
+#  antlr4_static
+  z3
+  Catch2::Catch
+  nlohmann_json::nlohmann_json)

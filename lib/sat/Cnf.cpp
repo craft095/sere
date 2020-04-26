@@ -2,7 +2,7 @@
 #include "boolean/Expr.hpp"
 
 #include <map>
-#include <minisat/core/Solver.h>
+#include "minisat/core/Solver.h"
 
 using Minisat::mkLit;
 
