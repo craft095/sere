@@ -25,7 +25,9 @@ add_custom_target(GenerateParser DEPENDS ${ANTLR_SereParser_CXX_OUTPUTS})
 include_directories(${extern_antlr4_SOURCE_DIR}/runtime/Cpp/runtime/src)
 include_directories(${ANTLR_SereParser_OUTPUT_DIR})
 
-file (GLOB sere_files "ast/*.cpp" "boolean/*.cpp" "nfasl/*.cpp" "rt/*.cpp" "sat/*.cpp")
+file (GLOB sere_files
+  "ast/*.cpp" "boolean/*.cpp" "nfasl/*.cpp" "rt/*.cpp" "sat/*.cpp")
+file (GLOB sere_public_headers "Match.hpp")
 add_library(sere_shared SHARED ${sere_files} ${ANTLR_SereParser_CXX_OUTPUTS})
 add_library(sere_static STATIC ${sere_files} ${ANTLR_SereParser_CXX_OUTPUTS})
 
@@ -55,3 +57,20 @@ target_link_libraries(
   antlr4_static
   z3
   )
+
+set_target_properties(sere_static PROPERTIES PUBLIC_HEADER "${sere_public_headers}")
+set_target_properties(sere_shared PROPERTIES PUBLIC_HEADER "${sere_public_headers}")
+
+install(DIRECTORY ast/ DESTINATION include/sere/ast
+        FILES_MATCHING PATTERN "*.hpp")
+install(DIRECTORY boolean/ DESTINATION include/sere/boolean
+        FILES_MATCHING PATTERN "*.hpp")
+install(DIRECTORY nfasl/ DESTINATION include/sere/nfasl
+        FILES_MATCHING PATTERN "*.hpp")
+install(DIRECTORY rt/ DESTINATION include/sere/rt
+        FILES_MATCHING PATTERN "*.hpp")
+
+install(TARGETS sere_static sere_shared
+        LIBRARY DESTINATION lib
+        PUBLIC_HEADER DESTINATION include/sere
+        )
