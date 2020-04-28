@@ -20,9 +20,9 @@ But where REs use symbols from some alphabet (like characters
 in text), SEREs use arbitrary boolean predicates over set
 boolean variables.
 
-It is al about succinctness: in general SERE with k boolean
-variables are equivalent to RE over alphbet of size 2^k.
-This explains why some properities, expressible in SERE,
+It is all about succinctness: in general SERE with `k` boolean
+variables are equivalent to RE over alphabet of size `2^k`.
+This explains why some properties, expressible in SERE,
 are practically inexpressible in RE.
 
 The library:
@@ -37,12 +37,7 @@ In the future, there will be added:
 - translation from non-deterministic to deterministic automaton
 - reverse mode: generating sequence of event, matching the given expression
 
-
-SERE
-
-Being very similar to well known reqular expressions, t
-
-## Docs
+## Syntax
 
 `()` - matches empty sequence
 `p` - matches sequence of size 1 where the only element satisfies

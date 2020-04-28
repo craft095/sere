@@ -86,7 +86,7 @@ bool set_non_empty_intersection (
                                  const std::set<T, CMP, ALLOC> &s1,
                                  const std::set<T, CMP, ALLOC> &s2)
 {
-  return set_intersects(s1, s2).size() > 0;
+  return !set_intersects(s1, s2).empty();
 }
 
 template <typename K, typename T, typename ... Ts>
