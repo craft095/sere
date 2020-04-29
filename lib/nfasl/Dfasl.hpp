@@ -38,8 +38,8 @@ namespace dfasl {
   };
 
   extern void toDfasl(const nfasl::Nfasl& a, Dfasl& b);
-  // extern void to_json(json& j, const Dfasl& a);
-  // extern std::string pretty(const Dfasl& a);
+  extern void to_json(json& j, const Dfasl& a);
+  extern std::string pretty(const Dfasl& a);
   // extern void toRt(const Dfasl& u, rt::Dfasl& v);
 
 } // namespace dfasl

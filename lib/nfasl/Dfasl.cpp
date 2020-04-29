@@ -7,8 +7,34 @@
 #include <map>
 #include <set>
 #include <vector>
+#include <string>
+#include <sstream>
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
 
 namespace dfasl {
+  static void to_json(json& j, const TransitionRule& p) {
+    j = json{{"phi", p.phi.pretty()}, {"state", p.state}};
+  }
+
+  void to_json(json& j, const Dfasl& a) {
+    j = json{
+      {"atomicCount", a.atomicCount},
+      {"stateCount",  a.stateCount},
+      {"initial",     a.initial},
+      {"finals",      a.finals},
+      {"transitions", a.transitions}
+    };
+  }
+
+  std::string pretty(const Dfasl& a) {
+    std::ostringstream s;
+    constexpr int spaces = 4;
+    s << json(a).dump(spaces) << std::endl;
+    return s.str();
+  }
+
   typedef std::vector<std::tuple<State, nfasl::States>> Candidates;
 
   class Builder {
@@ -24,6 +50,7 @@ namespace dfasl {
       auto r = stateMap.insert({ qs, stateMap.size() });
       if (r.second) {
         candidates.push_back({r.first->second, qs});
+        a.transitions.resize(stateMap.size());
       }
       return r.first->second;
     }
@@ -119,6 +146,7 @@ namespace dfasl {
       for (auto& [u,vs] : candidates) {
         nextState(a, builder, u, vs);
       }
+      candidates = Candidates{};
       builder.swapCandidates(candidates);
     }
 
