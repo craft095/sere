@@ -122,6 +122,12 @@ namespace parser {
       return result;
     }
 
+    virtual antlrcpp::Any visitSereComplement(SereParser::SereComplementContext *ctx) override {
+      Ptr<SereExpr> arg = visit(ctx->arg);
+      Ptr<SereExpr> result = RE_COMPLEMENT(arg);
+      return result;
+    }
+
     virtual antlrcpp::Any visitSereAbort(SereParser::SereAbortContext *ctx) override {
       Ptr<SereExpr> arg = visit(ctx->arg);
       Ptr<SereExpr> err = visit(ctx->err);

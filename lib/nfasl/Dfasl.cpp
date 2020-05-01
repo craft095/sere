@@ -152,4 +152,16 @@ namespace dfasl {
 
     builder.finalize();
   }
+
+  void complement(dfasl::Dfasl& a) {
+    States finals;
+    std::swap(a.finals, finals);
+
+    for (State q = 0; q < a.stateCount; ++q) {
+      if (!set_member(finals, q)) {
+        a.finals.insert(q);
+      }
+    }
+  }
+
 } // namespace dfasl

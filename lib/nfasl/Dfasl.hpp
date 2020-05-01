@@ -37,6 +37,7 @@ namespace dfasl {
     std::vector<TransitionRules> transitions;
   };
 
+  extern void complement(dfasl::Dfasl& a);
   extern void toDfasl(const nfasl::Nfasl& a, Dfasl& b);
   extern void to_json(json& j, const Dfasl& a);
   extern std::string pretty(const Dfasl& a);

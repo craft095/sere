@@ -117,6 +117,22 @@ TEST_CASE("Nfasl, operations") {
     Match r1 = evalNfasl(minimal, word0);
 
     CHECK(r0 == r1);
+
+    SECTION("complement") {
+      Nfasl comp;
+      complement(minimal, comp);
+      Match r2 = evalCleanNfasl(comp, word0);
+      if (r1 != Match_Ok) {
+        CHECK(r2 == Match_Ok);
+      } else {
+        CHECK(r2 != Match_Ok);
+      }
+      if (r2 != Match_Ok) {
+        CHECK(r1 == Match_Ok);
+      } else {
+        CHECK(r1 != Match_Ok);
+      }
+    }
   }
 
   SECTION("unary ops") {

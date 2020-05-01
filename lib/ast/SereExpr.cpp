@@ -1,5 +1,6 @@
 #include "ast/SereExpr.hpp"
 #include "nfasl/Nfasl.hpp"
+#include "nfasl/BisimNfasl.hpp"
 
 using Nfasl = nfasl::Nfasl;
 
@@ -67,6 +68,12 @@ public:
     Nfasl arg = sereToNfasl(*v.getArg());
 
     result = nfasl::partial(arg);
+  }
+
+  void visit(Complement& v) override {
+    Nfasl arg = sereToNfasl(*v.getArg());
+
+    nfasl::complement(arg, result);
   }
 };
 

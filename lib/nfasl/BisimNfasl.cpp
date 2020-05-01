@@ -5,6 +5,7 @@
 #include "Algo.hpp"
 #include "sat/Cnf.hpp"
 #include "nfasl/DAG.hpp"
+#include "nfasl/Dfasl.hpp"
 #include "nfasl/Nfasl.hpp"
 #include "nfasl/BisimNfasl.hpp"
 
@@ -223,6 +224,30 @@ namespace nfasl {
     simpleBisim(c, partition);
 
     joinStates(c, partition, b);
+  }
+
+  static void toNfasl(const dfasl::Dfasl& a, nfasl::Nfasl& b) {
+    b.atomicCount = a.atomicCount;
+    b.stateCount = a.stateCount;
+    b.initial = a.initial;
+    b.finals = a.finals;
+    b.transitions.resize(b.stateCount);
+
+    for (State q = 0; q < a.stateCount; ++q) {
+      for (auto const& rule : a.transitions[q]) {
+        b.transitions[q].push_back({rule.phi, rule.state});
+      }
+    }
+  }
+
+  void complement(const nfasl::Nfasl& a, nfasl::Nfasl& b) {
+    dfasl::Dfasl d;
+    dfasl::toDfasl(a, d);
+    dfasl::complement(d);
+
+    Nfasl u;
+    toNfasl(d, u);
+    clean(u, b);
   }
 
 }

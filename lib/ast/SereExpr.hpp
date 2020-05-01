@@ -17,6 +17,7 @@ class Concat;
 class Fusion;
 class KleeneStar;
 class KleenePlus;
+class Complement;
 class Partial;
 
 class SereVisitor {
@@ -30,6 +31,7 @@ public:
   virtual void visit(KleeneStar& v) = 0;
   virtual void visit(KleenePlus& v) = 0;
   virtual void visit(Partial& v) = 0;
+  virtual void visit(Complement& v) = 0;
 };
 
 class SereExpr : public LocatedBase {
@@ -180,6 +182,22 @@ public:
   Ptr<SereExpr> getArg() const { return arg; }
 };
 
+class Complement : public SereExpr {
+private:
+  Ptr<SereExpr> arg;
+
+public:
+  Complement(const Located& loc, Ptr<SereExpr> arg_) : SereExpr(loc), arg(arg_) {}
+
+  void accept(SereVisitor& v) override { v.visit(*this); }
+
+  const String pretty() const override {
+    return (boost::format("COMPLEMENT(%1%)") % arg->pretty()).str();
+  }
+
+  Ptr<SereExpr> getArg() const { return arg; }
+};
+
 namespace nfasl {
   class Nfasl;
 }
@@ -198,5 +216,6 @@ extern nfasl::Nfasl sereToNfasl(SereExpr& expr);
 #define RE_STAR(u) std::make_shared<KleeneStar>(RE_LOC, u)
 #define RE_PLUS(u) std::make_shared<KleenePlus>(RE_LOC, u)
 #define RE_PARTIAL(u) std::make_shared<Partial>(RE_LOC, u)
+#define RE_COMPLEMENT(u) std::make_shared<Complement>(RE_LOC, u)
 
 #endif // AST_SEREEXPR_HPP

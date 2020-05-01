@@ -18,6 +18,7 @@ sereExpr : boolExpr                                 # sereBoolExpr
                   ',' err=sereExpr ')'              # sereAbort
           | PERMUTE '(' (elements += sereExpr)
                     (',' elements += sereExpr)* ')' # serePermute
+          | COMPLEMENT arg=sereExpr                 # sereComplement
           | arg=sereExpr KLEENESTAR                 # sereKleeneStar
           | arg=sereExpr KLEENEPLUS                 # sereKleenePlus
           | arg=sereExpr '{' begin = NUM
@@ -40,6 +41,7 @@ RPAREN : ')' ;
 LBRACE : '{' ;
 RBRACE : '}' ;
 EPS : '()' ;
+COMPLEMENT : '~' ;
 ABORT : 'ABORT' ;
 PARTIAL : 'PARTIAL' ;
 PERMUTE : 'PERMUTE' ;

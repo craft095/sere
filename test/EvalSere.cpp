@@ -162,6 +162,13 @@ public:
     result = eval(*RE_CONCAT(v.getArg(), RE_STAR(v.getArg())), word);
   }
 
+  /**
+   * I know no reasonable way to evaluate complementation...
+   */
+  void visit(Complement& ) override {
+    assert(false); // not implemented
+  }
+
   static Match eval(SereExpr& expr, const Word& word) {
     return EvalSere(expr, word).getResult();
   }
