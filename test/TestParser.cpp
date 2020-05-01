@@ -7,7 +7,7 @@
 #include "test/Tools.hpp"
 #include "test/Letter.hpp"
 #include "test/GenLetter.hpp"
-#include "test/EvalRtNfasl.hpp"
+#include "test/EvalRt.hpp"
 
 #include <sstream>
 #include "catch2/catch.hpp"
@@ -75,6 +75,9 @@ public:
   void visit(Partial& v) override {
     v.getArg()->accept(*this);
   }
+  void visit(Complement& v) override {
+    v.getArg()->accept(*this);
+  }
 };
 
 template <typename T>
@@ -94,6 +97,7 @@ void checkEquiv(Ptr<SereExpr> u, Ptr<SereExpr> v) {
   checkAlt<Concat>(u,v);
   checkAlt<KleeneStar>(u,v);
   checkAlt<KleenePlus>(u,v);
+  checkAlt<Complement>(u,v);
 }
 
 void checkExpr(Ptr<SereExpr> expr0, const char* text) {
