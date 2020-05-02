@@ -6,6 +6,9 @@
 #include <unordered_set>
 
 #include "rt/RtPredicate.hpp"
+#include "rt/Executor.hpp"
+#include "rt/Loader.hpp"
+#include "rt/Saver.hpp"
 #include "Match.hpp"
 
 namespace rt {
@@ -30,13 +33,13 @@ namespace rt {
     std::vector<StateTransitions> transitions;
   };
 
-  class DfaslContext {
+  class DfaslContext : public Executor {
   public:
-    DfaslContext (const Dfasl& dfasl_) : dfasl(dfasl_) { reset(); }
-    Match getResult() const { return result; }
+    DfaslContext (std::shared_ptr<Dfasl> dfasl_) : dfasl(dfasl_) { reset(); }
+    Match getResult() const override { return result; }
 
-    void reset();
-    void advance(const Names& vars);
+    void reset() override ;
+    void advance(const Names& vars) override;
 
   private:
     void fail() { result = Match_Failed; }
@@ -54,7 +57,7 @@ namespace rt {
     }
 
     void checkFinals() {
-      if (dfasl.finals.find(currentState) != dfasl.finals.end()) {
+      if (dfasl->finals.find(currentState) != dfasl->finals.end()) {
         ok();
       } else {
         partial();
@@ -62,13 +65,17 @@ namespace rt {
     }
 
   private:
-    const Dfasl& dfasl;
+    std::shared_ptr<Dfasl> dfasl;
     Dfasl::State currentState;
 
     Match result;
   };
 
-  extern void load(const uint8_t* data, size_t len, Dfasl& dfasl);
+  class DfaslLoad : public LoadCallback {
+  public:
+    std::shared_ptr<Executor> load(Loader& loader) override;
+  };
+
   extern void write(const Dfasl& dfasl, std::vector<uint8_t>& data);
 
 } // namespace rt

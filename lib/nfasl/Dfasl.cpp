@@ -1,3 +1,4 @@
+#include "rt/RtDfasl.hpp"
 #include "nfasl/Dfasl.hpp"
 #include "nfasl/Nfasl.hpp"
 #include "sat/Cnf.hpp"
@@ -164,4 +165,24 @@ namespace dfasl {
     }
   }
 
+  void toRt(const Dfasl& u, rt::Dfasl& v) {
+    v.atomicCount = u.atomicCount;
+    v.stateCount = u.stateCount;
+    v.initial = u.initial;
+    v.finals.reserve(u.finals.size());
+    for (auto q : u.finals) {
+      v.finals.insert(q);
+    }
+    v.transitions.resize(v.stateCount);
+    for (State q = 0; q < u.stateCount; ++q) {
+      TransitionRules uT = u.transitions[q];
+      v.transitions[q].resize(uT.size());
+      auto vRule = v.transitions[q].begin();
+      for (auto& rule : uT) {
+        boolean::toRtPredicate(rule.phi, vRule->phi);
+        vRule->state = rule.state;
+        ++vRule;
+      }
+    }
+  }
 } // namespace dfasl

@@ -1,104 +1,53 @@
 #include "rt/RtDfasl.hpp"
-
-#include <memory.h>
+#include "rt/Executor.hpp"
+#include "rt/Loader.hpp"
+#include "rt/Saver.hpp"
 
 namespace rt {
 
-  struct Header {
-    uint32_t magic;
-    uint16_t atomicCount;
-    uint16_t stateCount;
-  } __attribute__((packed));
-
-  constexpr uint32_t magic = 0x8a33b462;
-
-  class Loader {
-  private:
-    const uint8_t* begin;
-    const uint8_t* end;
-    const uint8_t* curr;
-
-    template <typename T>
-    void readValue(T& t) {
-      assert(curr + sizeof(T) <= end);
-      t = *reinterpret_cast<const T*>(curr);
-      curr += sizeof(T);
+  static void loadStates(Loader& loader, Dfasl::States& states) {
+    Dfasl::State count;
+    loader.readValue(count);
+    states.reserve(count);
+    while (count--) {
+      Dfasl::State q;
+      loader.readValue(q);
+      states.insert(q);
     }
-
-    void readData(uint8_t* d, size_t len) {
-      assert(curr + len <= end);
-      memcpy(d, curr, len);
-      curr += len;
-    }
-
-    void loadStates(Dfasl::States& states) {
-      Dfasl::State count;
-      readValue(count);
-      states.reserve(count);
-      while (count--) {
-        Dfasl::State q;
-        readValue(q);
-        states.insert(q);
-      }
-    }
-
-    void loadPhi(Dfasl::Phi& phi) {
-      uint32_t size;
-      readValue(size);
-      phi.resize(size);
-      readData(&phi[0], sizeof(phi[0])*size);
-    }
-
-    void loadStateTransition(Dfasl::StateTransition& str) {
-      loadPhi(str.phi);
-      readValue(str.state);
-    }
-
-    void loadStateTransitions(Dfasl::StateTransitions& strs) {
-      uint32_t trsCount;
-      readValue(trsCount);
-      strs.resize(trsCount);
-      for (auto& str : strs) {
-        loadStateTransition(str);
-      }
-    }
-  public:
-    Loader(const uint8_t* data, size_t len)
-      : begin(data), end(data + len), curr(data) {
-    }
-
-    void load(Dfasl& dfasl) {
-      Header hdr;
-      readValue(hdr);
-      dfasl.atomicCount = hdr.atomicCount;
-      dfasl.stateCount = hdr.stateCount;
-      readValue(dfasl.initial);
-      loadStates(dfasl.finals);
-      dfasl.transitions.resize(dfasl.stateCount);
-
-      for (auto& t : dfasl.transitions) {
-        loadStateTransitions(t);
-      }
-    }
-  };
-
-  void load(const uint8_t* data, size_t len, Dfasl& dfasl) {
-    Loader(data, len).load(dfasl);
   }
 
-  class Saver {
+  static void loadStateTransition(Loader& loader, Dfasl::StateTransition& str) {
+    loader.loadPredicate(str.phi);
+    loader.readValue(str.state);
+  }
+
+  static void loadStateTransitions(Loader& loader, Dfasl::StateTransitions& strs) {
+    uint32_t trsCount;
+    loader.readValue(trsCount);
+    strs.resize(trsCount);
+    for (auto& str : strs) {
+      loadStateTransition(loader, str);
+    }
+  }
+
+  std::shared_ptr<Executor> DfaslLoad::load(Loader& loader) {
+    std::shared_ptr<Dfasl> dfasl = std::make_shared<Dfasl>();
+    const Header& hdr = loader.getHeader();
+    dfasl->atomicCount = hdr.atomicCount;
+    dfasl->stateCount = hdr.stateCount;
+    loader.readValue(dfasl->initial);
+    loadStates(loader, dfasl->finals);
+    dfasl->transitions.resize(dfasl->stateCount);
+
+    for (auto& t : dfasl->transitions) {
+      loadStateTransitions(loader, t);
+    }
+
+    return std::make_shared<DfaslContext>(dfasl);
+  }
+
+  class DfaslSaver : public Saver {
   private:
-    std::vector<uint8_t> data;
-
-    void writeData(const uint8_t* d, size_t len) {
-      data.insert(data.end(), d, d + len);
-    }
-
-    template <typename T>
-    void writeValue(const T& t) {
-      writeData((const uint8_t*)(&t), sizeof(t));
-    }
-
     void saveStates(const Dfasl::States& states) {
       writeValue(states.size());
       for (auto q : states) {
@@ -106,13 +55,8 @@ namespace rt {
       }
     }
 
-    void savePhi(const Dfasl::Phi& phi) {
-      writeValue(phi.size());
-      writeData(&phi[0], sizeof(phi[0])*phi.size());
-    }
-
     void saveStateTransition(const Dfasl::StateTransition& str) {
-      savePhi(str.phi);
+      savePredicate(str.phi);
       writeValue(str.state);
     }
 
@@ -124,7 +68,7 @@ namespace rt {
     }
 
   public:
-    Saver(std::vector<uint8_t>& data_) : data(data_) {}
+    DfaslSaver(std::vector<uint8_t>& data) : Saver(data) {}
 
     void save(const Dfasl& dfasl) {
       Header hdr;
@@ -141,14 +85,14 @@ namespace rt {
   };
 
   void write(const Dfasl& dfasl, std::vector<uint8_t>& data) {
-    Saver(data).save(dfasl);
+    DfaslSaver(data).save(dfasl);
   }
 
   void DfaslContext::reset() {
-    if (dfasl.finals.size() == 0) {
+    if (dfasl->finals.size() == 0) {
       fail();
     } else {
-      currentState = dfasl.initial;
+      currentState = dfasl->initial;
       checkFinals();
     }
   }
@@ -157,7 +101,7 @@ namespace rt {
     bool advanced = false;
 
     Dfasl::State nextState;
-    const Dfasl::StateTransitions& trs = dfasl.transitions[currentState];
+    const Dfasl::StateTransitions& trs = dfasl->transitions[currentState];
     for (auto& tr : trs) {
       if (eval(vars, &tr.phi[0], tr.phi.size())) {
         advanced = true;

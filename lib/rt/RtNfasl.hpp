@@ -1,12 +1,15 @@
 #ifndef RTNFASL_HPP
 #define RTNFASL_HPP
 
+#include "rt/RtPredicate.hpp"
+#include "rt/Executor.hpp"
+#include "rt/Loader.hpp"
+#include "rt/Saver.hpp"
+#include "Match.hpp"
+
 #include <cstdint>
 #include <vector>
 #include <boost/dynamic_bitset.hpp>
-
-#include "rt/RtPredicate.hpp"
-#include "Match.hpp"
 
 namespace rt {
   typedef uint16_t State;
@@ -30,13 +33,13 @@ namespace rt {
     std::vector<StateTransitions> transitions;
   };
 
-  class NfaslContext {
+  class NfaslContext : public Executor {
   public:
-    NfaslContext (const Nfasl& nfasl_) : nfasl(nfasl_) { reset(); }
-    Match getResult() const { return result; }
+    NfaslContext (std::shared_ptr<Nfasl> nfasl_) : nfasl(nfasl_) { reset(); }
+    Match getResult() const override { return result; }
 
-    void reset();
-    void advance(const Names& vars);
+    void reset() override;
+    void advance(const Names& vars) override;
 
   private:
     void fail() { result = Match_Failed; }
@@ -54,7 +57,7 @@ namespace rt {
     }
 
     void checkFinals() {
-      if (currentStates.intersects(nfasl.finals)) {
+      if (currentStates.intersects(nfasl->finals)) {
         ok();
       } else {
         partial();
@@ -62,13 +65,17 @@ namespace rt {
     }
 
   private:
-    const Nfasl& nfasl;
+    std::shared_ptr<Nfasl> nfasl;
     States currentStates;
 
     Match result;
   };
 
-  extern void load(const uint8_t* data, size_t len, Nfasl& nfasl);
+  class NfaslLoad : public LoadCallback {
+  public:
+    std::shared_ptr<Executor> load(Loader& loader) override;
+  };
+
   extern void write(const Nfasl& nfasl, std::vector<uint8_t>& data);
 
 } // namespace rt
