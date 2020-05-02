@@ -24,7 +24,7 @@ namespace rt {
   }
 
   void Loader::ensure(bool cond) {
-    if (cond) {
+    if (!cond) {
       throw LoadingFailed{};
     }
   }
@@ -33,7 +33,7 @@ namespace rt {
     callbacks[kind] = callback;
   }
 
-  ExecutorPtr Loader::load(std::vector<uint8_t> data) {
+  ExecutorPtr Loader::load(const std::vector<uint8_t>& data) {
     return load(&data[0], data.size());
   }
 

@@ -38,6 +38,14 @@ TEST_CASE("RtNfasl") {
   Match r1 = evalRtNfasl(rtNfasl, word0);
 
   CHECK(r0 == r1);
+
+  SECTION("Serialization") {
+    std::vector<uint8_t> data;
+    rt::write(rtNfasl, data);
+    rt::ExecutorPtr exec = rt::Loader::load(data);
+    Match r2 = evalRt(exec, word0);
+    CHECK(r0 == r2);
+  }
 }
 
 TEST_CASE("RtDfasl") {
@@ -62,4 +70,12 @@ TEST_CASE("RtDfasl") {
   Match r1 = evalRtDfasl(rtDfasl, word0);
 
   CHECK(r0 == r1);
+
+  SECTION("Serialization") {
+    std::vector<uint8_t> data;
+    rt::write(rtDfasl, data);
+    rt::ExecutorPtr exec = rt::Loader::load(data);
+    Match r2 = evalRt(exec, word0);
+    CHECK(r0 == r2);
+  }
 }

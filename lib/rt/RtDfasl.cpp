@@ -73,6 +73,7 @@ namespace rt {
     void save(const Dfasl& dfasl) {
       Header hdr;
       hdr.magic = magic;
+      hdr.kind = Kind::DFASL;
       hdr.atomicCount = dfasl.atomicCount;
       hdr.stateCount = dfasl.stateCount;
       writeValue(hdr);

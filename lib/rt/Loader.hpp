@@ -50,7 +50,7 @@ namespace rt {
     void ensure(bool cond);
 
     static void addCallback(Kind kind, LoadCallback* callback);
-    static ExecutorPtr load(std::vector<uint8_t> data);
+    static ExecutorPtr load(const std::vector<uint8_t>& data);
     static ExecutorPtr load(const uint8_t* data, size_t len);
   };
 
