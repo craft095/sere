@@ -26,7 +26,7 @@ include_directories(${extern_antlr4_SOURCE_DIR}/runtime/Cpp/runtime/src)
 include_directories(${ANTLR_SereParser_OUTPUT_DIR})
 
 file (GLOB sere_files
-  "ast/*.cpp" "boolean/*.cpp" "nfasl/*.cpp" "rt/*.cpp" "sat/*.cpp")
+  "api/*.cpp" "ast/*.cpp" "boolean/*.cpp" "nfasl/*.cpp" "rt/*.cpp" "sat/*.cpp")
 file (GLOB sere_public_headers "Match.hpp")
 add_library(sere_shared SHARED ${sere_files} ${ANTLR_SereParser_CXX_OUTPUTS})
 add_library(sere_static STATIC ${sere_files} ${ANTLR_SereParser_CXX_OUTPUTS})
