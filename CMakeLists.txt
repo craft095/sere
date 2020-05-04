@@ -96,4 +96,5 @@ list(APPEND CMAKE_MODULE_PATH ${extern_antlr4_SOURCE_DIR}/runtime/Cpp/cmake)
 configure_file(SereLibConfig.h.in SereLibConfig.h)
 
 add_subdirectory(lib)
+add_subdirectory(tool)
 add_subdirectory(test)

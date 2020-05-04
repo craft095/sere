@@ -1,5 +1,8 @@
 #include <iostream>
 #include <sstream>
+
+#include "boolean/Expr.hpp"
+
 #include "antlr4-runtime.h"
 #include "SereLexer.h"
 #include "SereParser.h"

@@ -8,6 +8,10 @@
 #include <memory>
 #include <cassert>
 
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
+
 namespace boolean {
 
 struct Expr0 {
@@ -182,6 +186,8 @@ private:
   static Context context;
 };
 
+extern void from_json(const json& j, Expr& e);
+extern void to_json(json& j, const Expr& a);
 extern void toRtPredicate(Expr expr,
                           std::vector<uint8_t>& data);
 } // boolean

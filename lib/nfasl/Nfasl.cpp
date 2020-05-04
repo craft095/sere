@@ -13,12 +13,21 @@
 using json = nlohmann::json;
 
 namespace nfasl {
-  // static void to_json(json& j, const VarName& var) {
-  //   j = json{{"var", var.ix}};
-  // }
+  static void from_json(const json& j, TransitionRule& p) {
+    j.at("phi").get_to(p.phi);
+    j.at("state").get_to(p.state);
+  }
 
   static void to_json(json& j, const TransitionRule& p) {
-    j = json{{"phi", p.phi.pretty()}, {"state", p.state}};
+    j = json{{"phi", p.phi}, {"state", p.state}};
+  }
+
+  void from_json(const json& j, Nfasl& a) {
+    j.at("atomicCount").get_to(a.atomicCount);
+    j.at("stateCount").get_to(a.stateCount);
+    j.at("initial").get_to(a.initial);
+    j.at("finals").get_to(a.finals);
+    j.at("transitions").get_to(a.transitions);
   }
 
   void to_json(json& j, const Nfasl& a) {

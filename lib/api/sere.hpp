@@ -10,6 +10,12 @@
 #define MATCH_PARTIAL Match_Partial
 #define MATCH_FAILED Match_Failed
 
+#define SERE_FORMAT_JSON 0
+#define SERE_FORMAT_RT 1
+
+#define SERE_TARGET_NFASL 0
+#define SERE_TARGET_DFASL 1
+
 struct sere_ref;
 struct sere_context;
 
@@ -17,6 +23,8 @@ struct sere_context;
  * Options to control resource consumption
  */
 struct sere_options {
+  int target;
+  int format;
   size_t maxNfaslStates; /** abort if number of NFASL states exceeds the limit */
   size_t maxDfaslStates; /** abort if number of DFASL states exceeds the limit */
 };

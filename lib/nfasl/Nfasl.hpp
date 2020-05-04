@@ -47,6 +47,7 @@ namespace nfasl {
   extern Nfasl kleenePlus(const Nfasl& a0);
   extern Nfasl partial(const Nfasl& a0);
 
+  extern void from_json(const json& j, Nfasl& a);
   extern void to_json(json& j, const Nfasl& a);
   extern std::string pretty(const Nfasl& a);
   extern void toRt(const Nfasl& u, rt::Nfasl& v);

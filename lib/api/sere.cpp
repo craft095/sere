@@ -7,10 +7,15 @@
 #include "nfasl/Dfasl.hpp"
 #include "rt/RtDfasl.hpp"
 #include "rt/RtNfasl.hpp"
+#include "boolean/Expr.hpp"
 #include "Match.hpp"
+
+#include <nlohmann/json.hpp>
 
 #include <cstdint>
 #include <vector>
+
+using json = nlohmann::json;
 
 /**
  * Opaque (for clients) structure to
@@ -47,6 +52,8 @@ int sere_compile(const char* expr,
                  const struct sere_options* opts,
                  sere_compiled* result) {
   try {
+    memset((void*)result, 0, sizeof(result));
+
     std::istringstream stream(expr);
     parser::ParseResult r = parser::parse(stream);
 
@@ -56,12 +63,6 @@ int sere_compile(const char* expr,
     nfasl::Nfasl nfa = sereToNfasl(*expr);
     nfasl::Nfasl min;
     nfasl::minimize(nfa, min);
-
-    dfasl::Dfasl dfa;
-    dfasl::toDfasl(min, dfa);
-
-    rt::Dfasl rtDfa;
-    dfasl::toRt(dfa, rtDfa);
 
     result->compiled = 1;
     result->ref = new sere_ref;
@@ -74,13 +75,52 @@ int sere_compile(const char* expr,
       result->atomics[v.second] = result->ref->atomics[v.second].c_str();
     }
 
-    write(rtDfa, result->ref->rt);
+    if (opts->target == SERE_TARGET_DFASL) {
+      dfasl::Dfasl dfa;
+      dfasl::toDfasl(min, dfa);
 
+      if (opts->format == SERE_FORMAT_JSON) {
+        json j;
+        to_json(j, dfa);
+        std::string r = j.dump(4);
+        std::copy(r.begin(), r.end(), std::back_inserter(result->ref->rt));
+      } else if (opts->format == SERE_FORMAT_RT) {
+        rt::Dfasl rtDfa;
+        dfasl::toRt(dfa, rtDfa);
+        write(rtDfa, result->ref->rt);
+      } else {
+        assert(false); // TODO: error reporting
+      }
+    } else if (opts->target == SERE_TARGET_NFASL) {
+      if (opts->format == SERE_FORMAT_JSON) {
+        json j;
+        to_json(j, min);
+        std::string r = j.dump(4);
+        std::copy(r.begin(), r.end(), std::back_inserter(result->ref->rt));
+      } else if (opts->format == SERE_FORMAT_RT) {
+        rt::Nfasl rtNfa;
+        nfasl::toRt(min, rtNfa);
+
+        write(rtNfa, result->ref->rt);
+      } else {
+        assert(false); // TODO: error reporting
+      }
+    } else {
+      assert(false); // TODO: error reporting
+    }
     result->rt = &(result->ref->rt)[0];
     result->rt_size = result->ref->rt.size();
     return 0;
   } catch(std::invalid_argument& ex) {
-    result->compiled = 0;
+    return -1;
+  } catch(std::exception& ex) {
+    if (result->ref != nullptr) {
+      delete result->ref;
+    }
+    if (result->atomics != nullptr) {
+      delete result->atomics;
+    }
+    memset((void*)result, 0, sizeof(result));
     return -1;
   }
 }

@@ -8,9 +8,11 @@
 namespace rt {
 
   static void loadStates(Loader& loader, States& states) {
-    State count;
+    uint32_t size;
+    uint32_t count;
+    loader.readValue(size);
     loader.readValue(count);
-    states.resize(count);
+    states.resize(size);
     while (count--) {
       State q;
       loader.readValue(q);
@@ -51,7 +53,8 @@ namespace rt {
   class NfaslSaver : public Saver {
   private:
     void saveStates(const States& states) {
-      writeValue(states.count());
+      writeValue(uint32_t(states.size()));
+      writeValue(uint32_t(states.count()));
       for (State q = 0; q < states.size(); ++q) {
         if (states.test(q)) {
           writeValue(q);
@@ -65,7 +68,7 @@ namespace rt {
     }
 
     void saveStateTransitions(const StateTransitions& strs) {
-      writeValue(strs.size());
+      writeValue(uint32_t(strs.size()));
       for (auto const& str : strs) {
         saveStateTransition(str);
       }
@@ -83,6 +86,7 @@ namespace rt {
       writeValue(hdr);
       saveStates(nfasl.initials);
       saveStates(nfasl.finals);
+      assert(nfasl.transitions.size() == nfasl.stateCount);
       for (auto const& t : nfasl.transitions) {
         saveStateTransitions(t);
       }

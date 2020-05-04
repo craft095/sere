@@ -39,6 +39,7 @@ namespace dfasl {
 
   extern void complement(dfasl::Dfasl& a);
   extern void toDfasl(const nfasl::Nfasl& a, Dfasl& b);
+  extern void from_json(const json& j, Dfasl& a);
   extern void to_json(json& j, const Dfasl& a);
   extern std::string pretty(const Dfasl& a);
   extern void toRt(const Dfasl& u, rt::Dfasl& v);

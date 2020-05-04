@@ -6,7 +6,7 @@
 namespace rt {
 
   static void loadStates(Loader& loader, Dfasl::States& states) {
-    Dfasl::State count;
+    uint32_t count;
     loader.readValue(count);
     states.reserve(count);
     while (count--) {
@@ -49,7 +49,7 @@ namespace rt {
   class DfaslSaver : public Saver {
   private:
     void saveStates(const Dfasl::States& states) {
-      writeValue(states.size());
+      writeValue(uint32_t(states.size()));
       for (auto q : states) {
         writeValue(q);
       }
@@ -61,7 +61,7 @@ namespace rt {
     }
 
     void saveStateTransitions(const Dfasl::StateTransitions& strs) {
-      writeValue(strs.size());
+      writeValue(uint32_t(strs.size()));
       for (auto const& str : strs) {
         saveStateTransition(str);
       }
@@ -79,6 +79,7 @@ namespace rt {
       writeValue(hdr);
       writeValue(dfasl.initial);
       saveStates(dfasl.finals);
+      assert(dfasl.transitions.size() == dfasl.stateCount);
       for (auto const& t : dfasl.transitions) {
         saveStateTransitions(t);
       }
