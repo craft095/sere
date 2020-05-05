@@ -24,9 +24,7 @@ int main(int, char*[]) {
     return r;
   }
 
-  for (size_t ix = 0; ix < compiled.rt_size; ++ix) {
-    std::cout << char(compiled.rt[ix]);
-  }
+  std::cout << compiled.content << std::endl;
 
   sere_release(&compiled);
   return 0;

@@ -22,14 +22,107 @@ using json = nlohmann::json;
  * keep reference to service objects
  */
 
+class sere_object;
+
 struct sere_ref {
-  std::vector<uint8_t> rt;
-  std::vector<std::string> atomics;
+  std::shared_ptr<sere_object> object;
+  std::string content;
 };
 
 struct sere_context {
+  std::shared_ptr<sere_object> object;
   rt::ExecutorPtr context;
 };
+
+class sere_object {
+public:
+  static std::shared_ptr<sere_object> load(const char* data);
+
+  const std::vector<std::string>& getAtomics() const { return atomics; }
+  void setAtomics(const std::map<std::string, size_t>& vars) {
+    atomics.resize(vars.size());
+    for (auto v : vars) {
+      atomics[v.second] = v.first;
+    }
+  }
+
+  virtual rt::ExecutorPtr createExecutor() const = 0;
+  virtual void load(const json& j) = 0;
+  virtual void save(json& j) const = 0;
+  virtual ~sere_object() {}
+protected:
+  std::vector<std::string>& getAtomicsRef() { return atomics; }
+private:
+  std::vector<std::string> atomics;
+};
+
+class sere_nfasl : public sere_object {
+public:
+  rt::ExecutorPtr createExecutor() const override {
+    return std::make_shared<rt::NfaslContext>(rt);
+  }
+  void load(const json& j) override {
+    from_json(j, nfa);
+    rt = std::make_shared<rt::Nfasl>();
+    nfasl::toRt(nfa, *rt);
+  }
+  void save(json& j) const override {
+    j = json {
+              { "kind", "nfasl" },
+              { "atomics", getAtomics() },
+              { "fasl", nfa } };
+  }
+  void setNfasl(const nfasl::Nfasl& nfa_) { nfa = nfa_; }
+  const nfasl::Nfasl& getNfasl() const { return nfa; }
+
+private:
+  std::shared_ptr<rt::Nfasl> rt;
+  nfasl::Nfasl nfa;
+};
+
+class sere_dfasl : public sere_object {
+public:
+  rt::ExecutorPtr createExecutor() const override {
+    return std::make_shared<rt::DfaslContext>(rt);
+  }
+  void load(const json& j) {
+    from_json(j, dfa);
+    rt = std::make_shared<rt::Dfasl>();
+    dfasl::toRt(dfa, *rt);
+  }
+  void save(json& j) const override {
+    j = json {
+              { "kind", "dfasl" },
+              { "atomics", getAtomics() },
+              { "fasl", dfa } };
+  }
+  void setDfasl(const dfasl::Dfasl& dfa_) { dfa = dfa_; }
+  const dfasl::Dfasl& getDfasl() const { return dfa; }
+private:
+  std::shared_ptr<rt::Dfasl> rt;
+  dfasl::Dfasl dfa;
+};
+
+std::shared_ptr<sere_object> sere_object::load(const char* data) {
+  std::string kind;
+  std::shared_ptr<sere_object> obj;
+
+  json j = json::parse(data);
+
+  j.at("kind").get_to(kind);
+
+  if (kind == "nfasl") {
+    obj = std::make_shared<sere_nfasl>();
+  } else if (kind == "dfasl") {
+    obj = std::make_shared<sere_dfasl>();
+  } else {
+    assert(false); // TODO: report an error
+  }
+  j.at("atomics").get_to(obj->getAtomicsRef());
+  obj->load(j.at("fasl"));
+
+  return obj;
+}
 
 /**
  * Release SERE compilation results
@@ -37,7 +130,6 @@ struct sere_context {
 void sere_release(sere_compiled* result) {
   if (result->compiled) {
     delete result->ref;
-    delete [] result->atomics;
   }
 }
 
@@ -67,49 +159,25 @@ int sere_compile(const char* expr,
     result->compiled = 1;
     result->ref = new sere_ref;
 
-    result->atomics = new const char* [nfa.atomicCount];
-    result->atomics_count = nfa.atomicCount;
-    result->ref->atomics.resize(nfa.atomicCount);
-    for (auto v : vars) {
-      result->ref->atomics[v.second] = v.first;
-      result->atomics[v.second] = result->ref->atomics[v.second].c_str();
-    }
-
     if (opts->target == SERE_TARGET_DFASL) {
+      auto ptr = std::make_shared<sere_dfasl>();
+      result->ref->object = ptr;
       dfasl::Dfasl dfa;
       dfasl::toDfasl(min, dfa);
-
-      if (opts->format == SERE_FORMAT_JSON) {
-        json j;
-        to_json(j, dfa);
-        std::string r = j.dump(4);
-        std::copy(r.begin(), r.end(), std::back_inserter(result->ref->rt));
-      } else if (opts->format == SERE_FORMAT_RT) {
-        rt::Dfasl rtDfa;
-        dfasl::toRt(dfa, rtDfa);
-        write(rtDfa, result->ref->rt);
-      } else {
-        assert(false); // TODO: error reporting
-      }
+      ptr->setDfasl(dfa);
     } else if (opts->target == SERE_TARGET_NFASL) {
-      if (opts->format == SERE_FORMAT_JSON) {
-        json j;
-        to_json(j, min);
-        std::string r = j.dump(4);
-        std::copy(r.begin(), r.end(), std::back_inserter(result->ref->rt));
-      } else if (opts->format == SERE_FORMAT_RT) {
-        rt::Nfasl rtNfa;
-        nfasl::toRt(min, rtNfa);
-
-        write(rtNfa, result->ref->rt);
-      } else {
-        assert(false); // TODO: error reporting
-      }
+      auto ptr = std::make_shared<sere_nfasl>();
+      result->ref->object = ptr;
+      ptr->setNfasl(min);
     } else {
       assert(false); // TODO: error reporting
     }
-    result->rt = &(result->ref->rt)[0];
-    result->rt_size = result->ref->rt.size();
+    result->ref->object->setAtomics(vars);
+    json j;
+    result->ref->object->save(j);
+    result->ref->content = j.dump(4);
+    result->content = result->ref->content.c_str();
+    result->content_size = result->ref->content.size();
     return 0;
   } catch(std::invalid_argument& ex) {
     return -1;
@@ -117,28 +185,37 @@ int sere_compile(const char* expr,
     if (result->ref != nullptr) {
       delete result->ref;
     }
-    if (result->atomics != nullptr) {
-      delete result->atomics;
-    }
     memset((void*)result, 0, sizeof(result));
     return -1;
   }
 }
 
-int sere_context_load(const uint8_t* rt, /** serialized *FASL */
-                      size_t rt_size, /** serialized *FASL size */
+int sere_context_load(const char* rt, /** serialized *FASL */
+                      size_t, /** serialized *FASL size */
                       void** sere /** loaded SERE */
                       ) {
   struct sere_context* ctx = nullptr;
   try {
-    rt::ExecutorPtr context = rt::Loader::load(rt, rt_size);
     ctx = new sere_context;
+    ctx->object = sere_object::load(rt);
+    rt::ExecutorPtr context = ctx->object->createExecutor();
     ctx->context = context;
     *sere = reinterpret_cast<void*>(ctx);
     return 0;
   } catch(rt::LoadingFailed& ex) {
+    throw;
+  } catch(std::exception&) {
+    delete ctx;
     return -1;
   }
+}
+
+void sere_context_atomic_count(void* ctx, size_t* count) {
+  *count = reinterpret_cast<sere_context*>(ctx)->object->getAtomics().size();
+}
+
+void sere_context_atomic_name(void* ctx, size_t id, const char** name) {
+  *name = reinterpret_cast<sere_context*>(ctx)->object->getAtomics().at(id).c_str();
 }
 
 void sere_context_release(void* ctx) {
@@ -152,7 +229,7 @@ void sere_context_reset(void* ctx) {
 void sere_context_advance(void* ctx,
                           const char* atomics,
                           size_t atomics_count) {
-  rt::Names vars;
+  rt::Names vars{atomics_count};
   for (size_t ix = 0; ix < atomics_count; ++ix) {
     vars.set(ix, atomics[ix]);
   }

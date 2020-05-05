@@ -40,10 +40,8 @@ struct sere_compiled {
     };
     struct {
       struct sere_ref* ref; /** opaque reference */
-      const uint8_t* rt; /** serialized *FASL */
-      size_t rt_size; /** serialized *FASL size */
-      const char** atomics; /** atomic predicate names */
-      size_t atomics_count; /** atomic predicate names count */
+      const char* content; /** serialized *FASL */
+      size_t content_size; /** serialized *FASL size */
     };
   };
 };
@@ -67,10 +65,14 @@ extern "C"
 void sere_release(sere_compiled* result);
 
 extern "C"
-int sere_context_load(const uint8_t* rt, /** serialized *FASL */
+int sere_context_load(const char* rt, /** serialized *FASL */
                       size_t rt_size, /** serialized *FASL size */
                       void** sere /** loaded SERE */
                       );
+extern "C"
+void sere_context_atomic_count(void* ctx, size_t* count);
+extern "C"
+void sere_context_atomic_name(void* ctx, size_t id, const char** name);
 extern "C"
 void sere_context_release(void* sere);
 extern "C"

@@ -9,21 +9,27 @@ TEST_CASE("Sere API") {
   //const char expr[] = "(A ; B[*] ; ~(C | D) ; E) & F[+]";
   const char expr[] = "(A ; B[*]) & F[+]";
 
-  struct sere_options opts;
+  struct sere_options opts = { SERE_TARGET_DFASL, SERE_FORMAT_JSON, 0, 0 };
   struct sere_compiled compiled;
   int r = sere_compile(expr, &opts, &compiled);
 
   CHECK(r == 0);
 
   void* sere = nullptr;
-  r = sere_context_load(compiled.rt, compiled.rt_size, &sere);
+  r = sere_context_load(compiled.content, compiled.content_size, &sere);
 
   CHECK(r == 0);
 
-  char atomics[compiled.atomics_count];
-  auto mapper = [&compiled, &atomics](char c) {
-                  for (size_t ix = 0; ix < compiled.atomics_count; ++ix) {
-                    if (compiled.atomics[ix][0] == c) {
+  size_t atomic_count;
+  sere_context_atomic_count(sere, &atomic_count);
+
+  char atomics[atomic_count];
+  auto mapper = [&sere, &atomic_count, &atomics](char c) {
+                  for (size_t ix = 0; ix < atomic_count; ++ix) {
+                    const char* name = nullptr;
+                    sere_context_atomic_name(sere, ix, &name);
+                    assert(name != 0);
+                    if (name[0] == c) {
                       atomics[ix] = 1;
                     }
                   }
