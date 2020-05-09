@@ -107,14 +107,18 @@ namespace dfasl {
       e0 = e0 && next.at(q);
     }
 
+    e0 = simplify(e0);
+
     boolean::Expr nextUpper;
-    if (sat(e0)) {
+    // if (sat(e0)) {
+    if (e0 != boolean::Expr::value(false)) {
       State targetNew = builder.addCandidate(qs);
       builder.addTransitionRule(sourceNew, e0, targetNew);
 
-      nextUpper = !e0;
+      nextUpper = nnf(!e0);
       // short cut
-      if (!sat(nextUpper)) {
+      // if (!sat(nextUpper)) {
+      if (e0 == boolean::Expr::value(false)) {
         return;
       }
     } else {

@@ -76,7 +76,7 @@ public:
 };
 
 inline Catch2::GeneratorWrapper<boolean::Expr>
-genBoolExpr(size_t depth, size_t atomics) {
+genExpr(size_t depth, size_t atomics) {
   return Catch2::GeneratorWrapper<boolean::Expr>
     (std::make_unique<ExprGenerator>
      (depth, atomics));

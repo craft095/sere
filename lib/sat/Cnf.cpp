@@ -1,3 +1,4 @@
+#include "sat/Cnf.hpp"
 #include "ast/BoolExpr.hpp"
 #include "boolean/Expr.hpp"
 
@@ -288,7 +289,7 @@ public:
   }
 };
 
-boolean::Expr simplify(boolean::Expr expr) {
+boolean::Expr nnf(boolean::Expr expr) {
   bool b;
   boolean::Expr lhs, rhs;
 
@@ -301,7 +302,7 @@ boolean::Expr simplify(boolean::Expr expr) {
   }
 
   if (expr.not_arg(lhs)) {
-    auto arg = simplify(lhs);
+    auto arg = nnf(lhs);
 
     if (arg.get_value(b)) {
       return boolean::Expr::value(!b);
@@ -312,12 +313,25 @@ boolean::Expr simplify(boolean::Expr expr) {
       return inner;
     }
 
+    if (arg.and_args(lhs, rhs)) {
+      return nnf(!lhs) || nnf(!rhs);
+    }
+
+    if (arg.or_args(lhs, rhs)) {
+      return nnf(!lhs) && nnf(!rhs);
+    }
+
+    assert(arg.is_var());
     return !arg;
   }
 
   if (expr.and_args(lhs, rhs)) {
-    auto lhsE = simplify(lhs);
-    auto rhsE = simplify(rhs);
+    auto lhsE = nnf(lhs);
+    auto rhsE = nnf(rhs);
+
+    if (lhsE == rhsE) {
+      return lhsE;
+    }
 
     if (lhsE.get_value(b)) {
       return b ? rhsE : lhsE;
@@ -331,8 +345,8 @@ boolean::Expr simplify(boolean::Expr expr) {
   }
 
   if (expr.or_args(lhs, rhs)) {
-    auto lhsE = simplify(lhs);
-    auto rhsE = simplify(rhs);
+    auto lhsE = nnf(lhs);
+    auto rhsE = nnf(rhs);
 
     if (lhsE.get_value(b)) {
       return b ? lhsE : rhsE;
@@ -348,6 +362,229 @@ boolean::Expr simplify(boolean::Expr expr) {
   assert(false); // unreachable code
   return boolean::Expr();
 }
+/*
+    Expr ll, lr, rl, rr;
+
+    if (lhsE.or_args(ll, lr)) {
+      if (rhsE.or_args(rl, rr)) {
+        if (ll == rl) {
+          return ll || (lr && rr);
+        } else if (ll == rr) {
+          return ll || (lr && rl);
+        } else if (lr == rl) {
+          return lr || (ll && rr);
+        } else if (lr == rr) {
+          return lr || (ll && rl);
+        }
+        return lhsE && rhsE;
+      } else if (rhsE.and_args(rl, rr)) {
+        if (ll == rl || ll == rr) {
+          return lr && rhsE;
+        } else if (lr == rl || lr == rr) {
+          return ll && rhsE;
+        }
+        return lhsE && rhsE;
+      }
+    } !!! else if (lhsE.and_args(ll, lr)) {
+      if (rhsE.or_args(rl, rr)) {
+        if (ll == rl) {
+          return ll || (lr && rr);
+        } else if (ll == rr) {
+          return ll || (lr && rl);
+        } else if (lr == rl) {
+          return lr || (ll && rr);
+        } else if (lr == rr) {
+          return lr || (ll && rl);
+        }
+        return lhsE && rhsE;
+      } else if (rhsE.and_args(rl, rr)) {
+        if (ll == rl || ll == rr) {
+          return lr && rhsE;
+        } else if (lr == rl || lr == rr) {
+          return ll && rhsE;
+        }
+        return lhsE && rhsE;
+      }
+    }
+
+
+
+    return lhsE && rhsE;
+  }
+
+*/
+
+/**
+ * Substitute expression with a const.
+ * @param expr expression must be in NNF
+ * @param search expression to search
+ * @param replace expression to replace with
+ * @returns new expression
+ */
+boolean::Expr subst(boolean::Expr expr, boolean::Expr search, boolean::Expr replace) {
+  bool b;
+  boolean::Expr r, lhs, rhs;
+
+  if (expr == search) {
+    return replace;
+  }
+
+  if (expr.is_const()) {
+    return expr;
+  }
+
+  if (expr.is_var()) {
+    return expr;
+  }
+
+  if (expr.not_arg(lhs)) {
+    r = !subst(lhs, search, replace);
+  } else if (expr.and_args(lhs, rhs)) {
+    auto lhsE = subst(lhs, search, replace);
+    auto rhsE = subst(rhs, search, replace);
+    r = lhsE && rhsE;
+  } else if (expr.or_args(lhs, rhs)) {
+    auto lhsE = subst(lhs, search, replace);
+    auto rhsE = subst(rhs, search, replace);
+    r = lhsE || rhsE;
+  } else {
+    assert(false); // unreachable code
+  }
+  return nnf(r);
+}
+
+static bool prove(boolean::Expr expr) {
+  return !sat(!expr);
+}
+
+static boolean::Expr implies(boolean::Expr u, boolean::Expr v) {
+  return !u || v;
+}
+
+enum class ContOp {
+  And, Or,
+};
+
+enum class ContHole {
+  Lhs, Rhs,
+};
+
+struct ContCtx {
+  ContOp op;
+  ContHole hole;
+  boolean::Expr self;
+  boolean::Expr lhs;
+  boolean::Expr rhs;
+};
+
+boolean::Expr simplify(boolean::Expr expr0) {
+  constexpr size_t maxDepth = 2048;
+
+  auto isLeaf = [] (boolean::Expr ex)
+                { return
+                    ex.is_var() ||
+                    ex.is_not() ||
+                    ex.is_const(); };
+
+  std::array<ContCtx, maxDepth> stack;
+  size_t esp {0};
+
+  stack[esp].self = nnf(expr0);
+  boolean::Expr& topExpr = stack[0].self;
+  boolean::Expr lhs, rhs;
+
+  while (true) {
+    auto expr = stack[esp].self;
+    if (isLeaf(expr)) {
+      if (esp == 0) {
+        return expr;
+      }
+      // leaf found, replace it with true&false to produce
+      // new candidates
+      boolean::Expr neg{boolean::Expr::value(false)};
+      boolean::Expr pos{boolean::Expr::value(true)};
+      boolean::Expr subst;
+      for (size_t ix = esp - 1; ; --ix) {
+        auto cont = stack[ix];
+        auto arg = cont.hole == ContHole::Lhs ? cont.rhs : cont.lhs;
+        switch (cont.op) {
+        case ContOp::Or:
+          pos = pos || arg;
+          neg = neg || arg;
+          break;
+        case ContOp::And:
+          pos = pos && arg;
+          neg = neg && arg;
+          break;
+        }
+
+        if (ix == 0) {
+          break;
+        }
+      }
+
+      neg = nnf(neg);
+      pos = nnf(pos);
+
+      /**
+         Definition 5. (Redundancy) We say a leaf L is non-constraining in formula
+         φ if φ+ (L) ⇒ φ and non-relaxing if φ ⇒ φ− (L). Leaf L is redundant if L is
+         either non-constraining or non-relaxing.
+      */
+
+      if (prove(implies(pos,topExpr))) {
+        // pos is new reduced formula
+        esp = 0;
+        topExpr = pos;
+        continue;
+      }
+      if (prove(implies(topExpr, neg))) {
+        // neg is new reduced formula
+        esp = 0;
+        topExpr = neg;
+        continue;
+      }
+
+      // skip to next alternative
+      assert(esp > 0);
+      esp -= 1;
+
+      while (stack[esp].hole == ContHole::Rhs) {
+        if (esp == 0) {
+          // that is it, nothing can be done anymore
+          return topExpr;
+        }
+        // rollback to upper level
+        esp -= 1;
+      }
+
+      assert(esp >= 0);
+      assert(stack[esp].hole == ContHole::Lhs);
+      stack[esp].hole = ContHole::Rhs;
+      ++esp;
+      stack[esp].self = stack[esp - 1].rhs;
+      continue;
+    }
+    if (expr.and_args(lhs, rhs)) {
+      stack[esp].op = ContOp::And;
+      stack[esp].hole = ContHole::Lhs;
+      stack[esp].lhs = lhs;
+      stack[esp].rhs = rhs;
+      ++esp;
+      stack[esp].self = lhs;
+      continue;
+    }
+    if (expr.or_args(lhs, rhs)) {
+      stack[esp].op = ContOp::Or;
+      stack[esp].hole = ContHole::Lhs;
+      stack[esp].lhs = lhs;
+      stack[esp].rhs = rhs;
+      ++esp;
+      stack[esp].self = lhs;
+      continue;
+    }
+  }
+}
 
 bool sat(BoolExpr& expr) {
   auto simplifiedExpr = Simplify(expr).getResult();
@@ -355,6 +592,6 @@ bool sat(BoolExpr& expr) {
 }
 
 bool sat(boolean::Expr expr) {
-  auto simplifiedExpr = simplify(expr);
+  auto simplifiedExpr = nnf(expr);
   return TseitinExpr(simplifiedExpr).isSatisfiable();
 }

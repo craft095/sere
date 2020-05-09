@@ -7,7 +7,8 @@
 
 int main(int, char*[]) {
   //const char expr[] = "(A ; B[*] ; ~(C | D) ; E) & F[+]";
-  const char expr[] = "(A ; B[*]) & F[+]";
+  const char expr[] = "(A ; B[*] ; (C | D)[+] ; E) & F[+]";
+  //const char expr[] = "(A ; B[*]) & F[+]";
 
   struct sere_options opts
     = {

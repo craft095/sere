@@ -32,6 +32,9 @@ struct Expr0 {
   bool operator== (Expr0 u) const {
     return u.kind == kind && u.ref == ref;
   }
+  bool operator!= (Expr0 u) const {
+    return u.kind != kind || u.ref != ref;
+  }
   bool operator< (Expr0 u) const {
     return u.kind < kind || (u.kind == kind && u.ref < ref);
   }
@@ -172,6 +175,12 @@ public:
 
   static Expr value (bool v) { return Expr{context.new_value(v)}; }
   static Expr var (uint32_t v) { return Expr{context.new_var(v)}; }
+  friend bool operator == (Expr lhs, Expr rhs) {
+    return lhs.expr == rhs.expr;
+  }
+  friend bool operator != (Expr lhs, Expr rhs) {
+    return lhs.expr != rhs.expr;
+  }
   friend Expr operator! (Expr expr) {
     return Expr::context.new_not(expr.expr);
   }
