@@ -69,6 +69,8 @@ install(DIRECTORY nfasl/ DESTINATION include/sere/nfasl
         FILES_MATCHING PATTERN "*.hpp")
 install(DIRECTORY rt/ DESTINATION include/sere/rt
         FILES_MATCHING PATTERN "*.hpp")
+install(DIRECTORY api/ DESTINATION include/sere/
+        FILES_MATCHING PATTERN "*.h")
 
 install(TARGETS sere_static sere_shared
         LIBRARY DESTINATION lib
