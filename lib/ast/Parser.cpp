@@ -16,6 +16,31 @@ using namespace antlr4;
 using namespace ast;
 
 namespace parser {
+  void toPosStart(const FileName& file,
+                 const antlr4::Token& token,
+                 Pos& pos) {
+    pos.fileName = file;
+    pos.line = token.getLine();
+    pos.column = token.getCharPositionInLine();
+  }
+
+  void toPosEnd(const FileName& file,
+                const antlr4::Token& token,
+                Pos& pos) {
+    toPosStart(file, token, pos);
+    pos.column += token.getText().size();
+  }
+
+  void toLocated(const FileName& file,
+                 antlr4::ParserRuleContext& rule,
+                 Located& loc) {
+    const Token* start = rule.getStart();
+    const Token* stop = rule.getStop();
+
+    toPosStart(file, *start, loc.from);
+    toPosEnd(file, *stop, loc.to);
+  }
+
 
   class SereErrorListener : public antlr4::BaseErrorListener {
     virtual void syntaxError(
@@ -37,9 +62,9 @@ namespace parser {
    * @param [in] us vector of expressions
    * @returns union of all permutations
    */
-  Ptr<SereExpr> permute(const std::vector<Ptr<SereExpr>>& us) {
+  Ptr<SereExpr> permute(const Located& loc, const std::vector<Ptr<SereExpr>>& us) {
     if (us.empty()) {
-      return RE_EMPTY;
+      return std::make_shared<SereEmpty>(loc);
     } else if (us.size() == 1) {
       return us[0];
     }
@@ -49,11 +74,11 @@ namespace parser {
     for (size_t ix = 0; ix < us.size(); ix++) {
       auto tail{us};
       tail.erase(tail.begin() + ix);
-      auto alt = RE_CONCAT(us[ix], permute(tail));
+      auto alt = std::make_shared<Concat>(loc, us[ix], permute(loc, tail));
       if (opt == nullptr) {
         opt = alt;
       } else {
-        opt = RE_UNION(opt, alt);
+        opt = std::make_shared<Union>(loc, opt, alt);
       }
     }
     return opt;
@@ -63,71 +88,87 @@ namespace parser {
    */
   class ExprCollector : public SereBaseVisitor {
     std::map<std::string, size_t> vars;
+    FileName fileName;
   public:
+    ExprCollector(const FileName& file) : fileName(file) {}
+
+    Located toLocated(antlr4::ParserRuleContext& rule) const {
+      Located loc;
+      parser::toLocated(fileName, rule, loc);
+      return loc;
+    }
+
+    template<typename T, typename Node, typename... Args>
+    Ptr<T> create(Node ctx, Args... args) {
+      return std::make_shared<T>(toLocated(*ctx), args...);
+    }
+
     std::map<std::string, size_t> getVars() const { return vars; }
 
     virtual antlrcpp::Any visitSere(SereParser::SereContext *ctx) override {
-      return visit(ctx->sereExpr());
+      Ptr<SereExpr> result = visit(ctx->sereExpr());
+      return result;
     }
 
     virtual antlrcpp::Any visitSereParens(SereParser::SereParensContext *ctx) override {
-      return visit(ctx->sereExpr());
+      Ptr<SereExpr> result = visit(ctx->sereExpr());
+      return result;
     }
 
-    virtual antlrcpp::Any visitSereEps(SereParser::SereEpsContext *) override {
-      Ptr<SereExpr> expr = RE_EMPTY;
+    virtual antlrcpp::Any visitSereEps(SereParser::SereEpsContext *ctx) override {
+      Ptr<SereExpr> expr = create<SereEmpty>(ctx);
       return expr;
     }
 
     virtual antlrcpp::Any visitSereIntersection(SereParser::SereIntersectionContext *ctx) override {
       Ptr<SereExpr> lhs = visit(ctx->lhs);
       Ptr<SereExpr> rhs = visit(ctx->rhs);
-      Ptr<SereExpr> result = RE_INTERSECT(lhs, rhs);
+      Ptr<SereExpr> result = create<Intersect>(ctx, lhs, rhs);
       return result;
     }
 
     virtual antlrcpp::Any visitSereUnion(SereParser::SereUnionContext *ctx) override {
       Ptr<SereExpr> lhs = visit(ctx->lhs);
       Ptr<SereExpr> rhs = visit(ctx->rhs);
-      Ptr<SereExpr> result = RE_UNION(lhs, rhs);
+      Ptr<SereExpr> result = create<Union>(ctx, lhs, rhs);
       return result;
     }
 
     virtual antlrcpp::Any visitSereConcat(SereParser::SereConcatContext *ctx) override {
       Ptr<SereExpr> lhs = visit(ctx->lhs);
       Ptr<SereExpr> rhs = visit(ctx->rhs);
-      Ptr<SereExpr> result = RE_CONCAT(lhs, rhs);
+      Ptr<SereExpr> result = create<Concat>(ctx, lhs, rhs);
       return result;
     }
 
     virtual antlrcpp::Any visitSereFusion(SereParser::SereFusionContext *ctx) override {
       Ptr<SereExpr> lhs = visit(ctx->lhs);
       Ptr<SereExpr> rhs = visit(ctx->rhs);
-      Ptr<SereExpr> result = RE_FUSION(lhs, rhs);
+      Ptr<SereExpr> result = create<Fusion>(ctx, lhs, rhs);
       return result;
     }
 
     virtual antlrcpp::Any visitSereKleeneStar(SereParser::SereKleeneStarContext *ctx) override {
       Ptr<SereExpr> arg = visit(ctx->arg);
-      Ptr<SereExpr> result = RE_STAR(arg);
+      Ptr<SereExpr> result = create<KleeneStar>(ctx, arg);
       return result;
     }
 
     virtual antlrcpp::Any visitSereKleenePlus(SereParser::SereKleenePlusContext *ctx) override {
       Ptr<SereExpr> arg = visit(ctx->arg);
-      Ptr<SereExpr> result = RE_PLUS(arg);
+      Ptr<SereExpr> result = create<KleenePlus>(ctx, arg);
       return result;
     }
 
     virtual antlrcpp::Any visitSerePartial(SereParser::SerePartialContext *ctx) override {
       Ptr<SereExpr> arg = visit(ctx->arg);
-      Ptr<SereExpr> result = RE_PARTIAL(arg);
+      Ptr<SereExpr> result = create<Partial>(ctx, arg);
       return result;
     }
 
     virtual antlrcpp::Any visitSereComplement(SereParser::SereComplementContext *ctx) override {
       Ptr<SereExpr> arg = visit(ctx->arg);
-      Ptr<SereExpr> result = RE_COMPLEMENT(arg);
+      Ptr<SereExpr> result = create<Complement>(ctx, arg);
       return result;
     }
 
@@ -135,9 +176,10 @@ namespace parser {
       Ptr<SereExpr> arg = visit(ctx->arg);
       Ptr<SereExpr> err = visit(ctx->err);
       Ptr<SereExpr> result =
-        RE_UNION(
-                 RE_CONCAT(RE_PARTIAL(arg), err),
-                 arg);
+        create<Union>(ctx,
+                      create<Concat>(ctx,
+                                     create<Partial>(ctx, arg), err),
+                      arg);
 
       return result;
     }
@@ -150,7 +192,7 @@ namespace parser {
         es.push_back(expr);
       }
 
-      Ptr<SereExpr> result = permute(es);
+      Ptr<SereExpr> result = permute(toLocated(*ctx), es);
 
       return result;
     }
@@ -162,7 +204,8 @@ namespace parser {
       size_t end = std::stoi(ctx->end->getText());
 
       if (begin == 0 && end == 0) {
-        return Ptr<SereExpr>{RE_EMPTY};
+        Ptr<SereExpr> r = create<SereEmpty>(ctx);
+        return r;
       }
 
       Ptr<SereExpr> arg = visit(ctx->arg);
@@ -172,7 +215,7 @@ namespace parser {
         if (opt == nullptr) {
           opt = arg;
         } else {
-          opt = RE_CONCAT(opt, arg);
+          opt = create<Concat>(ctx, opt, arg);
         }
       }
 
@@ -181,20 +224,20 @@ namespace parser {
       Ptr<SereExpr> rhs = nullptr;
       for (size_t ix = begin; ix < end; ++ix) {
         if (rhs == nullptr) {
-          rhs = RE_UNION(RE_EMPTY, arg);
+          rhs = create<Union>(ctx, create<SereEmpty>(ctx), arg);
         } else {
-          rhs = RE_UNION(RE_EMPTY, RE_CONCAT(arg, rhs));
+          rhs = create<Union>(ctx, create<SereEmpty>(ctx), create<Concat>(ctx, arg, rhs));
         }
       }
 
       Ptr<SereExpr> result =
         rhs == nullptr
         ? (opt == nullptr
-           ? RE_EMPTY
+           ? create<SereEmpty>(ctx)
            : opt)
         : (opt == nullptr
            ? rhs
-           : RE_CONCAT(opt, rhs));
+           : create<Concat>(ctx, opt, rhs));
       return result;
     }
 
@@ -204,14 +247,14 @@ namespace parser {
       size_t begin = std::stoi(ctx->begin->getText());
 
       switch (begin) {
-      case 0: return Ptr<SereExpr>{RE_STAR(arg)};
-      case 1: return Ptr<SereExpr>{RE_PLUS(arg)};
+      case 0: return Ptr<SereExpr>{create<KleeneStar>(ctx, arg)};
+      case 1: return Ptr<SereExpr>{create<KleenePlus>(ctx, arg)};
       }
       Ptr<SereExpr> opt = arg;
       for (size_t ix = 1; ix < begin; ++ix) {
-        opt = RE_CONCAT(opt, arg);
+        opt = create<Concat>(ctx, opt, arg);
       }
-      opt = RE_CONCAT(opt, RE_STAR(arg));
+      opt = create<Concat>(ctx, opt, create<KleeneStar>(ctx, arg));
       return opt;
     }
 
@@ -220,7 +263,8 @@ namespace parser {
       size_t count = std::stoi(ctx->count->getText());
 
       if (count == 0) {
-        return Ptr<SereExpr>{RE_EMPTY};
+        Ptr<SereExpr> r = create<SereEmpty>(ctx);
+        return r;
       }
 
       // traverse the expression only if it is not discarded
@@ -231,63 +275,65 @@ namespace parser {
       }
       Ptr<SereExpr> opt = arg;
       for (size_t ix = 1; ix < count; ++ix) {
-        opt = RE_CONCAT(opt, arg);
+        opt = create<Concat>(ctx, opt, arg);
       }
       return opt;
     }
 
     virtual antlrcpp::Any visitSereBoolExpr(SereParser::SereBoolExprContext *ctx) override {
       Ptr<BoolExpr> expr = visit(ctx->boolExpr());
-      return Ptr<SereExpr>{RE_SEREBOOL(expr)};
+      Ptr<SereExpr> result = create<SereBool>(ctx, expr);
+      return result;
     }
 
     virtual antlrcpp::Any visitBoolVar(SereParser::BoolVarContext *ctx) override {
       auto r = vars.insert({
           std::string {ctx->NAME()->getText()},
           vars.size() });
-      Ptr<BoolExpr> result = RE_VAR(r.first->second);
+      Ptr<BoolExpr> result = create<Variable>(ctx, VarName {r.first->second});
       return result;
     }
 
     virtual antlrcpp::Any visitBoolOr(SereParser::BoolOrContext *ctx) override {
       Ptr<BoolExpr> lhs = visit(ctx->lhs);
       Ptr<BoolExpr> rhs = visit(ctx->rhs);
-      Ptr<BoolExpr> result = RE_OR(lhs, rhs);
+      Ptr<BoolExpr> result = create<BoolOr>(ctx, lhs, rhs);
       return result;
     }
 
     virtual antlrcpp::Any visitBoolAnd(SereParser::BoolAndContext *ctx) override {
       Ptr<BoolExpr> lhs = visit(ctx->lhs);
       Ptr<BoolExpr> rhs = visit(ctx->rhs);
-      Ptr<BoolExpr> result = RE_AND(lhs, rhs);
+      Ptr<BoolExpr> result = create<BoolAnd>(ctx, lhs, rhs);
       return result;
     }
 
     virtual antlrcpp::Any visitBoolValue(SereParser::BoolValueContext *ctx) override {
-      Ptr<BoolExpr> value = ctx->BOOL_TRUE() != nullptr ? RE_TRUE : RE_FALSE;
+      Ptr<BoolExpr> value = create<BoolValue>(ctx, ctx->BOOL_TRUE() != nullptr);
       return value;
     }
 
     virtual antlrcpp::Any visitBoolNeg(SereParser::BoolNegContext *ctx) override {
       Ptr<BoolExpr> arg = visit(ctx->arg);
-      Ptr<BoolExpr> result = RE_NOT(arg);
+      Ptr<BoolExpr> result = create<BoolNot>(ctx, arg);
       return result;
     }
 
     virtual antlrcpp::Any visitBoolParens(SereParser::BoolParensContext *ctx) override {
-      return visit(ctx->boolExpr());
+      return Ptr<BoolExpr>{visit(ctx->boolExpr())};
     }
   };
 
   /**
    * Parse input stream into complete SERE
    *
+   * @param [in] file stream source name
    * @param [in] stream input stream
    * @return SERE AST root pointer
    * @throws std::invalid_argument if parse/scan errors occur
    */
 
-  ParseResult parse(std::istream& stream) {
+  ParseResult parse(const std::string& file, std::istream& stream) {
     ANTLRInputStream input(stream);
     SereLexer lexer(&input);
     CommonTokenStream tokens(&lexer);
@@ -296,7 +342,7 @@ namespace parser {
     parser.removeErrorListeners();
     parser.addErrorListener(&errorListner);
     SereParser::SereContext* tree = parser.sere();
-    ExprCollector visitor;
+    ExprCollector visitor(file);
     ParseResult result;
     result.expr = visitor.visitSere(tree);
     result.vars = visitor.getVars();
@@ -304,4 +350,7 @@ namespace parser {
     return result;
   }
 
+  ParseResult parse(std::istream& stream) {
+    return parse("<unknown>", stream);
+  }
 } // namespace parser

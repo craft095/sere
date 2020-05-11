@@ -11,6 +11,11 @@ struct Pos {
   int line;
   int column;
 
+  Pos() {}
+
+  Pos(const Pos& p)
+    : fileName(p.fileName), line(p.line), column(p.column) {}
+
   Pos(const FileName& fn, int ln, int cl)
     : fileName(fn), line(ln), column(cl) {}
 
@@ -34,6 +39,7 @@ struct Pos {
 
 class Located {
 public:
+  Located() {}
   Located(const Pos& pos) : from(pos), to(pos) {}
   Located(const Pos& from_, const Pos& to_) : from(from_), to(to_) {}
 
@@ -45,7 +51,6 @@ public:
     }
   }
 
-private:
   Pos from;
   Pos to;
 };

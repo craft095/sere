@@ -147,7 +147,7 @@ int sere_compile(const char* expr,
     memset((void*)result, 0, sizeof(result));
 
     std::istringstream stream(expr);
-    parser::ParseResult r = parser::parse(stream);
+    parser::ParseResult r = parser::parse("<buffer>", stream);
 
     Ptr<SereExpr> expr = r.expr;
     const std::map<std::string, size_t>& vars = r.vars;
