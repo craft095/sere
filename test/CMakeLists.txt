@@ -14,3 +14,5 @@ target_link_libraries(
   z3
   Catch2::Catch
   nlohmann_json::nlohmann_json)
+
+add_test (NAME sere_test COMMAND sere_test)

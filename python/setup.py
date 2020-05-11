@@ -8,7 +8,7 @@ module1 = Extension('sere',
                     libraries = ['sere_shared'],
                     library_dirs = ['/home/dima/work/sere/build/install/lib',
                                     '/usr/local/lib'],
-                    sources = ['seremodule.c'])
+                    sources = ['extension/seremodule.c', 'sere'])
 
 setup (name = 'Sere',
        version = '0.9',

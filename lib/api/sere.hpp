@@ -3,6 +3,11 @@
 
 #include <cstddef>
 #include <cstdint>
+#include "sere.h"
+
+#if 0
+#include <cstddef>
+#include <cstdint>
 
 #include "Match.hpp"
 
@@ -83,5 +88,5 @@ void sere_context_advance(void* sere,
                           size_t atomics_count);
 extern "C"
 void sere_context_get_result(void* sere, int* result);
-
+#endif // 0
 #endif // API_SERE_HPP

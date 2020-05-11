@@ -10,6 +10,8 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+enable_testing()
+
 include(FetchContent)
 
 FetchContent_Declare(
@@ -51,6 +53,7 @@ FetchContent_Declare(
 FetchContent_GetProperties(extern_json)
 if(NOT extern_json_POPULATED)
   FetchContent_Populate(extern_json)
+  set(JSON_BuildTests "OFF")
   add_subdirectory(
     ${extern_json_SOURCE_DIR}
     ${extern_json_BINARY_DIR}
@@ -97,4 +100,5 @@ configure_file(SereLibConfig.h.in SereLibConfig.h)
 
 add_subdirectory(lib)
 add_subdirectory(tool)
+add_subdirectory(python)
 add_subdirectory(test)

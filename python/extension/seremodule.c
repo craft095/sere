@@ -2,7 +2,7 @@
 #include <Python.h>
 #include "structmember.h"
 
-#include "sere/sere.h"
+#include "api/sere.h"
 
 #define ALLOC_PY_OBJECT(type) (type*)type##Type.tp_alloc(&type##Type, 1);
 
@@ -76,9 +76,11 @@ ContextSere_get_result(ContextSere *self, PyObject *Py_UNUSED(ignored)) {
   return PyLong_FromLong(result);
 }
 
-static void
+static PyObject *
 ContextSere_reset(ContextSere *self, PyObject *Py_UNUSED(ignored)) {
   sere_context_reset(self->sere);
+  Py_INCREF(Py_None);
+  return Py_None;
 }
 
 static PyObject *
@@ -226,7 +228,7 @@ static PyMethodDef SereMethods[] = {
 
 static struct PyModuleDef seremodule = {
     PyModuleDef_HEAD_INIT,
-    "sere",   /* name of module */
+    "serec",   /* name of module */
     NULL/*sere_doc*/, /* module documentation, may be NULL */
     -1,       /* size of per-interpreter state of the module,
                  or -1 if the module keeps state in global variables. */
@@ -234,7 +236,7 @@ static struct PyModuleDef seremodule = {
 };
 
 PyMODINIT_FUNC
-PyInit_sere(void) {
+PyInit_serec(void) {
   if (PyType_Ready(&CompiledSereType) < 0)
     return NULL;
   Py_INCREF(&CompiledSereType);
