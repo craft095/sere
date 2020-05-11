@@ -143,9 +143,10 @@ void sere_release(sere_compiled* result) {
 int sere_compile(const char* expr,
                  const struct sere_options* opts,
                  sere_compiled* result) {
-  try {
-    memset((void*)result, 0, sizeof(result));
+  memset((void*)result, 0, sizeof(result));
+  result->ref = new sere_ref;
 
+  try {
     std::istringstream stream(expr);
     parser::ParseResult r = parser::parse("<buffer>", stream);
 
@@ -157,7 +158,6 @@ int sere_compile(const char* expr,
     nfasl::minimize(nfa, min);
 
     result->compiled = 1;
-    result->ref = new sere_ref;
 
     if (opts->target == SERE_TARGET_DFASL) {
       auto ptr = std::make_shared<sere_dfasl>();
@@ -179,13 +179,11 @@ int sere_compile(const char* expr,
     result->content = result->ref->content.c_str();
     result->content_size = result->ref->content.size();
     return 0;
-  } catch(std::invalid_argument& ex) {
-    return -1;
   } catch(std::exception& ex) {
-    if (result->ref != nullptr) {
-      delete result->ref;
-    }
-    memset((void*)result, 0, sizeof(result));
+    result->compiled = 0;
+    result->ref->object = nullptr;
+    result->ref->content = ex.what();
+    result->error = result->ref->content.c_str();
     return -1;
   }
 }

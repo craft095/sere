@@ -15,12 +15,24 @@ namespace parser {
   };
 
   /**
+   * Parse error
+   */
+  class ParseError : public std::exception {
+  public:
+    ParseError(const Located& loc, const std::string& msg);
+    const char* what() const throw() override;
+  private:
+    Located loc;
+    std::string msg;
+  };
+
+  /**
    * Parse input stream into complete SERE
    *
    * @param [in] file input stream name
    * @param [in] stream input stream
    * @return SERE AST root pointer
-   * @throws std::invalid_argument if parse/scan errors occur
+   * @throws parser::ParseError if parse/scan errors occur
    */
   extern ParseResult parse(const std::string& file, std::istream& stream);
 
@@ -29,7 +41,7 @@ namespace parser {
    *
    * @param [in] stream input stream
    * @return SERE AST root pointer
-   * @throws std::invalid_argument if parse/scan errors occur
+   * @throws parser::ParseError if parse/scan errors occur
    */
   extern ParseResult parse(std::istream& stream);
 } // namespace parser

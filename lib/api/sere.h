@@ -33,12 +33,12 @@ struct sere_options {
  */
 struct sere_compiled {
   int compiled;
+  struct sere_ref* ref; /** opaque reference */
   union {
     struct {
-      int r;
+      const char* error; /** compilation error */
     };
     struct {
-      struct sere_ref* ref; /** opaque reference */
       const char* content; /** serialized *FASL */
       size_t content_size; /** serialized *FASL size */
     };

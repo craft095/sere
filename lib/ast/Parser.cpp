@@ -16,6 +16,18 @@ using namespace antlr4;
 using namespace ast;
 
 namespace parser {
+
+  ParseError::ParseError(const Located& loc_, const std::string& desc)
+    : loc(loc_) {
+    std::ostringstream stream{msg};
+    stream << loc.pretty() << ": " << desc;
+    msg = stream.str();
+  }
+
+  const char* ParseError::what() const throw() {
+    return msg.c_str();
+  }
+
   void toPosStart(const FileName& file,
                  const antlr4::Token& token,
                  Pos& pos) {
@@ -43,6 +55,8 @@ namespace parser {
 
 
   class SereErrorListener : public antlr4::BaseErrorListener {
+  public:
+    SereErrorListener(const FileName& file_) : file(file_) {}
     virtual void syntaxError(
                              antlr4::Recognizer * /*recognizer*/,
                              antlr4::Token * /*offendingSymbol*/,
@@ -50,10 +64,11 @@ namespace parser {
                              size_t charPositionInLine,
                              const std::string &msg,
                              std::exception_ptr /*e*/) override {
-      std::ostringstream s;
-      s << "[" << line << ":" << charPositionInLine << "]: " << msg;
-      throw std::invalid_argument(s.str());
+      Pos pos(file, line, charPositionInLine);
+      throw ParseError(Located(pos,pos), msg);
     }
+  private:
+    FileName file;
   };
 
   /**
@@ -330,7 +345,7 @@ namespace parser {
    * @param [in] file stream source name
    * @param [in] stream input stream
    * @return SERE AST root pointer
-   * @throws std::invalid_argument if parse/scan errors occur
+   * @throws parser::ParseError if parse/scan errors occur
    */
 
   ParseResult parse(const std::string& file, std::istream& stream) {
@@ -338,7 +353,7 @@ namespace parser {
     SereLexer lexer(&input);
     CommonTokenStream tokens(&lexer);
     SereParser parser(&tokens);
-    SereErrorListener errorListner;
+    SereErrorListener errorListner(file);
     parser.removeErrorListeners();
     parser.addErrorListener(&errorListner);
     SereParser::SereContext* tree = parser.sere();

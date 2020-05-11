@@ -184,8 +184,9 @@ sere_compile_expr(PyObject *self, PyObject *args) {
                        &compiled->result);
 
   if (r != 0) {
+    PyErr_SetString(PyExc_ValueError, compiled->result.error);
     Py_XDECREF((PyObject *)compiled);
-    compiled = NULL;
+    return NULL;
   }
 
   return (PyObject *)compiled;

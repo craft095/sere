@@ -1,5 +1,12 @@
 import sere
 
+result = False
+
+try:
+    sere.compile("a;;", "dfasl")
+except ValueError:
+    result = True
+
 x = sere.compile("a;b", "dfasl")
 y = sere.load(x.content())
 
@@ -8,9 +15,9 @@ events = [{ 'a' : True, 'b' : False },
 
 r = y.match(events)
 
-print('Result:', r)
+result = result and r == 0
 
-if r == 0:
+if result:
     exit(0)
 else:
     exit(1)
