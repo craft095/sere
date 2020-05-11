@@ -1,8 +1,14 @@
-# T
+# Why has this library been created?
 
 The purpose of the library is to promote runtime verification
 of temporal properties, specified with [sequential extended
 regular expressions]().
+
+The other (and perhaps the most important) reason - this
+is just an adventure into the world of fascinating algorithms:
+SAT solvers, predicate simplification, symbolic automata etc.
+
+## What is SERE?
 
 Sequential extended regular expressions or SEREs are very
 concise, flexible way to specify temporal properites.
@@ -32,9 +38,13 @@ The library:
 - clean/normalize/minimize NFASL (BisimNfasl.hpp)
 - translate NFASL into runtime NFASL (rt/RtNfasl.hpp)
 - evaluate RtNfasl over stream of events in real time
+- translation from non-deterministic to deterministic automaton (DFASL)
+- translate DFASL into runtime DFASL (rt/RtDfasl.hpp)
+
+There is also a python3 bindings, which provides a simple way
+to try the SERE.
 
 In the future, there will be added:
-- translation from non-deterministic to deterministic automaton
 - reverse mode: generating sequence of event, matching the given expression
 
 ## Syntax
