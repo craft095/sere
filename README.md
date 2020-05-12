@@ -6,7 +6,7 @@ regular expressions]().
 
 The other (and perhaps the most important) reason - this
 is just an adventure into the world of fascinating algorithms:
-SAT solvers, predicate simplification, symbolic automata etc.
+partition refinement, SAT solvers, predicate simplification etc.
 
 ## What is SERE?
 
@@ -14,10 +14,7 @@ Sequential extended regular expressions or SEREs are very
 concise, flexible way to specify temporal properites.
 
 SERE can describe any regular language (without infinite words).
-Semantics:
-
-- $\phi$
-
+Semantics: TBD
 
 SERE is very seimilar to normal reqular expressions, which
 are especially often used with texts. As a normal RE, SERE
@@ -33,12 +30,12 @@ are practically inexpressible in RE.
 
 The library:
 
-- parsing from SERE syntax into AST SereExpr (Language.hpp)
-- translation from SereExpr into Non-deterministic automaton with symbolic lables (NFASL)
+- parsing from SERE syntax into AST SereExpr
+- translate from SereExpr into Non-deterministic automaton with symbolic lables (NFASL)
 - clean/normalize/minimize NFASL (BisimNfasl.hpp)
 - translate NFASL into runtime NFASL (rt/RtNfasl.hpp)
-- evaluate RtNfasl over stream of events in real time
-- translation from non-deterministic to deterministic automaton (DFASL)
+- evaluate RtNfasl over a stream of events in real time
+- translate from non-deterministic to deterministic automaton (DFASL)
 - translate DFASL into runtime DFASL (rt/RtDfasl.hpp)
 
 There is also a python3 bindings, which provides a simple way
