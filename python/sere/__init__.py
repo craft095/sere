@@ -23,12 +23,9 @@ class Sere:
              for i in range(0,ctx.atomic_count())])
 
     def _pack_event(self, event):
-        l = [(self.remap.get(k), 1 if v else 0)
-            for k,v
-            in event.items()]
-        l.sort()
-        [_,vs] = zip(*l)
-        return bytes(vs)
+        for k,v in event.items():
+            if v:
+                self.ctx.set_atomic(self.remap.get(k))
 
     def reset(self):
         self.ctx.reset()
@@ -37,7 +34,8 @@ class Sere:
         return self.ctx.get_result()
 
     def feed(self, event):
-        self.ctx.advance(self._pack_event(event))
+        self._pack_event(event)
+        self.ctx.advance()
 
     def match(self, events):
         self.reset()

@@ -32,6 +32,7 @@ struct sere_ref {
 struct sere_context {
   std::shared_ptr<sere_object> object;
   rt::ExecutorPtr context;
+  rt::Names vars;
 };
 
 class sere_object {
@@ -198,6 +199,7 @@ int sere_context_load(const char* rt, /** serialized *FASL */
     ctx->object = sere_object::load(rt);
     rt::ExecutorPtr context = ctx->object->createExecutor();
     ctx->context = context;
+    ctx->vars.resize(ctx->object->getAtomics().size());
     *sere = reinterpret_cast<void*>(ctx);
     return 0;
   } catch(rt::LoadingFailed& ex) {
@@ -212,8 +214,13 @@ void sere_context_atomic_count(void* ctx, size_t* count) {
   *count = reinterpret_cast<sere_context*>(ctx)->object->getAtomics().size();
 }
 
-void sere_context_atomic_name(void* ctx, size_t id, const char** name) {
-  *name = reinterpret_cast<sere_context*>(ctx)->object->getAtomics().at(id).c_str();
+int sere_context_atomic_name(void* ctx, size_t id, const char** name) {
+  auto ref = reinterpret_cast<sere_context*>(ctx);
+  if (id < ref->vars.size()) {
+    *name = ref->object->getAtomics().at(id).c_str();
+    return 0;
+  }
+  return -1;
 }
 
 void sere_context_release(void* ctx) {
@@ -221,17 +228,24 @@ void sere_context_release(void* ctx) {
 }
 
 void sere_context_reset(void* ctx) {
-  reinterpret_cast<sere_context*>(ctx)->context->reset();
+  auto ref = reinterpret_cast<sere_context*>(ctx);
+  ref->context->reset();
+  ref->vars.reset();
 }
 
-void sere_context_advance(void* ctx,
-                          const char* atomics,
-                          size_t atomics_count) {
-  rt::Names vars{atomics_count};
-  for (size_t ix = 0; ix < atomics_count; ++ix) {
-    vars.set(ix, atomics[ix]);
+int sere_context_set_atomic(void* ctx, size_t atomic) {
+  auto ref = reinterpret_cast<sere_context*>(ctx);
+  if (atomic < ref->vars.size()) {
+    ref->vars.set(atomic);
+    return 0;
   }
-  reinterpret_cast<sere_context*>(ctx)->context->advance(vars);
+  return -1;
+}
+
+void sere_context_advance(void* ctx) {
+  auto ref = reinterpret_cast<sere_context*>(ctx);
+  ref->context->advance(ref->vars);
+  ref->vars.reset();
 }
 
 void sere_context_get_result(void* ctx, int* result) {

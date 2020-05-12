@@ -70,12 +70,11 @@ int sere_context_load(const char* rt, /** serialized *FASL */
                       void** sere /** loaded SERE */
                       );
 void sere_context_atomic_count(void* ctx, size_t* count);
-void sere_context_atomic_name(void* ctx, size_t id, const char** name);
+int sere_context_atomic_name(void* ctx, size_t id, const char** name);
 void sere_context_release(void* sere);
 void sere_context_reset(void* sere);
-void sere_context_advance(void* sere,
-                          const char* atomics,
-                          size_t atomics_count);
+int sere_context_set_atomic(void* sere, size_t id);
+void sere_context_advance(void* sere);
 void sere_context_get_result(void* sere, int* result);
 
 #ifdef __cplusplus

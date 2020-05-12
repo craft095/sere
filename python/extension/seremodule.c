@@ -53,17 +53,8 @@ ContextSere_dealloc(ContextSere *self) {
 }
 
 static PyObject *
-ContextSere_advance(ContextSere *self, PyObject *args) {
-  const char *atomics;
-  Py_ssize_t atomics_count;
-
-  if (!PyArg_ParseTuple(args, "y#", &atomics, &atomics_count))
-    return NULL;
-
-  if (atomics_count < 0)
-    return NULL;
-
-  sere_context_advance(self->sere, atomics, (size_t) atomics_count);
+ContextSere_advance(ContextSere *self, PyObject *Py_UNUSED(ignored)) {
+  sere_context_advance(self->sere);
   return PyLong_FromLong(1);
 }
 
@@ -102,12 +93,32 @@ ContextSere_atomic_name(ContextSere *self, PyObject *args) {
 
   const char* name = NULL;
 
-  sere_context_atomic_name(self->sere, id, &name);
-  if (name == NULL) {
-    Py_INCREF(Py_None);
-    return Py_None;
+  int r = sere_context_atomic_name(self->sere, id, &name);
+  if (r != 0) {
+    PyErr_SetString(PyExc_ValueError, "incorrect atomic predicate index");
+    return NULL;
   }
   return PyBytes_FromString(name);
+}
+
+static PyObject *
+ContextSere_set_atomic(ContextSere *self, PyObject *args) {
+  unsigned int id;
+
+  if (!self)
+    return NULL;
+
+  if (!PyArg_ParseTuple(args, "I", &id))
+    return NULL;
+
+  int r = sere_context_set_atomic(self->sere, id);
+  if (r != 0) {
+    PyErr_SetString(PyExc_ValueError, "incorrect atomic predicate index");
+    return NULL;
+  }
+
+  Py_INCREF(Py_None);
+  return Py_None;
 }
 
 static PyMethodDef ContextSere_methods[] = {
@@ -122,6 +133,11 @@ static PyMethodDef ContextSere_methods[] = {
      METH_VARARGS,
      "Returns name of a particular atomic predicate"
     }, {
+     "set_atomic",
+     (PyCFunction) ContextSere_set_atomic,
+     METH_VARARGS,
+     "Sets a particular atomic predicate to TRUE"
+    }, {
      "reset",
      (PyCFunction) ContextSere_reset,
      METH_NOARGS,
@@ -129,7 +145,7 @@ static PyMethodDef ContextSere_methods[] = {
     }, {
      "advance",
      (PyCFunction) ContextSere_advance,
-     METH_VARARGS,
+     METH_NOARGS,
      "Feeds SERE context with new event"
     }, {
      "get_result",

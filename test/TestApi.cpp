@@ -2,6 +2,7 @@
 
 #include "api/sere.hpp"
 
+#include <map>
 #include <string>
 #include <memory.h>
 
@@ -23,17 +24,13 @@ TEST_CASE("Sere API") {
   size_t atomic_count;
   sere_context_atomic_count(sere, &atomic_count);
 
-  char atomics[atomic_count];
-  auto mapper = [&sere, &atomic_count, &atomics](char c) {
-                  for (size_t ix = 0; ix < atomic_count; ++ix) {
-                    const char* name = nullptr;
-                    sere_context_atomic_name(sere, ix, &name);
-                    assert(name != 0);
-                    if (name[0] == c) {
-                      atomics[ix] = 1;
-                    }
-                  }
-                };
+  std::map<char, size_t> remap;
+
+  for (size_t ix = 0; ix < atomic_count; ++ix) {
+    const char* name = nullptr;
+    sere_context_atomic_name(sere, ix, &name);
+    remap[name[0]] = ix;
+  }
 
   std::string word[] = { "AF", "ABF", "BBF" };
 
@@ -41,13 +38,10 @@ TEST_CASE("Sere API") {
   sere_context_get_result(sere, &result);
   CHECK(result == MATCH_PARTIAL);
   for (size_t il = 0; il < sizeof(word)/sizeof(word[0]); ++il) {
-    memset((void*)atomics, 0, sizeof(atomics));;
     for (auto s : word[il]) {
-      mapper(s);
+      sere_context_set_atomic(sere, remap[s]);
     }
-
-    sere_context_advance(sere, atomics, sizeof(atomics));
-
+    sere_context_advance(sere);
     sere_context_get_result(sere, &result);
     CHECK(result == MATCH_OK);
   }
