@@ -3,7 +3,8 @@
 #include <optional>
 
 #include "Algo.hpp"
-#include "sat/Cnf.hpp"
+#include "sat/Sat.hpp"
+#include "sat/Simplify.hpp"
 #include "nfasl/DAG.hpp"
 #include "nfasl/Dfasl.hpp"
 #include "nfasl/Nfasl.hpp"

@@ -190,6 +190,10 @@ public:
   friend Expr operator|| (Expr lhs, Expr rhs) {
     return Expr::context.new_or(lhs.expr, rhs.expr);
   }
+  friend Expr implies(Expr lhs, Expr rhs) {
+    return !lhs || rhs;
+  }
+
 private:
   Expr0 expr;
   static Context context;

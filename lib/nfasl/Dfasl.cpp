@@ -1,7 +1,9 @@
 #include "rt/RtDfasl.hpp"
 #include "nfasl/Dfasl.hpp"
 #include "nfasl/Nfasl.hpp"
-#include "sat/Cnf.hpp"
+#include "sat/Sat.hpp"
+#include "sat/Transform.hpp"
+#include "sat/Simplify.hpp"
 #include "boolean/Expr.hpp"
 #include "Algo.hpp"
 

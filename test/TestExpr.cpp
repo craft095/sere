@@ -6,7 +6,9 @@
 
 #include "test/Letter.hpp"
 
-#include "sat/Cnf.hpp"
+#include "sat/Transform.hpp"
+#include "sat/Simplify.hpp"
+#include "sat/Sat.hpp"
 
 TEST_CASE("boolean::Expr") {
   constexpr size_t atoms = 3;
