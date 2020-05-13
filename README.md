@@ -2,7 +2,7 @@
 
 The purpose of the library is to promote runtime verification
 of temporal properties, specified with [sequential extended
-regular expressions]().
+regular expressions](http://www.sergiomover.eu/paper/ciaa10.pdf).
 
 The other (and perhaps the most important) reason - this
 is just an adventure into the world of fascinating algorithms:
@@ -66,7 +66,7 @@ In the future, there will be added:
          repeation on `w`: w, w+w, w+w+w, etc
 * `PERMUTE(u0,..,un)` - union of all possible concatenations of `u0..un`
          E.g. `PERMUTE(a,b) = a;b | b;a`
-         (number of states is `n!*|u0|*...*|un|`)
+         (number of states is `n!*(|u0|+...+|un|)`)
 * `ABORT(u,e)` - preempt any word `w` partially (or fully) matched
                by `u` by any suffix `s` matched by `e`
 * `~u` - complement L(u) (you can think of it like a negation).
