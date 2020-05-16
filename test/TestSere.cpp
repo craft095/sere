@@ -11,7 +11,7 @@
 
 #include "ast/BoolExpr.hpp"
 #include "ast/SereExpr.hpp"
-#include "sat/Cnf.hpp"
+#include "sat/Sat.hpp"
 
 TEST_CASE("Sere") {
   SECTION("empty") {

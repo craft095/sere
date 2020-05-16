@@ -19,4 +19,15 @@ extern Match evalNfasl(const nfasl::Nfasl& a, const Word& word);
  */
 extern Match evalCleanNfasl(const nfasl::Nfasl& a, const Word& word);
 
+
+struct ExtendedMatch;
+/**
+ * This evaluator may produce PARTIAL results
+ * even if there is no chance to match the word.
+ *
+ * It may happen due to presense of unreachable states.
+ * Note: it does not produce FAILED at all
+ */
+ExtendedMatch evalExtendedNfasl(const nfasl::Nfasl& a, const Word& word);
+
 #endif // EVALNFASL_HPP

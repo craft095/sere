@@ -28,6 +28,16 @@ variables are equivalent to RE over alphabet of size `2^k`.
 This explains why some properties, expressible in SERE,
 are practically inexpressible in RE.
 
+This library aims to runtime verification, i.e. it is purpose
+is to find patterns in a stream of events in real time.
+Good examples here are security policies and events monitoring
+in general. This kind of problems often arise in stream processing.
+
+Having in mind the purpose (online stream processing) it does
+not provide many features provided by many incredible RE libraries
+like PCRE. There are no replacing and no recursion support.
+
+
 The library:
 
 - parsing from SERE syntax into AST SereExpr
