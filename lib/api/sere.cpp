@@ -35,6 +35,12 @@ struct sere_context {
   rt::Names vars;
 };
 
+struct sere_context_extended {
+  std::shared_ptr<sere_object> object;
+  rt::ExtendedExecutorPtr context;
+  rt::Names vars;
+};
+
 class sere_object {
 public:
   static std::shared_ptr<sere_object> load(const char* data);
@@ -48,6 +54,7 @@ public:
   }
 
   virtual rt::ExecutorPtr createExecutor() const = 0;
+  virtual rt::ExtendedExecutorPtr createExtendedExecutor() const = 0;
   virtual void load(const json& j) = 0;
   virtual void save(json& j) const = 0;
   virtual ~sere_object() {}
@@ -61,6 +68,9 @@ class sere_nfasl : public sere_object {
 public:
   rt::ExecutorPtr createExecutor() const override {
     return std::make_shared<rt::NfaslContext>(rt);
+  }
+  rt::ExtendedExecutorPtr createExtendedExecutor() const override {
+    return std::make_shared<rt::NfaslExtendedContext>(rt);
   }
   void load(const json& j) override {
     from_json(j, nfa);
@@ -85,6 +95,10 @@ class sere_dfasl : public sere_object {
 public:
   rt::ExecutorPtr createExecutor() const override {
     return std::make_shared<rt::DfaslContext>(rt);
+  }
+  rt::ExtendedExecutorPtr createExtendedExecutor() const override {
+    // not implemented
+    return nullptr;
   }
   void load(const json& j) {
     from_json(j, dfa);
@@ -189,16 +203,17 @@ int sere_compile(const char* expr,
   }
 }
 
-int sere_context_load(const char* rt, /** serialized *FASL */
+template <typename Ctx, typename Factory>
+int temp_context_load(Factory factory,
+                      const char* rt, /** serialized *FASL */
                       size_t, /** serialized *FASL size */
                       void** sere /** loaded SERE */
                       ) {
-  struct sere_context* ctx = nullptr;
+  Ctx* ctx = nullptr;
   try {
-    ctx = new sere_context;
+    ctx = new Ctx;
     ctx->object = sere_object::load(rt);
-    rt::ExecutorPtr context = ctx->object->createExecutor();
-    ctx->context = context;
+    ctx->context = factory(ctx->object);
     ctx->vars.resize(ctx->object->getAtomics().size());
     *sere = reinterpret_cast<void*>(ctx);
     return 0;
@@ -210,12 +225,42 @@ int sere_context_load(const char* rt, /** serialized *FASL */
   }
 }
 
-void sere_context_atomic_count(void* ctx, size_t* count) {
-  *count = reinterpret_cast<sere_context*>(ctx)->object->getAtomics().size();
+int sere_context_load(const char* rt, /** serialized *FASL */
+                      size_t sz, /** serialized *FASL size */
+                      void** sere /** loaded SERE */
+                      ) {
+  return temp_context_load<sere_context>
+    ([](auto obj) { return obj->createExecutor(); },
+     rt, sz, sere);
 }
 
-int sere_context_atomic_name(void* ctx, size_t id, const char** name) {
-  auto ref = reinterpret_cast<sere_context*>(ctx);
+int sere_context_extended_load(const char* rt, /** serialized *FASL */
+                               size_t sz, /** serialized *FASL size */
+                               void** sere /** loaded SERE */
+                               ) {
+  return temp_context_load<sere_context_extended>
+    ([](auto obj) { return obj->createExtendedExecutor(); },
+     rt, sz, sere);
+}
+
+
+
+template <typename Ctx>
+void temp_context_atomic_count(void* ctx, size_t* count) {
+  *count = reinterpret_cast<Ctx*>(ctx)->object->getAtomics().size();
+}
+
+void sere_context_atomic_count(void* ctx, size_t* count) {
+  temp_context_atomic_count<sere_context>(ctx, count);
+}
+
+void sere_context_extended_atomic_count(void* ctx, size_t* count) {
+  temp_context_atomic_count<sere_context_extended>(ctx, count);
+}
+
+template <typename Ctx>
+int temp_context_atomic_name(void* ctx, size_t id, const char** name) {
+  auto ref = reinterpret_cast<Ctx*>(ctx);
   if (id < ref->vars.size()) {
     *name = ref->object->getAtomics().at(id).c_str();
     return 0;
@@ -223,18 +268,45 @@ int sere_context_atomic_name(void* ctx, size_t id, const char** name) {
   return -1;
 }
 
-void sere_context_release(void* ctx) {
-  delete reinterpret_cast<sere_context*>(ctx);
+int sere_context_atomic_name(void* ctx, size_t id, const char** name) {
+  return temp_context_atomic_name<sere_context>(ctx, id, name);
 }
 
-void sere_context_reset(void* ctx) {
-  auto ref = reinterpret_cast<sere_context*>(ctx);
+int sere_context_extended_atomic_name(void* ctx, size_t id, const char** name) {
+  return temp_context_atomic_name<sere_context_extended>(ctx, id, name);
+}
+
+template <typename Ctx>
+void temp_context_release(void* ctx) {
+  delete reinterpret_cast<Ctx*>(ctx);
+}
+
+void sere_context_release(void* ctx) {
+  temp_context_release<sere_context>(ctx);
+}
+
+void sere_context_extended_release(void* ctx) {
+  temp_context_release<sere_context_extended>(ctx);
+}
+
+template <typename Ctx>
+void temp_context_reset(void* ctx) {
+  auto ref = reinterpret_cast<Ctx*>(ctx);
   ref->context->reset();
   ref->vars.reset();
 }
 
-int sere_context_set_atomic(void* ctx, size_t atomic) {
-  auto ref = reinterpret_cast<sere_context*>(ctx);
+void sere_context_reset(void* ctx) {
+  temp_context_reset<sere_context>(ctx);
+}
+
+void sere_context_extended_reset(void* ctx) {
+  temp_context_reset<sere_context_extended>(ctx);
+}
+
+template <typename Ctx>
+int temp_context_set_atomic(void* ctx, size_t atomic) {
+  auto ref = reinterpret_cast<Ctx*>(ctx);
   if (atomic < ref->vars.size()) {
     ref->vars.set(atomic);
     return 0;
@@ -242,12 +314,33 @@ int sere_context_set_atomic(void* ctx, size_t atomic) {
   return -1;
 }
 
-void sere_context_advance(void* ctx) {
-  auto ref = reinterpret_cast<sere_context*>(ctx);
+int sere_context_set_atomic(void* ctx, size_t atomic) {
+  return temp_context_set_atomic<sere_context>(ctx, atomic);
+}
+
+int sere_context_extended_set_atomic(void* ctx, size_t atomic) {
+  return temp_context_set_atomic<sere_context_extended>(ctx, atomic);
+}
+
+template <typename Ctx>
+void temp_context_advance(void* ctx) {
+  auto ref = reinterpret_cast<Ctx*>(ctx);
   ref->context->advance(ref->vars);
   ref->vars.reset();
 }
 
+void sere_context_advance(void* ctx) {
+  temp_context_advance<sere_context>(ctx);
+}
+
+void sere_context_extended_advance(void* ctx) {
+  temp_context_advance<sere_context_extended>(ctx);
+}
+
 void sere_context_get_result(void* ctx, int* result) {
   *result = reinterpret_cast<sere_context*>(ctx)->context->getResult();
+}
+
+void sere_context_extended_get_result(void* ctx, ExtendedMatch* result) {
+  *result = reinterpret_cast<sere_context_extended*>(ctx)->context->getResult();
 }

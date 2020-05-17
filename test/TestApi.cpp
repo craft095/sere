@@ -48,3 +48,47 @@ TEST_CASE("Sere API") {
   sere_context_release(sere);
   sere_release(&compiled);
 }
+
+TEST_CASE("Sere Extended API") {
+  const char expr[] = "(A ; B) | B";
+
+  struct sere_options opts = { SERE_TARGET_NFASL, SERE_FORMAT_JSON, 0, 0 };
+  struct sere_compiled compiled;
+  int r = sere_compile(expr, &opts, &compiled);
+
+  CHECK(r == 0);
+
+  void* sere = nullptr;
+  r = sere_context_extended_load(compiled.content, compiled.content_size, &sere);
+
+  CHECK(r == 0);
+
+  size_t atomic_count;
+  sere_context_extended_atomic_count(sere, &atomic_count);
+
+  std::map<char, size_t> remap;
+
+  for (size_t ix = 0; ix < atomic_count; ++ix) {
+    const char* name = nullptr;
+    sere_context_extended_atomic_name(sere, ix, &name);
+    remap[name[0]] = ix;
+  }
+
+  std::string word = "ABAB";
+
+  ExtendedMatch result;
+  sere_context_extended_get_result(sere, &result);
+  CHECK(result.match == MATCH_PARTIAL);
+  CHECK(result.partial.horizon == 0);
+  for (auto s : word) {
+    sere_context_extended_set_atomic(sere, remap[s]);
+    sere_context_extended_advance(sere);
+  }
+  sere_context_extended_get_result(sere, &result);
+  CHECK(result.match == MATCH_OK);
+  CHECK(result.ok.shortest == 1);
+  CHECK(result.ok.longest == 2);
+  CHECK(result.ok.horizon == 2);
+  sere_context_extended_release(sere);
+  sere_release(&compiled);
+}

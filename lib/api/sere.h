@@ -81,7 +81,13 @@ int sere_context_load(const char* rt, /** serialized *FASL */
                       void** sere /** loaded SERE */
                       );
 
+/**
+ * Release resources, allocated for SERE
+ *
+ * @param[in] sere SERE context
+ */
 void sere_context_release(void* sere);
+
 /**
  * Get number of atomic predicates in SERE
  *
@@ -135,6 +141,81 @@ void sere_context_advance(void* sere);
  * @param[out] result match result
  */
 void sere_context_get_result(void* sere, int* result);
+
+
+/**
+ * Load compiled SERE expression
+ *
+ * @param[in] rt SERE image
+ * @param[in] rt_size SERE image size
+ * @param[out] sere loaded extended SERE context
+ * @returns non-zero in case of errors
+ */
+int sere_context_extended_load(const char* rt, /** serialized *FASL */
+                               size_t rt_size, /** serialized *FASL size */
+                               void** sere /** loaded extended SERE context */
+                               );
+
+/**
+ * Release resources, allocated for SERE
+ *
+ * @param[in] sere SERE context
+ */
+void sere_context_extended_release(void* sere);
+
+/**
+ * Get number of atomic predicates in SERE
+ *
+ * @param[in] sere SERE context
+ * @param[out] count number of atomic predicates
+ */
+void sere_context_extended_atomic_count(void* sere, size_t* count);
+
+/**
+ * Get name of a given atomic predicate
+ *
+ * All predicates are numbered from zero to `count`-1,
+ * where `count` can be requested with `sere_context_atomic_count`
+ *
+ * @param[in] sere SERE context
+ * @param[in] id atomic predicate id
+ * @param[out] name predicate name
+ * @returns non-zero in case of errors
+ */
+int sere_context_extended_atomic_name(void* sere, size_t id, const char** name);
+
+/**
+ * Reset SERE context to its initial state
+ *
+ * @param[in] sere SERE context
+ */
+void sere_context_extended_reset(void* sere);
+
+/**
+ * Set atomic predicate to TRUE
+ *
+ * All predicates are set to FALSE at every step.
+ *
+ * @param[in] sere SERE context
+ * @param[in] id atomic predicate to set
+ * @returns non-zero in case of error (incorrect predicate id)
+ */
+int sere_context_extended_set_atomic(void* sere, size_t id);
+
+/**
+ * Advance SERE's automaton
+ *
+ * @param[in] sere SERE context
+ */
+void sere_context_extended_advance(void* sere);
+
+/**
+ * Get match results.
+ *
+ * @param[in] sere SERE context
+ * @param[out] result match result
+ */
+void sere_context_extended_get_result(void* sere, struct ExtendedMatch* result);
 
 #ifdef __cplusplus
 } // extern "C"
