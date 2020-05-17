@@ -14,6 +14,7 @@ namespace rt {
   };
 
   typedef std::shared_ptr<Executor> ExecutorPtr;
+  typedef std::shared_ptr<ExtendedExecutor> ExtendedExecutorPtr;
 
   class Loader;
 
@@ -23,9 +24,16 @@ namespace rt {
     virtual ~LoadCallback() {}
   };
 
+  class LoadExtendedCallback {
+  public:
+    virtual ExtendedExecutorPtr load(Loader& loader) = 0;
+    virtual ~LoadExtendedCallback() {}
+  };
+
   class Loader {
   protected:
     static std::map<Kind, LoadCallback*> callbacks;
+    static std::map<Kind, LoadExtendedCallback*> extendedCallbacks;
 
     Header header;
     const uint8_t* begin;
@@ -52,6 +60,10 @@ namespace rt {
     static void addCallback(Kind kind, LoadCallback* callback);
     static ExecutorPtr load(const std::vector<uint8_t>& data);
     static ExecutorPtr load(const uint8_t* data, size_t len);
+
+    static void addCallback(Kind kind, LoadExtendedCallback* callback);
+    static ExtendedExecutorPtr loadExtended(const std::vector<uint8_t>& data);
+    static ExtendedExecutorPtr loadExtended(const uint8_t* data, size_t len);
   };
 
 } //namespace rt

@@ -5,10 +5,12 @@
 #include "rt/Executor.hpp"
 #include "rt/Loader.hpp"
 #include "rt/Saver.hpp"
+#include "rt/RtContext.hpp"
 #include "Match.hpp"
 
 #include <cstdint>
 #include <vector>
+#include <unordered_map>
 #include <boost/dynamic_bitset.hpp>
 
 namespace rt {
@@ -71,12 +73,45 @@ namespace rt {
     Match result;
   };
 
-  class NfaslLoad : public LoadCallback {
+  typedef std::unordered_map<State, RtContext> StateMap;
+
+  class NfaslExtendedContext : public ExtendedExecutor {
   public:
-    std::shared_ptr<Executor> load(Loader& loader) override;
+    NfaslExtendedContext (std::shared_ptr<Nfasl> nfasl_) : nfasl(nfasl_) { reset(); }
+    const ExtendedMatch& getResult() const override {
+      return result;
+    }
+
+    void reset() override;
+    void advance(const Names& vars) override;
+
+  private:
+    void initials(States& qs, StateMap& map);
+    void finals();
+
+    size_t horizon;
+    std::shared_ptr<Nfasl> nfasl;
+    States currentStates;
+    StateMap currentContext;
+    ExtendedMatch result;
   };
 
+  extern std::shared_ptr<Nfasl> loadNfasl(Loader& loader);
   extern void write(const Nfasl& nfasl, std::vector<uint8_t>& data);
+
+  class NfaslExecutorFactory : public LoadCallback {
+  public:
+    std::shared_ptr<Executor> load(Loader& loader) override {
+      return std::make_shared<NfaslContext>(loadNfasl(loader));
+    }
+  };
+
+  class NfaslExtendedExecutorFactory : public LoadExtendedCallback {
+  public:
+    std::shared_ptr<ExtendedExecutor> load(Loader& loader) override {
+      return std::make_shared<NfaslExtendedContext>(loadNfasl(loader));
+    }
+  };
 
 } // namespace rt
 

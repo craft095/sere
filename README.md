@@ -28,7 +28,7 @@ variables are equivalent to RE over alphabet of size `2^k`.
 This explains why some properties, expressible in SERE,
 are practically inexpressible in RE.
 
-This library aims to runtime verification, i.e. it is purpose
+This library aims to runtime verification, i.e. the purpose
 is to find patterns in a stream of events in real time.
 Good examples here are security policies and events monitoring
 in general. This kind of problems often arise in stream processing.

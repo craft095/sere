@@ -8,6 +8,7 @@
 
 extern Match evalRtDfasl(const rt::Dfasl& dfasl, const Word& word);
 extern Match evalRtNfasl(const rt::Nfasl& nfasl, const Word& word);
+extern ExtendedMatch evalExtendedRtNfasl(const rt::Nfasl& nfasl, const Word& word);
 extern Match evalRt(rt::ExecutorPtr executor, const Word& word);
 
 #endif // EVALRT_HPP

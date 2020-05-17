@@ -30,7 +30,7 @@ namespace rt {
     }
   }
 
-  std::shared_ptr<Executor> DfaslLoad::load(Loader& loader) {
+  std::shared_ptr<Executor> DfaslExecutorFactory::load(Loader& loader) {
     std::shared_ptr<Dfasl> dfasl = std::make_shared<Dfasl>();
     const Header& hdr = loader.getHeader();
     dfasl->atomicCount = hdr.atomicCount;

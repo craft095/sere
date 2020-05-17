@@ -7,11 +7,16 @@
 
 namespace parser {
   /**
+   * Mapping from atomic predicate name to variable index
+   */
+  typedef std::map<std::string, size_t> AtomicNameMap;
+
+  /**
    * Parse results
    */
   struct ParseResult {
     Ptr<SereExpr> expr;
-    std::map<std::string, size_t> vars;
+    AtomicNameMap vars;
   };
 
   /**

@@ -71,7 +71,7 @@ namespace rt {
     Match result;
   };
 
-  class DfaslLoad : public LoadCallback {
+  class DfaslExecutorFactory : public LoadCallback {
   public:
     std::shared_ptr<Executor> load(Loader& loader) override;
   };

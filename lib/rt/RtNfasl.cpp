@@ -34,7 +34,7 @@ namespace rt {
     }
   }
 
-  std::shared_ptr<Executor> NfaslLoad::load(Loader& loader) {
+  std::shared_ptr<Nfasl> loadNfasl(Loader& loader) {
     std::shared_ptr<Nfasl> nfasl = std::make_shared<Nfasl>();
     const Header& hdr = loader.getHeader();
     nfasl->atomicCount = hdr.atomicCount;
@@ -42,12 +42,7 @@ namespace rt {
     loadStates(loader, nfasl->initials);
     loadStates(loader, nfasl->finals);
     nfasl->transitions.resize(nfasl->stateCount);
-
-    for (auto& t : nfasl->transitions) {
-      loadStateTransitions(loader, t);
-    }
-
-    return std::make_shared<NfaslContext>(nfasl);
+    return nfasl;
   }
 
   class NfaslSaver : public Saver {
@@ -128,6 +123,79 @@ namespace rt {
     } else {
       fail();
     }
+  }
+
+  void NfaslExtendedContext::initials(States& qs, StateMap& map) {
+    for (size_t q = nfasl->initials.find_first();
+         q != States::npos;
+         q = nfasl->initials.find_next(q)) {
+      qs.set(q);
+      map[q].started();
+    }
+  }
+
+  void NfaslExtendedContext::finals() {
+    if (nfasl->finals.count() == 0) {
+      result.match = Match_Failed;
+      return;
+    }
+    RtContext ctx;
+    for (size_t q = nfasl->finals.find_first();
+         q != States::npos;
+         q = nfasl->finals.find_next(q)) {
+      auto i = currentContext.find(q);
+      if (i != currentContext.end()) {
+        ctx.merge(i->second);
+      }
+    }
+    if (ctx.defined()) {
+      result.match = Match_Ok;
+      result.ok.shortest = ctx.shortest;
+      result.ok.longest = ctx.longest;
+      result.ok.horizon = horizon;
+    } else {
+      result.match = Match_Partial;
+      result.partial.horizon = horizon;
+    }
+  }
+
+  void NfaslExtendedContext::reset() {
+    horizon = 0;
+    currentStates.resize(nfasl->stateCount);
+    initials(currentStates, currentContext);
+    finals();
+  }
+
+  void NfaslExtendedContext::advance(const rt::Names& vars) {
+    bool advanced = false;
+    rt::Names nextStates;
+    StateMap nextContext;
+    nextStates.resize(nfasl->stateCount);
+    initials(nextStates, nextContext);
+    for (size_t q = currentStates.find_first();
+         q != States::npos;
+         q = currentStates.find_next(q)) {
+      bool advancedState = false;
+      auto const& advancedCtx = RtContext::advance(currentContext[q]);
+      const StateTransitions& trs = nfasl->transitions[q];
+      for (auto& tr : trs) {
+        if (eval(vars, &tr.phi[0], tr.phi.size())) {
+          advancedState = true;
+          nextStates.set(tr.state);
+          nextContext[tr.state].merge(advancedCtx);
+        }
+      }
+      if (advancedState) {
+        advanced = true;
+        horizon = std::max(horizon, advancedCtx.longest);
+      }
+    }
+    std::swap(currentStates, nextStates);
+    std::swap(currentContext, nextContext);
+    if (!advanced) {
+      horizon = 0;
+    }
+    finals();
   }
 
 } //namespace rt

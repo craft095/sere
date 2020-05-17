@@ -19,6 +19,14 @@ Match evalRtDfasl(const rt::Dfasl& dfasl, const Word& word) {
   return context.getResult();
 }
 
+ExtendedMatch evalExtendedRtNfasl(const rt::Nfasl& nfasl, const Word& word) {
+  rt::NfaslExtendedContext context{std::make_shared<rt::Nfasl>(nfasl)};
+  for (auto& letter : word) {
+    context.advance(letter);
+  }
+  return context.getResult();
+}
+
 Match evalRt(rt::ExecutorPtr executor, const Word& word) {
   for (auto& letter : word) {
     executor->advance(letter);
