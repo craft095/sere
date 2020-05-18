@@ -15,6 +15,9 @@ def compile(expr, target = 'dfasl'):
 def load(content):
     return Sere(serec.load(content))
 
+def load_extended(content):
+    return Sere(serec.load_extended(content))
+
 class Sere:
     def __init__(self, ctx):
         self.ctx = ctx

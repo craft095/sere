@@ -4,13 +4,15 @@
 
 #include "compile.h"
 #include "load.h"
-// #include "load_extended.h"
+#include "load_extended.h"
 
 static PyMethodDef SereMethods[] = {
     {"compile",  sere_compile_expr, METH_VARARGS,
      "Compile SERE expression."},
     {"load",  sere_load, METH_VARARGS,
      "Load compiled SERE."},
+    {"load_extended",  sere_load_extended, METH_VARARGS,
+     "Load compiled SERE in extended mode."},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
@@ -32,6 +34,14 @@ PyInit_serec(void) {
   if (PyType_Ready(&ContextSereType) < 0)
     return NULL;
   Py_INCREF(&ContextSereType);
+
+  if (PyType_Ready(&ExtendedContextSereType) < 0)
+    return NULL;
+  Py_INCREF(&ExtendedContextSereType);
+
+  if (PyType_Ready(&ExtendedMatchObjectType) < 0)
+    return NULL;
+  Py_INCREF(&ExtendedMatchObjectType);
 
   return PyModule_Create(&seremodule);
 }
