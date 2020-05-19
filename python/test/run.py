@@ -18,7 +18,7 @@ r = y.match(events)
 result = result and r == 0
 
 u = sere.compile("a;b", "nfasl")
-v = sere.load_extended(x.content())
+v = sere.load_extended(u.content())
 
 events = [{ 'a' : True, 'b' : False },
           { 'a' : True, 'b' : True },
