@@ -76,6 +76,29 @@ if(NOT catch_POPULATED)
 endif()
 message(STATUS "catch2 populated " ${extern_catch_SOURCE_DIR})
 
+##############
+
+FetchContent_Declare(
+  extern_benchmark
+  GIT_REPOSITORY https://github.com/google/benchmark
+  GIT_TAG        v1.5.0
+)
+FetchContent_GetProperties(extern_benchmark)
+if(NOT extern_benchmark_POPULATED)
+  message(STATUS "Populating benchmark")
+  message(STATUS "benchmark populating: " ${extern_benchmark_SOURCE_DIR})
+  message(STATUS "benchmark populating: " ${extern_benchmark_BINARY_DIR})
+  FetchContent_Populate(extern_benchmark)
+  set(BENCHMARK_ENABLE_TESTING "OFF")
+  add_subdirectory(
+    ${extern_benchmark_SOURCE_DIR}
+    ${extern_benchmark_BINARY_DIR}
+    EXCLUDE_FROM_ALL)
+endif()
+message(STATUS "benchmark populated " ${extern_benchmark_SOURCE_DIR})
+
+#############
+
 FetchContent_Declare(
   extern_antlr4
   GIT_REPOSITORY https://github.com/antlr/antlr4
