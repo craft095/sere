@@ -26,24 +26,45 @@ struct Expr0 {
   typedef uint32_t Kind;
   typedef uint32_t Ref;
 
-  Kind kind;
-  Ref ref;
+  union {
+    struct {
+      Kind kind;
+      Ref ref;
+    };
+    uint64_t value;
+  };
 
   bool operator== (Expr0 u) const {
-    return u.kind == kind && u.ref == ref;
+    return u.value == value;
   }
   bool operator!= (Expr0 u) const {
-    return u.kind != kind || u.ref != ref;
+    return u.value != value;
   }
   bool operator< (Expr0 u) const {
-    return u.kind < kind || (u.kind == kind && u.ref < ref);
+    return u.value < value;
+  }
+};
+
+struct Expr0Hash {
+  size_t operator()(const Expr0& s) const noexcept
+  {
+    return s.value;
+  }
+};
+
+struct Expr0Expr0Hash {
+  size_t operator()(const std::tuple<Expr0, Expr0>& s) const noexcept
+  {
+    size_t h1 = Expr0Hash{}(std::get<0>(s));
+    size_t h2 = Expr0Hash{}(std::get<1>(s));
+    return h1 ^ (h2 << 1);
   }
 };
 
 class Context {
-  std::map<std::tuple<Expr0,Expr0>, Expr0> to_and;
-  std::map<std::tuple<Expr0,Expr0>, Expr0> to_or;
-  std::map<Expr0, Expr0> to_not;
+  std::unordered_map<std::tuple<Expr0,Expr0>, Expr0, Expr0Expr0Hash> to_and;
+  std::unordered_map<std::tuple<Expr0,Expr0>, Expr0, Expr0Expr0Hash> to_or;
+  std::unordered_map<Expr0, Expr0, Expr0Hash> to_not;
   std::vector<std::tuple<Expr0, Expr0>> exprs;
 
   static constexpr Expr0 trueExpr0{Expr0::Const, 1};
@@ -51,7 +72,7 @@ class Context {
 
 public:
   Context() {
-    exprs.reserve(1024);
+    exprs.reserve(1024*64);
   }
 
   std::tuple<Expr0, Expr0> get_args(Expr0 expr) const {

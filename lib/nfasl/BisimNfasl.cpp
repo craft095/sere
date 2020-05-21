@@ -148,7 +148,7 @@ namespace nfasl {
 
   static Predicate delta(const Nfasl& a, State q, States R) {
     Predicate ret = Predicate::value(false);
-    for (auto const& r : R) {
+    for (auto r : R) {
       ret = ret || delta(a, q, r);
     }
 
@@ -217,12 +217,119 @@ namespace nfasl {
     std::swap(P, partition);
   }
 
+  static void greedyBisim(const Nfasl& a, std::set<States>& partition) {
+    std::set<States> P, W;
+    States Q;
+
+    for (State q = 0; q < a.stateCount; ++q) {
+      Q.insert(q);
+    }
+
+    States QsubF(set_difference(Q, a.finals));
+
+    P.insert(a.finals);
+    P.insert(QsubF);
+
+    if (a.finals.size() <= QsubF.size()) {
+      W.insert(a.finals);
+    } else {
+      W.insert(QsubF);
+    }
+
+    std::map<States, States> SUPER;
+    SUPER[a.finals] = Q;
+    SUPER[QsubF] = Q;
+
+    while (!W.empty()) {
+      States R, R_prime;
+      R = *W.begin();
+      W.erase(W.begin());
+
+      R_prime = set_difference(SUPER[R], R);
+
+      for (auto const& B : P) {
+        State q, r;
+        bool found_in_R = false;
+        bool found_in_R_prime = false;
+        Predicate DqNotDr;
+        Predicate DqNotDr_prime;
+
+        for (auto qx : B) {
+          for (auto rx : B) {
+            if (qx != rx) {
+              q = qx;
+              r = rx;
+
+              DqNotDr = delta(a, q, R) && !delta(a, r, R);
+
+              if (sat(DqNotDr)) {
+                found_in_R = true;
+                break;
+              }
+
+              DqNotDr_prime = delta(a, q, R_prime) && !delta(a, r, R_prime);
+
+              if (sat(DqNotDr_prime)) {
+                found_in_R_prime = true;
+                break;
+              }
+            }
+          }
+          if (found_in_R || found_in_R_prime) { break; }
+        }
+        if (found_in_R || found_in_R_prime) {
+          States D, B_dif_D;
+
+          if (found_in_R) {
+            for (auto p : B) {
+              if (sat(delta(a, p, R) && DqNotDr)) {
+                D.insert(p);
+              } else {
+                B_dif_D.insert(p);
+              }
+            }
+          } else {
+            for (auto p : B) {
+              if (sat(delta(a, p, R_prime) && DqNotDr_prime)) {
+                D.insert(p);
+              } else {
+                B_dif_D.insert(p);
+              }
+            }
+          }
+          P.erase(B);
+          P.insert(D);
+          P.insert(B_dif_D);
+
+          if (set_member(W, B)) {
+            W.erase(B);
+            W.insert(D);
+            W.insert(B_dif_D);
+          } else {
+            if (D.size() <= B_dif_D.size()) {
+              W.insert(D);
+            } else {
+              W.insert(B_dif_D);
+            }
+          }
+
+          auto const& SUPER_B = SUPER[B];
+          SUPER[D] = SUPER_B;
+          SUPER[B_dif_D] = SUPER_B;
+        }
+      }
+    }
+
+    std::swap(P, partition);
+  }
+
   void minimize(const Nfasl& a, Nfasl& b) {
     Nfasl c;
     clean(a, c);
 
     std::set<States> partition;
-    simpleBisim(c, partition);
+    //simpleBisim(c, partition);
+    greedyBisim(c, partition);
 
     joinStates(c, partition, b);
   }

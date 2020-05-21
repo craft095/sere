@@ -89,7 +89,7 @@ if(NOT extern_benchmark_POPULATED)
   message(STATUS "benchmark populating: " ${extern_benchmark_SOURCE_DIR})
   message(STATUS "benchmark populating: " ${extern_benchmark_BINARY_DIR})
   FetchContent_Populate(extern_benchmark)
-  set(BENCHMARK_ENABLE_TESTING "OFF")
+  set(BENCHMARK_ENABLE_TESTING OFF)
   add_subdirectory(
     ${extern_benchmark_SOURCE_DIR}
     ${extern_benchmark_BINARY_DIR}
