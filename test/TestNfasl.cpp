@@ -74,12 +74,13 @@ TEST_CASE("Nfasl, minimal") {
 #define CHECK_IF(premise, cond) if ((premise)) { CHECK(cond); }
 
 TEST_CASE("Nfasl, operations") {
-  constexpr size_t atoms = 2;
-  constexpr size_t states = 3;
-  constexpr size_t maxTrs = 2;
+  constexpr size_t depth = 3;
+  constexpr size_t atoms = 3;
+  constexpr size_t states = 5;
+  constexpr size_t maxTrs = 3;
 
-  auto expr0 = GENERATE(Catch2::take(10, genNfasl(3, atoms, states, maxTrs)));
-  auto word0 = GENERATE(Catch2::take(3, genWord(atoms, 0, 3)));
+  auto expr0 = GENERATE(Catch2::take(10, genNfasl(depth, atoms, states, maxTrs)));
+  auto word0 = GENERATE(Catch2::take(10, genWord(atoms, 0, depth)));
 
   Match r0 = evalNfasl(*expr0, word0);
 
@@ -113,11 +114,11 @@ TEST_CASE("Nfasl, operations") {
     clean(*expr0, cleaned);
     minimize(*expr0, minimal);
 
-    Match r0 = evalNfasl(cleaned, word0);
-    Match r1 = evalNfasl(minimal, word0);
+    Match r0 = evalCleanNfasl(cleaned, word0);
+    Match r1 = evalCleanNfasl(minimal, word0);
 
     CHECK(r0 == r1);
-
+#if 1
     SECTION("complement") {
       Nfasl comp;
       complement(minimal, comp);
@@ -133,6 +134,7 @@ TEST_CASE("Nfasl, operations") {
         CHECK(r1 != Match_Ok);
       }
     }
+#endif
   }
 
   SECTION("unary ops") {

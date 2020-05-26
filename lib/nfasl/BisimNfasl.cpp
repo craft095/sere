@@ -146,7 +146,7 @@ namespace nfasl {
     return ret;
   }
 
-  static Predicate delta(const Nfasl& a, State q, States R) {
+  static Predicate delta(const Nfasl& a, State q, const States& R) {
     Predicate ret = Predicate::value(false);
     for (auto r : R) {
       ret = ret || delta(a, q, r);
@@ -247,79 +247,89 @@ namespace nfasl {
 
       R_prime = set_difference(SUPER[R], R);
 
-      for (auto const& B : P) {
-        State q, r;
-        bool found_in_R = false;
-        bool found_in_R_prime = false;
-        Predicate DqNotDr;
-        Predicate DqNotDr_prime;
+      bool restart_iteration_over_P = true;
+      while (restart_iteration_over_P) {
+        restart_iteration_over_P = false;
+        for (auto const& B : P) {
+          State q, r;
+          bool found_in_R = false;
+          bool found_in_R_prime = false;
+          Predicate DqNotDr;
+          Predicate DqNotDr_prime;
 
-        for (auto qx : B) {
-          for (auto rx : B) {
-            if (qx != rx) {
-              q = qx;
-              r = rx;
+          for (auto qx : B) {
+            for (auto rx : B) {
+              if (qx != rx) {
+                q = qx;
+                r = rx;
 
-              DqNotDr = delta(a, q, R) && !delta(a, r, R);
+                DqNotDr = delta(a, q, R) && !delta(a, r, R);
 
-              if (sat(DqNotDr)) {
-                found_in_R = true;
-                break;
-              }
+                if (sat(DqNotDr)) {
+                  found_in_R = true;
+                  break;
+                }
 
-              DqNotDr_prime = delta(a, q, R_prime) && !delta(a, r, R_prime);
+                DqNotDr_prime = delta(a, q, R_prime) && !delta(a, r, R_prime);
 
-              if (sat(DqNotDr_prime)) {
-                found_in_R_prime = true;
-                break;
+                if (sat(DqNotDr_prime)) {
+                  found_in_R_prime = true;
+                  break;
+                }
               }
             }
+            if (found_in_R || found_in_R_prime) { break; }
           }
-          if (found_in_R || found_in_R_prime) { break; }
-        }
-        if (found_in_R || found_in_R_prime) {
-          States D, B_dif_D;
+          if (found_in_R || found_in_R_prime) {
+            States D, B_dif_D;
 
-          if (found_in_R) {
-            for (auto p : B) {
-              if (sat(delta(a, p, R) && DqNotDr)) {
-                D.insert(p);
-              } else {
-                B_dif_D.insert(p);
+            if (found_in_R) {
+              for (auto p : B) {
+                if (sat(delta(a, p, R) && DqNotDr)) {
+                  D.insert(p);
+                } else {
+                  B_dif_D.insert(p);
+                }
               }
-            }
-          } else {
-            for (auto p : B) {
-              if (sat(delta(a, p, R_prime) && DqNotDr_prime)) {
-                D.insert(p);
-              } else {
-                B_dif_D.insert(p);
-              }
-            }
-          }
-          P.erase(B);
-          P.insert(D);
-          P.insert(B_dif_D);
-
-          if (set_member(W, B)) {
-            W.erase(B);
-            W.insert(D);
-            W.insert(B_dif_D);
-          } else {
-            if (D.size() <= B_dif_D.size()) {
-              W.insert(D);
             } else {
-              W.insert(B_dif_D);
+              for (auto p : B) {
+                if (sat(delta(a, p, R_prime) && DqNotDr_prime)) {
+                  D.insert(p);
+                } else {
+                  B_dif_D.insert(p);
+                }
+              }
             }
-          }
+            // refine P by splitting B
+            P.erase(B);
+            P.insert(D);
+            P.insert(B_dif_D);
 
-          auto const& SUPER_B = SUPER[B];
-          SUPER[D] = SUPER_B;
-          SUPER[B_dif_D] = SUPER_B;
+            if (set_member(W, B)) {
+              W.erase(B);
+              W.insert(D);
+              W.insert(B_dif_D);
+
+              auto const& SUPER_B = SUPER[B];
+              SUPER[D] = SUPER_B;
+              SUPER[B_dif_D] = SUPER_B;
+            } else {
+              if (D.size() <= B_dif_D.size()) {
+                W.insert(D);
+              } else {
+                W.insert(B_dif_D);
+              }
+
+              SUPER[D] = B;
+              SUPER[B_dif_D] = B;
+            }
+
+            //restart_iteration_over_P = true;
+            break; // abort current iteration over P as P was changed
+          }
         }
       }
     }
-
     std::swap(P, partition);
   }
 

@@ -5,6 +5,7 @@
 #include "nfasl/Nfasl.hpp"
 #include "nfasl/BisimNfasl.hpp"
 #include "nfasl/Dfasl.hpp"
+#include "nfasl/Dot.hpp"
 #include "rt/RtDfasl.hpp"
 #include "rt/RtNfasl.hpp"
 #include "boolean/Expr.hpp"
@@ -55,6 +56,7 @@ public:
 
   virtual rt::ExecutorPtr createExecutor() const = 0;
   virtual rt::ExtendedExecutorPtr createExtendedExecutor() const = 0;
+  virtual int toDot(const std::string& file) const = 0;
   virtual void load(const json& j) = 0;
   virtual void save(json& j) const = 0;
   virtual ~sere_object() {}
@@ -71,6 +73,10 @@ public:
   }
   rt::ExtendedExecutorPtr createExtendedExecutor() const override {
     return std::make_shared<rt::NfaslExtendedContext>(rt);
+  }
+  int toDot(const std::string& file) const override {
+    nfasl::toDot(nfa, file);
+    return 0;
   }
   void load(const json& j) override {
     from_json(j, nfa);
@@ -99,6 +105,11 @@ public:
   rt::ExtendedExecutorPtr createExtendedExecutor() const override {
     // not implemented
     return nullptr;
+  }
+  int toDot(const std::string& file) const override {
+    // not implemented
+    assert(false);
+    return 1;
   }
   void load(const json& j) {
     from_json(j, dfa);
@@ -244,6 +255,19 @@ int sere_context_extended_load(const char* rt, /** serialized *FASL */
 }
 
 
+
+template <typename Ctx>
+int temp_context_to_dot(void* ctx, const char* file) {
+  return reinterpret_cast<Ctx*>(ctx)->object->toDot(file);
+}
+
+int sere_context_to_dot(void* ctx, const char* file) {
+  return temp_context_to_dot<sere_context>(ctx, file);
+}
+
+int sere_context_extended_to_dot(void* ctx, const char* file) {
+  return temp_context_to_dot<sere_context_extended>(ctx, file);
+}
 
 template <typename Ctx>
 void temp_context_atomic_count(void* ctx, size_t* count) {

@@ -67,9 +67,8 @@ public:
     } else {
       auto u = [atoms, d]() { return makeNot(d, atoms); };
       auto v = [atoms, d]() { return makeAnd(d, atoms); };
-      std::vector<std::function<boolean::Expr()>> ops(2);
-      ops[0] = u;
-      ops[1] = v;
+      auto w = [atoms, d]() { return makeOr(d, atoms); };
+      std::vector<std::function<boolean::Expr()>> ops = {v,v,v,w,w,w,w,w,u};
       return any_of(ops)();
     }
   }

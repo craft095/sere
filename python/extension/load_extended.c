@@ -57,6 +57,21 @@ ExtendedContextSere_advance(ExtendedContextSere *self, PyObject *Py_UNUSED(ignor
 }
 
 static PyObject *
+ExtendedContextSere_to_dot(ExtendedContextSere *self, PyObject *args) {
+  const char* file;
+  if (!PyArg_ParseTuple(args, "s", &file))
+    return NULL;
+
+  int r = sere_context_extended_to_dot(self->sere, file);
+
+  if (r != 0) {
+    PyErr_SetObject(PyExc_ValueError, PyLong_FromLong(r));
+    return NULL;
+  }
+  return PyLong_FromLong(0);
+}
+
+static PyObject *
 ExtendedContextSere_get_result(ExtendedContextSere *self, PyObject *Py_UNUSED(ignored)) {
   if (!self)
     return NULL;
@@ -170,6 +185,11 @@ static PyMethodDef ExtendedContextSere_methods[] = {
      (PyCFunction) ExtendedContextSere_get_result,
      METH_NOARGS,
      "Returns matching results"
+    }, {
+     "to_dot",
+     (PyCFunction) ExtendedContextSere_to_dot,
+     METH_VARARGS,
+     "Write Graphviz's DOT file"
     },
     {NULL}  /* Sentinel */
 };

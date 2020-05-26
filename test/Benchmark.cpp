@@ -50,25 +50,24 @@ const char mediumExpr[] =
 
 static void generate(std::string& nm) {
   constexpr size_t word_size = 5;
-  constexpr size_t word_count = 60;
-  const char letters[] = "abcdefghijklmnopqrstuvwxyz";
-  constexpr size_t letter_size = sizeof(letters) - 1;
+  constexpr size_t word_count = 300;
 
   std::srand(42);
 
-  auto genLetter = [letters, letter_size](std::string& s) {
-                     s.push_back(letters[std::rand() % letter_size]);
+  auto genLetter = []() {
+                     const char letters[] = "abcdefghijklmnopqrstuvwxyz";
+                     constexpr size_t letter_size = sizeof(letters) - 1;
+                     return letters[std::rand() % letter_size];
                    };
 
-  nm = "true";
+  nm = "false";
   for (size_t w = 0; w < word_count; ++w) {
     std::string word;
-    genLetter(word);
+    word.push_back(genLetter());
 
     for (size_t l = 1; l < word_size; ++l) {
       word.push_back(';');
-      genLetter(word);
-
+      word.push_back(genLetter());
     }
     nm += "| (";
     nm += word;

@@ -217,6 +217,10 @@ void sere_context_extended_advance(void* sere);
  */
 void sere_context_extended_get_result(void* sere, struct ExtendedMatch* result);
 
+  int sere_context_to_dot(void* ctx, const char* file);
+  int sere_context_extended_to_dot(void* ctx, const char* file);
+
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

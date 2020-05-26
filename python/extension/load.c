@@ -19,6 +19,21 @@ ContextSere_dealloc(ContextSere *self) {
 }
 
 static PyObject *
+ContextSere_to_dot(ContextSere *self, PyObject *args) {
+  const char* file;
+  if (!PyArg_ParseTuple(args, "s", &file))
+    return NULL;
+
+  int r = sere_context_to_dot(self->sere, file);
+
+  if (r != 0) {
+    PyErr_SetObject(PyExc_ValueError, PyLong_FromLong(r));
+    return NULL;
+  }
+  return PyLong_FromLong(0);
+}
+
+static PyObject *
 ContextSere_advance(ContextSere *self, PyObject *Py_UNUSED(ignored)) {
   sere_context_advance(self->sere);
   return PyLong_FromLong(1);
@@ -118,6 +133,11 @@ static PyMethodDef ContextSere_methods[] = {
      (PyCFunction) ContextSere_get_result,
      METH_NOARGS,
      "Returns matching results"
+    }, {
+     "to_dot",
+     (PyCFunction) ContextSere_to_dot,
+     METH_VARARGS,
+     "Write Graphviz's DOT file"
     },
     {NULL}  /* Sentinel */
 };

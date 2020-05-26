@@ -63,6 +63,7 @@ namespace dfasl {
     }
 
     State addCandidate(const nfasl::States& qs) {
+      assert(!qs.empty());
       auto r = stateMap.insert({ qs, stateMap.size() });
       if (r.second) {
         candidates.push_back({r.first->second, qs});
@@ -84,7 +85,7 @@ namespace dfasl {
     void finalize() {
       States ini({n.initial});
       a.stateCount = stateMap.size();
-      a.initial = stateMap[ini];
+      a.initial = stateMap.at(ini);
       for (auto const& v : stateMap) {
         if (set_non_empty_intersection(v.first, n.finals)) {
           a.finals.insert(v.second);
@@ -112,7 +113,7 @@ namespace dfasl {
     e0 = simplify(e0);
 
     boolean::Expr nextUpper;
-    // if (sat(e0)) {
+    //if (sat(e0)) {
     if (e0 != boolean::Expr::value(false)) {
       State targetNew = builder.addCandidate(qs);
       builder.addTransitionRule(sourceNew, e0, targetNew);
@@ -120,18 +121,20 @@ namespace dfasl {
       nextUpper = nnf(!e0);
       // short cut
       // if (!sat(nextUpper)) {
-      if (e0 == boolean::Expr::value(false)) {
+      if (nextUpper == boolean::Expr::value(false)) {
         return;
       }
     } else {
       nextUpper = boolean::Expr::value(true);
     }
 
-    for (auto q : qs) {
-      States substates{qs};
-      substates.erase(q);
+    if (qs.size() > 1) {
+      for (auto q : qs) {
+        States substates{qs};
+        substates.erase(q);
 
-      deeper(builder, next, sourceNew, nextUpper, substates);
+        deeper(builder, next, sourceNew, nextUpper, substates);
+      }
     }
   }
 
@@ -152,7 +155,9 @@ namespace dfasl {
       }
     }
 
-    deeper(builder, next, sourceNew, boolean::Expr::value(true), targets);
+    if (!targets.empty()) {
+      deeper(builder, next, sourceNew, boolean::Expr::value(true), targets);
+    }
   }
 
   void toDfasl(const nfasl::Nfasl& a, Dfasl& b) {
@@ -174,14 +179,32 @@ namespace dfasl {
   }
 
   void complement(dfasl::Dfasl& a) {
+    assert(a.stateCount != 0);
+
     States finals;
     std::swap(a.finals, finals);
 
+    // make it total
+    State newQ = a.stateCount;
+    for (State q = 0; q < a.stateCount; ++q) {
+      boolean::Expr phi = boolean::Expr::value(false);
+      for (auto r : a.transitions[q]) {
+        phi = phi || r.phi;
+      }
+      a.transitions[q].push_back({ !phi, newQ });
+    }
+    ++a.stateCount;
+    a.transitions.resize(a.stateCount);
+    a.transitions[newQ].push_back({ boolean::Expr::value(true), newQ });
+
+    // Invert final states
     for (State q = 0; q < a.stateCount; ++q) {
       if (!set_member(finals, q)) {
         a.finals.insert(q);
       }
     }
+
+    assert(set_member(a.finals, newQ));
   }
 
   void toRt(const Dfasl& u, rt::Dfasl& v) {

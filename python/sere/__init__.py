@@ -33,6 +33,9 @@ class Sere:
     def reset(self):
         self.ctx.reset()
 
+    def to_dot(self, filename):
+        self.ctx.to_dot(filename)
+
     def matched(self):
         return self.ctx.get_result()
 

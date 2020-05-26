@@ -1,3 +1,4 @@
+#if 0
 #include "catch2/catch.hpp"
 
 #include "test/GenBoolExpr.hpp"
@@ -79,3 +80,4 @@ TEST_CASE("RtDfasl") {
     CHECK(r0 == r2);
   }
 }
+#endif
