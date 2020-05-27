@@ -324,7 +324,7 @@ namespace nfasl {
               SUPER[B_dif_D] = B;
             }
 
-            //restart_iteration_over_P = true;
+            restart_iteration_over_P = true;
             break; // abort current iteration over P as P was changed
           }
         }

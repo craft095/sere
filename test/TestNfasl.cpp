@@ -76,11 +76,11 @@ TEST_CASE("Nfasl, minimal") {
 TEST_CASE("Nfasl, operations") {
   constexpr size_t depth = 3;
   constexpr size_t atoms = 3;
-  constexpr size_t states = 5;
+  constexpr size_t states = 7;
   constexpr size_t maxTrs = 3;
 
-  auto expr0 = GENERATE(Catch2::take(10, genNfasl(depth, atoms, states, maxTrs)));
-  auto word0 = GENERATE(Catch2::take(10, genWord(atoms, 0, depth)));
+  auto expr0 = GENERATE_COPY(Catch2::take(10, genNfasl(depth, atoms, states, maxTrs)));
+  auto word0 = GENERATE_COPY(Catch2::take(10, genWord(atoms, 0, 10)));
 
   Match r0 = evalNfasl(*expr0, word0);
 
@@ -162,10 +162,10 @@ TEST_CASE("Nfasl, operations") {
     }
   }
 
+#if 0
   SECTION("binary ops") {
-    auto expr1 = GENERATE(Catch2::take(10, genNfasl(2, atoms, states, maxTrs)));
+    auto expr1 = GENERATE_COPY(Catch2::take(10, genNfasl(2, atoms, states, maxTrs)));
 
-#if 1
     SECTION("intersect/union") {
       Match r1 = evalNfasl(*expr1, word0);
 
@@ -193,13 +193,12 @@ TEST_CASE("Nfasl, operations") {
         }
       }
     }
-#endif
     SECTION("concat") {
       // auto word0 = GENERATE(Catch2::take(3, genWord(atoms, 0, 3)));
 
 #if 1
       SECTION("concat") {
-        auto word1 = GENERATE(Catch2::take(3, genWord(atoms, 0, 3)));
+        auto word1 = GENERATE_COPY(Catch2::take(3, genWord(atoms, 0, 3)));
         auto word{word0};
         word.insert(word.end(), word1.begin(), word1.end());
 
@@ -213,7 +212,7 @@ TEST_CASE("Nfasl, operations") {
       }
 
       SECTION("fuse") {
-        auto word1 = GENERATE(Catch2::take(3, genWord(atoms, 1, 2)));
+        auto word1 = GENERATE_COPY(Catch2::take(3, genWord(atoms, 1, 2)));
 
         if (word0.size() > 0 && word1.size() > 0) {
           auto word{word0};
@@ -231,4 +230,5 @@ TEST_CASE("Nfasl, operations") {
 #endif
     }
   }
+#endif
 }
