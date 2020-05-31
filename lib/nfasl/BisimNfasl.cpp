@@ -247,30 +247,42 @@ namespace nfasl {
 
       R_prime = set_difference(SUPER[R], R);
 
+      auto P_copy{P};
       bool restart_iteration_over_P = true;
       while (restart_iteration_over_P) {
         restart_iteration_over_P = false;
-        for (auto const& B : P) {
+        while (!P_copy.empty()) {
+          auto B {*P_copy.begin()};
+          P_copy.erase(P_copy.begin());
           State q, r;
           bool found_in_R = false;
           bool found_in_R_prime = false;
           Predicate DqNotDr;
           Predicate DqNotDr_prime;
 
-          for (auto qx : B) {
-            for (auto rx : B) {
-              if (qx != rx) {
-                q = qx;
-                r = rx;
+          struct XX {
+            State q;
+            Predicate Dq_R;
+            Predicate Dq_R_prime;
+          };
 
-                DqNotDr = delta(a, q, R) && !delta(a, r, R);
+          std::vector<XX> Bqs;
+          Bqs.reserve(B.size());
+          for (auto q : B) {
+            Bqs.push_back({ q, delta(a, q, R), delta(a, q, R_prime)});
+          }
+
+          for (auto q : Bqs) {
+            for (auto r : Bqs) {
+              if (q.q != r.q) {
+                DqNotDr = q.Dq_R && !r.Dq_R;
 
                 if (sat(DqNotDr)) {
                   found_in_R = true;
                   break;
                 }
 
-                DqNotDr_prime = delta(a, q, R_prime) && !delta(a, r, R_prime);
+                DqNotDr_prime = q.Dq_R_prime && !r.Dq_R_prime;
 
                 if (sat(DqNotDr_prime)) {
                   found_in_R_prime = true;
@@ -304,6 +316,8 @@ namespace nfasl {
             P.erase(B);
             P.insert(D);
             P.insert(B_dif_D);
+            P_copy.insert(D);
+            P_copy.insert(B_dif_D);
 
             if (set_member(W, B)) {
               W.erase(B);
@@ -324,8 +338,8 @@ namespace nfasl {
               SUPER[B_dif_D] = B;
             }
 
-            restart_iteration_over_P = true;
-            break; // abort current iteration over P as P was changed
+            //restart_iteration_over_P = true;
+            //break; // abort current iteration over P as P was changed
           }
         }
       }
