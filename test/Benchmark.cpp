@@ -59,6 +59,6 @@ static void BM_NfaslMinimization(benchmark::State& state) {
   state.counters["min-states"] = minSt;
 }
 
-BENCHMARK(BM_NfaslMinimization)->Arg(10)->Arg(20)->Arg(30)->Arg(40)->Arg(50;
+BENCHMARK(BM_NfaslMinimization)->Arg(10)->Arg(20)->Arg(30)->Arg(40)->Arg(50);
 
 BENCHMARK_MAIN();
