@@ -1,6 +1,7 @@
 #include <set>
 #include <map>
 #include <optional>
+#include <unordered_set>
 
 #include "Algo.hpp"
 #include "sat/Sat.hpp"
@@ -131,7 +132,7 @@ namespace nfasl {
       b.finals.insert(remapF(q));
     }
   }
-
+#if 0
   static Predicate delta(const Nfasl& a, State q, State r) {
     assert(q < a.stateCount);
     assert(r < a.stateCount);
@@ -216,36 +217,141 @@ namespace nfasl {
 
     std::swap(P, partition);
   }
+#endif
 
-  static void greedyBisim(const Nfasl& a, std::set<States>& partition) {
-    std::set<States> P, W;
-    States Q;
+  struct Set {
+    typedef std::unordered_set<State> Payload;
+    typedef std::shared_ptr<Set> Ptr;
+    typedef std::shared_ptr<Payload> PayloadPtr;
 
-    for (State q = 0; q < a.stateCount; ++q) {
-      Q.insert(q);
+    Ptr superBlock;
+    PayloadPtr payload;
+    size_t hashValue;
+
+    Set() : superBlock(nullptr), hashValue(0) {
+      payload = std::make_shared<Payload>();
     }
 
-    States QsubF(set_difference(Q, a.finals));
+    size_t hash() const {
+      return hashValue;
+    }
 
-    P.insert(a.finals);
+    size_t size() const {
+      return payload->size();
+    }
+
+    void insert(State q) {
+      payload->insert(q);
+
+      // order independed hash value - plain sum works fine here
+      hashValue = hashValue + q;
+    }
+
+    States as_set() const {
+      States qs;
+      for (auto q : *payload) {
+        qs.insert(q);
+      }
+      return qs;
+    }
+
+    void setSuper(Ptr super) {
+      superBlock = super;
+    }
+
+    Ptr getSuper() const {
+      return superBlock;
+    }
+
+    Payload::iterator begin() {
+      return payload->begin();
+    }
+    Payload::const_iterator begin() const {
+      return payload->begin();
+    }
+
+    Payload::iterator end() {
+      return payload->end();
+    }
+    Payload::const_iterator end() const {
+      return payload->end();
+    }
+
+    static Ptr make() {
+      return std::make_shared<Set>();
+    }
+
+    static Ptr make(const States& qs) {
+      Ptr r {make()};
+      for (auto q : qs) {
+        r->insert(q);
+      }
+      return r;
+    }
+  };
+
+  struct SetHash {
+    size_t operator()(const Set::Ptr& s) const noexcept
+    {
+      return s->hash();
+    }
+  };
+
+  typedef std::unordered_set<Set::Ptr, SetHash> SuperSet;
+
+  static Predicate delta(const Nfasl& a, State q, State r) {
+    assert(q < a.stateCount);
+    assert(r < a.stateCount);
+
+    Predicate ret = Predicate::value(false);
+    for (auto const& rule : a.transitions[q]) {
+      if (rule.state == r) {
+        ret = ret || rule.phi;
+      }
+    }
+
+    return ret;
+  }
+
+  static Predicate delta(const Nfasl& a, State q, const Set& R) {
+    Predicate ret = Predicate::value(false);
+    for (auto r : R) {
+      ret = ret || delta(a, q, r);
+    }
+
+    return ret;
+  }
+
+  static void greedyBisim(const Nfasl& a, std::set<States>& partition) {
+    SuperSet P, W;
+    Set::Ptr Q{Set::make()};
+
+    for (State q = 0; q < a.stateCount; ++q) {
+      Q->insert(q);
+    }
+
+    Set::Ptr QsubF(Set::make(set_difference(Q->as_set(), a.finals)));
+
+    Set::Ptr finals{Set::make(a.finals)};
+
+    P.insert(finals);
     P.insert(QsubF);
 
-    if (a.finals.size() <= QsubF.size()) {
-      W.insert(a.finals);
+    if (finals->size() <= QsubF->size()) {
+      W.insert(finals);
     } else {
       W.insert(QsubF);
     }
 
-    std::map<States, States> SUPER;
-    SUPER[a.finals] = Q;
-    SUPER[QsubF] = Q;
+    finals->setSuper(Q);
+    QsubF->setSuper(Q);
 
     while (!W.empty()) {
-      States R, R_prime;
-      R = *W.begin();
+      Set::Ptr R = *W.begin();
       W.erase(W.begin());
 
-      R_prime = set_difference(SUPER[R], R);
+      States R_prime_content = set_difference(R->getSuper()->as_set(), R->as_set());
+      Set::Ptr R_prime = Set::make(R_prime_content);
 
       auto P_copy{P};
       bool restart_iteration_over_P = true;
@@ -267,9 +373,9 @@ namespace nfasl {
           };
 
           std::vector<XX> Bqs;
-          Bqs.reserve(B.size());
-          for (auto q : B) {
-            Bqs.push_back({ q, delta(a, q, R), delta(a, q, R_prime)});
+          Bqs.reserve(B->size());
+          for (auto q : *B) {
+            Bqs.push_back({ q, delta(a, q, *R), delta(a, q, *R_prime)});
           }
 
           for (auto q : Bqs) {
@@ -293,22 +399,23 @@ namespace nfasl {
             if (found_in_R || found_in_R_prime) { break; }
           }
           if (found_in_R || found_in_R_prime) {
-            States D, B_dif_D;
+            Set::Ptr D = Set::make();
+            Set::Ptr B_dif_D = Set::make();
 
             if (found_in_R) {
-              for (auto p : B) {
-                if (sat(delta(a, p, R) && DqNotDr)) {
-                  D.insert(p);
+              for (auto p : *B) {
+                if (sat(delta(a, p, *R) && DqNotDr)) {
+                  D->insert(p);
                 } else {
-                  B_dif_D.insert(p);
+                  B_dif_D->insert(p);
                 }
               }
             } else {
-              for (auto p : B) {
-                if (sat(delta(a, p, R_prime) && DqNotDr_prime)) {
-                  D.insert(p);
+              for (auto p : *B) {
+                if (sat(delta(a, p, *R_prime) && DqNotDr_prime)) {
+                  D->insert(p);
                 } else {
-                  B_dif_D.insert(p);
+                  B_dif_D->insert(p);
                 }
               }
             }
@@ -319,23 +426,24 @@ namespace nfasl {
             P_copy.insert(D);
             P_copy.insert(B_dif_D);
 
-            if (set_member(W, B)) {
-              W.erase(B);
+            auto bi = W.find(B);
+            if (bi != W.end()) {
+              W.erase(bi);
               W.insert(D);
               W.insert(B_dif_D);
 
-              auto const& SUPER_B = SUPER[B];
-              SUPER[D] = SUPER_B;
-              SUPER[B_dif_D] = SUPER_B;
+              auto SUPER_B = B->getSuper();
+              D->setSuper(SUPER_B);
+              B_dif_D->setSuper(SUPER_B);
             } else {
-              if (D.size() <= B_dif_D.size()) {
+              if (D->size() <= B_dif_D->size()) {
                 W.insert(D);
               } else {
                 W.insert(B_dif_D);
               }
 
-              SUPER[D] = B;
-              SUPER[B_dif_D] = B;
+              D->setSuper(B);
+              B_dif_D->setSuper(B);
             }
 
             //restart_iteration_over_P = true;
@@ -344,7 +452,9 @@ namespace nfasl {
         }
       }
     }
-    std::swap(P, partition);
+    for (auto qs : P) {
+      partition.insert(qs->as_set());
+    }
   }
 
   void minimize(const Nfasl& a, Nfasl& b) {
