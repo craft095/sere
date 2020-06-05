@@ -16,11 +16,12 @@ namespace boolean {
 
 struct Expr0 {
   enum Op {
-    Const = 0,
-    Var = 1,
-    Not = 2,
-    And = 3,
-    Or = 4
+    NoValue = 0,
+    Const = 1,
+    Var = 2,
+    Not = 3,
+    And = 4,
+    Or = 5
   };
 
   typedef uint32_t Kind;
@@ -61,23 +62,55 @@ struct Expr0Expr0Hash {
   }
 };
 
+enum Func
+  {
+   F_NNF = 0,
+   F_SIMPLIFY,
+   F_FUNC_COUNT
+  };
+
 class Context {
   std::unordered_map<std::tuple<Expr0,Expr0>, Expr0, Expr0Expr0Hash> to_and;
   std::unordered_map<std::tuple<Expr0,Expr0>, Expr0, Expr0Expr0Hash> to_or;
   std::unordered_map<Expr0, Expr0, Expr0Hash> to_not;
   std::vector<std::tuple<Expr0, Expr0>> exprs;
 
+  typedef std::vector<Expr0> RefFunc;
+  typedef std::array<RefFunc, F_FUNC_COUNT> RefFuncs;
+
+  RefFuncs funcs;
+
   static constexpr Expr0 trueExpr0{Expr0::Const, 1};
   static constexpr Expr0 falseExpr0{Expr0::Const, 0};
+
+  void add_expr(std::tuple<Expr0, Expr0> texpr) {
+    exprs.push_back(texpr);
+    for (auto& e : funcs) {
+      assert(exprs.size() == e.size() + 1);
+      e.push_back(novalue());
+    }
+  }
 
 public:
   Context() {
     exprs.reserve(1024*64);
+    for (auto& e : funcs) {
+      e.reserve(1024*64);
+    }
+    //add_expr({novalue(),{0}}); // novalue
+  }
+
+  Expr0& func_site(Expr0 expr, Func func) {
+    return funcs[func][expr.ref];
   }
 
   std::tuple<Expr0, Expr0> get_args(Expr0 expr) const {
     assert(expr.ref < exprs.size());
     return exprs[expr.ref];
+  }
+
+  static Expr0 novalue() {
+    return Expr0{{0,0}};
   }
 
   Expr0 new_value(bool v) {
@@ -90,27 +123,27 @@ public:
 
   Expr0 new_not(Expr0 e) {
     Expr0 e1{Expr0::Not, (uint32_t)exprs.size()};
-    auto [i,has] = to_not.insert({e, e1});
-    if (has) {
-      exprs.push_back({e,e});
+    auto [i,is_new] = to_not.insert({e, e1});
+    if (is_new) {
+      add_expr({e,e});
     }
     return i->second;
   }
 
   Expr0 new_and(Expr0 l, Expr0 r) {
     Expr0 e1{Expr0::And, (uint32_t)exprs.size()};
-    auto [i, has] = to_and.insert({{l,r}, e1});
-    if (has) {
-      exprs.push_back({l,r});
+    auto [i, is_new] = to_and.insert({{l,r}, e1});
+    if (is_new) {
+      add_expr({l,r});
     }
     return i->second;
   }
 
   Expr0 new_or(Expr0 l, Expr0 r) {
     Expr0 e1{Expr0::Or, (uint32_t)exprs.size()};
-    auto [i, has] = to_or.insert({{l,r}, e1});
-    if (has) {
-      exprs.push_back({l,r});
+    auto [i, is_new] = to_or.insert({{l,r}, e1});
+    if (is_new) {
+      add_expr({l,r});
     }
     return i->second;
   }
@@ -215,7 +248,7 @@ public:
     return !lhs || rhs;
   }
 
-private:
+  //private:
   Expr0 expr;
   static Context context;
 };

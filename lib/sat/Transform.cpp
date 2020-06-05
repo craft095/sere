@@ -10,10 +10,9 @@
  * - or it does not contain neither TRUE nor FALSE
  *   and NEGATION is only applied to variable
  */
-boolean::Expr nnf(boolean::Expr expr) {
-  bool b;
-  boolean::Expr lhs, rhs;
+boolean::Expr nnf0(boolean::Expr expr) ;
 
+boolean::Expr nnf(boolean::Expr expr) {
   if (expr.is_const()) {
     return expr;
   }
@@ -21,6 +20,30 @@ boolean::Expr nnf(boolean::Expr expr) {
   if (expr.is_var()) {
     return expr;
   }
+
+  boolean::Expr0 cref = boolean::Expr::context.func_site(expr.expr, boolean::F_NNF);
+
+  if (cref == boolean::Context::novalue()) {
+    boolean::Expr0 val = nnf0(expr).expr;
+    boolean::Expr0& ref = boolean::Expr::context.func_site(expr.expr, boolean::F_NNF);
+    ref = val;
+    return boolean::Expr{ref};
+  } else {
+    return boolean::Expr{cref};
+  }
+}
+
+boolean::Expr nnf0(boolean::Expr expr) {
+  bool b;
+  boolean::Expr lhs, rhs;
+
+  // if (expr.is_const()) {
+  //   return expr;
+  // }
+
+  // if (expr.is_var()) {
+  //   return expr;
+  // }
 
   if (expr.not_arg(lhs)) {
     auto arg = nnf(lhs);

@@ -220,7 +220,8 @@ namespace nfasl {
 #endif
 
   struct Set {
-    typedef std::unordered_set<State> Payload;
+    //typedef std::unordered_set<State> Payload;
+    typedef std::set<State> Payload;
     typedef std::shared_ptr<Set> Ptr;
     typedef std::shared_ptr<Payload> PayloadPtr;
 
@@ -248,11 +249,15 @@ namespace nfasl {
     }
 
     States as_set() const {
+      #if 0
       States qs;
       for (auto q : *payload) {
         qs.insert(q);
       }
       return qs;
+      #else
+      return *payload;
+      #endif
     }
 
     void setSuper(Ptr super) {
@@ -297,7 +302,14 @@ namespace nfasl {
     }
   };
 
-  typedef std::unordered_set<Set::Ptr, SetHash> SuperSet;
+  struct SetEqual {
+    size_t operator()(const Set::Ptr& x, const Set::Ptr& y) const noexcept
+    {
+      return *(x->payload) == *(y->payload);
+    }
+  };
+
+  typedef std::unordered_set<Set::Ptr, SetHash, SetEqual> SuperSet;
 
   static Predicate delta(const Nfasl& a, State q, State r) {
     assert(q < a.stateCount);
