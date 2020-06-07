@@ -31,6 +31,7 @@ set(SereTest_files
 add_executable(sere_benchmark ${Benchmark_files})
 target_link_libraries(sere_benchmark PRIVATE
   sere_shared
+  tsl::robin_map
   nlohmann_json::nlohmann_json
   benchmark)
 
@@ -43,6 +44,7 @@ target_link_libraries(
   sere_shared
   z3
   Catch2::Catch
+  tsl::robin_map
   nlohmann_json::nlohmann_json)
 
 add_test (NAME sere_test COMMAND sere_test)

@@ -21,16 +21,7 @@ boolean::Expr nnf(boolean::Expr expr) {
     return expr;
   }
 
-  boolean::Expr0 cref = boolean::Expr::context.func_site(expr.expr, boolean::F_NNF);
-
-  if (cref == boolean::Context::novalue()) {
-    boolean::Expr0 val = nnf0(expr).expr;
-    boolean::Expr0& ref = boolean::Expr::context.func_site(expr.expr, boolean::F_NNF);
-    ref = val;
-    return boolean::Expr{ref};
-  } else {
-    return boolean::Expr{cref};
-  }
+  return expr.query_and_update_func(boolean::F_NNF, nnf0);
 }
 
 boolean::Expr nnf0(boolean::Expr expr) {

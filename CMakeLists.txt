@@ -45,6 +45,22 @@ message(STATUS "minisat populated " ${extern_minisat_SOURCE_DIR})
 # endif()
 
 FetchContent_Declare(
+  extern_robin_map
+  GIT_REPOSITORY https://github.com/Tessil/robin-map
+  GIT_TAG        v0.6.2
+)
+
+FetchContent_GetProperties(extern_robin_map)
+if(NOT extern_robin_map_POPULATED)
+  FetchContent_Populate(extern_robin_map)
+  add_subdirectory(
+    ${extern_robin_map_SOURCE_DIR}
+    ${extern_robin_map_BINARY_DIR}
+    EXCLUDE_FROM_ALL)
+endif()
+message(STATUS "robin-map populated " ${extern_robin_map_SOURCE_DIR})
+
+FetchContent_Declare(
   extern_json
   GIT_REPOSITORY https://github.com/nlohmann/json
   GIT_TAG        v3.7.3

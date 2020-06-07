@@ -295,9 +295,28 @@ bool sat(BoolExpr& expr) {
   return TseitinBoolExpr(*simplifiedExpr).isSatisfiable();
 }
 
+
+boolean::Expr sat0(boolean::Expr expr);
+
 bool sat(boolean::Expr expr) {
+  if (expr.is_const()) {
+    return expr == boolean::Expr::value(true);
+  }
+
+  if (expr.is_var()) {
+    return true;
+  }
+
+  return
+    expr.query_and_update_func(boolean::F_SAT, sat0)
+    ==
+    boolean::Expr::value(true);
+}
+
+boolean::Expr sat0(boolean::Expr expr) {
   auto simplifiedExpr = nnf(expr);
-  return TseitinExpr(simplifiedExpr).isSatisfiable();
+  bool r = TseitinExpr(simplifiedExpr).isSatisfiable();
+  return boolean::Expr::value(r);
 }
 
 bool prove(boolean::Expr expr) {

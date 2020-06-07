@@ -8,29 +8,41 @@
 #include <memory>
 #include <cassert>
 
+#include <tsl/robin_map.h>
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
 
 namespace boolean {
 
+  /*
+   * Some observations
+   * - expressions are created much more times than traversed
+   * - double word represenation does matter
+   * - caches (even for large SERE) are of moderate size
+   * - this implementation is _single_ threaded
+   */
+
 struct Expr0 {
   enum Op {
-    NoValue = 0,
-    Const = 1,
-    Var = 2,
-    Not = 3,
-    And = 4,
-    Or = 5
+    NoValue = 0, // ref is unused
+    Const = 1, // ref is (~0 - (0 | 1))
+    Var = 2, // ref is (~0 - (varId + 2))
+    Not = 3, // ref is used as an index
+    And = 4, // ref is used as an index
+    Or = 5   // ref is used as an index
   };
 
   typedef uint32_t Kind;
   typedef uint32_t Ref;
 
+  static constexpr uint32_t const_base = ~0;
+  static constexpr uint32_t var_base = const_base - 2;
+
   union {
     struct {
       Kind kind;
-      Ref ref;
+      Ref ref; // ref is unique id of an expression
     };
     uint64_t value;
   };
@@ -65,14 +77,58 @@ struct Expr0Expr0Hash {
 enum Func
   {
    F_NNF = 0,
-   F_SIMPLIFY,
-   F_FUNC_COUNT
+   F_SAT = 1,
+   F_SIMPLIFY = 2,
+   F_FUNC_COUNT = 3
+  };
+
+  /**
+   * Operation key uniquely identifies pair of expressions.
+   * The idea here is to pack the key into UInt64.
+   * For this purpose Ref (which UInt32) in Expr0 was made globally unique.
+   */
+  union OpKey {
+    struct {
+      Expr0::Ref lhs;
+      Expr0::Ref rhs;
+    };
+    uint64_t key;
+  };
+
+  inline bool operator== (OpKey x, OpKey y) { return x.key == y.key; }
+
+  inline uint32_t hashAmiga(uint32_t value) {
+    return value * 0xdeece66d + 0xb;
+  }
+
+  struct UInt32Hash {
+    size_t operator()(uint32_t k) const noexcept {
+      return hashAmiga(k);
+    }
+  };
+
+  struct OpKeyHash {
+    size_t operator()(OpKey k) const noexcept {
+      // Cantor pairing function
+      return k.rhs + (k.lhs + k.rhs)*(k.lhs + k.rhs + 1)/2;
+      //return k.key; //k.rhs + (k.lhs + k.rhs)*(k.lhs + k.rhs + 1)/2;
+      //return k.key*0x517cc1b727220a95;
+      /*
+      size_t h1 = hashAmiga(k.lhs);
+      size_t h2 = hashAmiga(k.rhs);
+      return h1 ^ (h2 << 1);*/
+    }
   };
 
 class Context {
-  std::unordered_map<std::tuple<Expr0,Expr0>, Expr0, Expr0Expr0Hash> to_and;
-  std::unordered_map<std::tuple<Expr0,Expr0>, Expr0, Expr0Expr0Hash> to_or;
-  std::unordered_map<Expr0, Expr0, Expr0Hash> to_not;
+  typedef tsl::robin_map<OpKey, Expr0, OpKeyHash> E2Map;
+  typedef tsl::robin_map<Expr0::Ref, Expr0> EMap;
+  // std::unordered_map<OpKey, Expr0, OpKeyHash> to_and;
+  // std::unordered_map<OpKey, Expr0, OpKeyHash> to_or;
+  // std::unordered_map<Expr0::Ref, Expr0, UInt32Hash> to_not;
+  E2Map to_and;
+  E2Map to_or;
+  EMap to_not;
   std::vector<std::tuple<Expr0, Expr0>> exprs;
 
   typedef std::vector<Expr0> RefFunc;
@@ -80,8 +136,8 @@ class Context {
 
   RefFuncs funcs;
 
-  static constexpr Expr0 trueExpr0{Expr0::Const, 1};
-  static constexpr Expr0 falseExpr0{Expr0::Const, 0};
+  static constexpr Expr0 trueExpr0{Expr0::Const, Expr0::const_base - 1};
+  static constexpr Expr0 falseExpr0{Expr0::Const, Expr0::const_base};
 
   void add_expr(std::tuple<Expr0, Expr0> texpr) {
     exprs.push_back(texpr);
@@ -93,11 +149,24 @@ class Context {
 
 public:
   Context() {
+    to_and.reserve(1024*1024*4);
+    to_or.reserve(1024*1024*4);
+    to_not.reserve(1024*64);
     exprs.reserve(1024*64);
     for (auto& e : funcs) {
       e.reserve(1024*64);
     }
     //add_expr({novalue(),{0}}); // novalue
+  }
+
+  template <typename F>
+  Expr0 query_and_update_func(Func func, Expr0 arg, F f) {
+    Expr0 r = funcs[func][arg.ref];
+    if (r == novalue()) {
+      r = f(arg);
+      funcs[func][arg.ref] = r;
+    }
+    return r;
   }
 
   Expr0& func_site(Expr0 expr, Func func) {
@@ -118,21 +187,27 @@ public:
   }
 
   Expr0 new_var(uint32_t var) {
-    return Expr0 { Expr0::Var, var };
+    return Expr0 { Expr0::Var, Expr0::var_base - var };
   }
 
   Expr0 new_not(Expr0 e) {
     Expr0 e1{Expr0::Not, (uint32_t)exprs.size()};
-    auto [i,is_new] = to_not.insert({e, e1});
+    auto [i,is_new] = to_not.insert({e.ref, e1});
     if (is_new) {
-      add_expr({e,e});
+      add_expr({e,novalue()});
     }
     return i->second;
   }
 
   Expr0 new_and(Expr0 l, Expr0 r) {
     Expr0 e1{Expr0::And, (uint32_t)exprs.size()};
-    auto [i, is_new] = to_and.insert({{l,r}, e1});
+
+    if (l.ref > r.ref) {
+      std::swap(l.value, r.value);
+    }
+
+    OpKey k {l.ref, r.ref};
+    auto [i, is_new] = to_and.insert({k, e1});
     if (is_new) {
       add_expr({l,r});
     }
@@ -141,7 +216,13 @@ public:
 
   Expr0 new_or(Expr0 l, Expr0 r) {
     Expr0 e1{Expr0::Or, (uint32_t)exprs.size()};
-    auto [i, is_new] = to_or.insert({{l,r}, e1});
+
+    if (l.ref > r.ref) {
+      std::swap(l.value, r.value);
+    }
+
+    OpKey k {l.ref, r.ref};
+    auto [i, is_new] = to_or.insert({k, e1});
     if (is_new) {
       add_expr({l,r});
     }
@@ -157,6 +238,25 @@ public:
 
   Expr& operator=(const Expr& expr1) { expr = expr1.expr; return *this; }
 
+  /**
+   * Caching predefined set of Expr->Expr functions
+   *
+   * Can only be applied to non-terms: not?, ?or?, ?and?
+   */
+
+  template <typename F>
+  Expr query_and_update_func(Func func, F f) const {
+    assert(!is_const() && !is_var());
+    return context.query_and_update_func
+      (
+       func,
+       expr,
+       [&f](Expr0 a) {
+         return f(Expr{a}).expr;
+       }
+       );
+  }
+
   bool is_const() const { return expr.kind == Expr0::Const; }
   bool is_var() const { return expr.kind == Expr0::Var; }
   bool is_not() const { return expr.kind == Expr0::Not; }
@@ -165,7 +265,7 @@ public:
 
   bool get_value(bool& v) const {
     if (expr.kind == Expr0::Const) {
-      v = expr.ref != 0;
+      v = expr.ref != Expr0::const_base;
       return true;
     }
     return false;
@@ -173,7 +273,7 @@ public:
 
   bool get_var(uint32_t& var) const {
     if (expr.kind == Expr0::Var) {
-      var = expr.ref;
+      var = Expr0::var_base - expr.ref;
       return true;
     }
     return false;

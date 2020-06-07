@@ -44,6 +44,7 @@ target_link_libraries(
   sere_shared
   PRIVATE
   minisat_static
+  tsl::robin_map
   nlohmann_json::nlohmann_json
   antlr4_static
   z3
@@ -53,6 +54,7 @@ target_link_libraries(
   sere_static
   PRIVATE
   minisat_static
+  tsl::robin_map
   nlohmann_json::nlohmann_json
   antlr4_static
   z3

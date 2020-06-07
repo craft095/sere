@@ -1,0 +1,8 @@
+-----------------------------------------------------------------------------------
+Benchmark                         Time             CPU   Iterations UserCounters...
+-----------------------------------------------------------------------------------
+BM_NfaslMinimization/10    28448526 ns     28435908 ns           24 min-states=42 states=112
+BM_NfaslMinimization/20   162989969 ns    162551662 ns            4 min-states=79 states=222
+BM_NfaslMinimization/40  1061916235 ns   1061233794 ns            1 min-states=140 states=442
+BM_NfaslMinimization/80  6103006287 ns   6098628314 ns            1 min-states=257 states=882
+BM_NfaslMinimization/160 37588417623 ns   37542435573 ns            1 min-states=488 states=1.762k

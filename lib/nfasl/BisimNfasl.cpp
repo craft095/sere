@@ -220,17 +220,14 @@ namespace nfasl {
 #endif
 
   struct Set {
-    //typedef std::unordered_set<State> Payload;
     typedef std::set<State> Payload;
     typedef std::shared_ptr<Set> Ptr;
-    typedef std::shared_ptr<Payload> PayloadPtr;
 
     Ptr superBlock;
-    PayloadPtr payload;
+    Payload payload;
     size_t hashValue;
 
     Set() : superBlock(nullptr), hashValue(0) {
-      payload = std::make_shared<Payload>();
     }
 
     size_t hash() const {
@@ -238,26 +235,18 @@ namespace nfasl {
     }
 
     size_t size() const {
-      return payload->size();
+      return payload.size();
     }
 
     void insert(State q) {
-      payload->insert(q);
+      payload.insert(q);
 
       // order independed hash value - plain sum works fine here
       hashValue = hashValue + q;
     }
 
-    States as_set() const {
-      #if 0
-      States qs;
-      for (auto q : *payload) {
-        qs.insert(q);
-      }
-      return qs;
-      #else
-      return *payload;
-      #endif
+    const States& as_set() const {
+      return payload;
     }
 
     void setSuper(Ptr super) {
@@ -269,17 +258,17 @@ namespace nfasl {
     }
 
     Payload::iterator begin() {
-      return payload->begin();
+      return payload.begin();
     }
     Payload::const_iterator begin() const {
-      return payload->begin();
+      return payload.begin();
     }
 
     Payload::iterator end() {
-      return payload->end();
+      return payload.end();
     }
     Payload::const_iterator end() const {
-      return payload->end();
+      return payload.end();
     }
 
     static Ptr make() {
@@ -305,7 +294,7 @@ namespace nfasl {
   struct SetEqual {
     size_t operator()(const Set::Ptr& x, const Set::Ptr& y) const noexcept
     {
-      return *(x->payload) == *(y->payload);
+      return x->payload == y->payload;
     }
   };
 
@@ -325,6 +314,33 @@ namespace nfasl {
     return ret;
   }
 
+#ifdef CACHE_DELTA
+  // pre-calculated delta functions
+  // `delta(const Nfasl& a, State q, State r)`
+  struct DeltaMatrix {
+    const Nfasl& a;
+    mutable std::vector<Predicate> table;
+
+    size_t ix(State u, State v) const {
+      return u*a.stateCount + v;
+    }
+
+    DeltaMatrix(const Nfasl& a_) : a(a_) {
+      table.resize(a.stateCount*a.stateCount);
+      memset(&table[0], 0, sizeof(table[0])*table.size());
+    }
+
+    Predicate get(State u, State v) const {
+      Predicate& p {table[ix(u,v)]};
+      if (p == boolean::Context::novalue()) {
+          p = delta(a, u, v);
+      }
+      return p;
+    }
+  };
+#endif
+
+#ifndef CACHE_DELTA
   static Predicate delta(const Nfasl& a, State q, const Set& R) {
     Predicate ret = Predicate::value(false);
     for (auto r : R) {
@@ -333,8 +349,19 @@ namespace nfasl {
 
     return ret;
   }
+#else
+  static Predicate delta(const DeltaMatrix m, State q, const Set& R) {
+    Predicate ret = Predicate::value(false);
+    for (auto r : R) {
+      ret = ret || m.get(q, r);
+    }
+
+    return ret;
+  }
+#endif
 
   static void greedyBisim(const Nfasl& a, std::set<States>& partition) {
+    //DeltaMatrix deltaM{a};
     SuperSet P, W;
     Set::Ptr Q{Set::make()};
 
@@ -387,7 +414,7 @@ namespace nfasl {
           std::vector<XX> Bqs;
           Bqs.reserve(B->size());
           for (auto q : *B) {
-            Bqs.push_back({ q, delta(a, q, *R), delta(a, q, *R_prime)});
+            Bqs.push_back({ q, delta(a/*deltaM*/, q, *R), delta(a/*deltaM*/, q, *R_prime)});
           }
 
           for (auto q : Bqs) {
@@ -416,7 +443,7 @@ namespace nfasl {
 
             if (found_in_R) {
               for (auto p : *B) {
-                if (sat(delta(a, p, *R) && DqNotDr)) {
+                if (sat(delta(a/*deltaM*/, p, *R) && DqNotDr)) {
                   D->insert(p);
                 } else {
                   B_dif_D->insert(p);
@@ -424,7 +451,7 @@ namespace nfasl {
               }
             } else {
               for (auto p : *B) {
-                if (sat(delta(a, p, *R_prime) && DqNotDr_prime)) {
+                if (sat(delta(a/*deltaM*/, p, *R_prime) && DqNotDr_prime)) {
                   D->insert(p);
                 } else {
                   B_dif_D->insert(p);
