@@ -1,4 +1,14 @@
-# Why has this library been created?
+## TL;DR
+
+If you known what SERE is, you can start with tutorial (you may
+find it in `python/test/tutorial.py`):
+
+* mkdir build
+* cd build
+* cmake -DCMAKE_BUILD_TYPE=Release ..
+* make Tutorial
+
+## Why has this library been created?
 
 The purpose of the library is to promote runtime verification
 of temporal properties, specified with [sequential extended
