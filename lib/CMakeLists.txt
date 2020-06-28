@@ -11,7 +11,6 @@ include_directories(${PROJECT_SOURCE_DIR})
 add_definitions(-DANTLR4CPP_STATIC)
 set(ANTLR4_WITH_STATIC_CRT OFF)
 include_directories(${ANTLR4_INCLUDE_DIRS})
-set(ANTLR_EXECUTABLE /home/dima/bin/antlr-4.8-complete.jar)
 find_package(ANTLR REQUIRED)
 
 antlr_target(

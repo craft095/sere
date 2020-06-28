@@ -1,8 +1,10 @@
 import sere
 
-# This is very basic example, which can easily canbe handled
-# with normal reegular expressions.
-# It helps to understand how to uses the library
+# This is very basic example, which can easily be handled
+# with normal regular expressions.
+# It helps to understand how to use the library
+
+# `messages` represent log records about customer activity
 
 messages = [  "start_session"
             , "list_items"
@@ -55,11 +57,14 @@ def session(content):
 #                      --- altogether it means any sequence which contains
 #                      --- neither `started` nor `closed`
 # &                    --- `&` has meaning of intersection of languages on both sides
+#                      --- and here it is used to ensure whatever `content` is, only sequences
+#                      --- that have neither `started` nor `closed` will match
 # content              --- some expression for session content (see below)
 
 # 2) now, we want only sessions with at least one purchase:
 def purchase():
     return session("true[*] ; purchase ; true[*]")
+
 # The only new thing here is `true`, which means `any predicate` and it is analogous to `.` (any symbol)
 # in normal regular expressions. So this means: any sequence with at least one `purchase` triggerred inside.
 
@@ -81,13 +86,13 @@ rt = sere.load_extended(compiled.content())
 # - predicate `purchase` becomes `True` if we see message `place_order`
 # Other messages can be safely ignored.
 
-# In this variable we will keep suffix of a stream (remember that our task
+# In `suffix` variable we keep suffix of the stream (remember that our task
 # is to find sequence of log messages of a completed session with a purchase)
 suffix = []
 
 for message in messages:
-    # remeber that in our expression all names are actually predicates
-    # so, `rt.match` accept a dictionary where every predicate mentioned in the expression
+    # remeber that in our expression all names are actually atomic predicates
+    # so, `rt.feed` accept a dictionary where every predicate mentioned in the expression
     # is either `True` or `False`
     predicates = {}
     predicates['started'] = message == 'start_session'
