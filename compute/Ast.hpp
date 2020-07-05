@@ -4,25 +4,85 @@
 #include "ast/Common.hpp"
 #include "ast/Located.hpp"
 
+#include <nlohmann/json.hpp>
+
 #include <string>
 #include <vector>
 #include <memory>
 
+#define TYPE_NAME(n)                           \
+  template<>                                   \
+  struct TypeName<n> {                         \
+    static const char* name() { return #n; }   \
+  };
+
+using json = nlohmann::json;
+
 namespace compute {
+  template <typename T>
+  void to_json(json& j, std::shared_ptr<T> a) {
+    to_json(j, *a);
+  }
+
+  /**
+     Helper trait to get name of a type.
+     Used to pretty print AST nodes for debug.
+  */
+  template <typename T>
+  struct TypeName {
+    static const char* name();
+  };
+
+  template <typename T>
+  class Literal;
+
+  enum class SereLiteral
+    {
+     EPS,
+    };
+
+  typedef Literal<std::string> StringLit;
+  typedef Literal<uint64_t> IntLit;
+  typedef Literal<double> FloatLit;
+  typedef Literal<bool> BoolLit;
+  typedef Literal<SereLiteral> SereLit;
+
+  TYPE_NAME(StringLit);
+  TYPE_NAME(IntLit);
+  TYPE_NAME(FloatLit);
+  TYPE_NAME(BoolLit);
+  TYPE_NAME(SereLit);
+
+  class NameRef;
+  class FuncCall;
+
+  class ExpressionVisitor {
+  public:
+    virtual void visit(StringLit* x) = 0;
+    virtual void visit(FloatLit* x) = 0;
+    virtual void visit(IntLit* x) = 0;
+    virtual void visit(BoolLit* x) = 0;
+    virtual void visit(SereLit* x) = 0;
+    virtual void visit(NameRef* x) = 0;
+    virtual void visit(FuncCall* x) = 0;
+  };
+
   class Node : public LocatedBase {
   public:
     Node(const Located& loc) : LocatedBase(loc) {}
-    const String pretty() const override { return "not implemented"; }
-    // virtual void accept(NodeVisitor& v) = 0;
+    virtual void to_json(json& j) const = 0;
+    const String pretty() const override;
   };
 
-  class Ident : public LocatedBase {
+  extern void to_json(json& j, const Node& a);
+
+  class Ident : public Node {
   public:
     typedef std::string Name;
     typedef std::shared_ptr<Ident> Ptr;
-    Ident(const Located& loc, const Name& n) : LocatedBase(loc), name(n) {}
+    Ident(const Located& loc, const Name& n) : Node(loc), name(n) {}
     const Name& getName() const { return name; }
-    const String pretty() const override { return "not implemented"; }
+    void to_json(json& j) const override;
   private:
     std::string name;
   };
@@ -31,7 +91,9 @@ namespace compute {
 
   enum class TypeId
     {
+     None,
      Bool,
+     Sere,
      UInt8,
      UInt16,
      UInt32,
@@ -53,6 +115,7 @@ namespace compute {
 
     TypeId getTypeId() const { return typeId; }
     Ident::Ptr getName() const { return name; }
+    void to_json(json& j) const override;
   private:
     TypeId typeId;
     Ident::Ptr name;
@@ -64,6 +127,7 @@ namespace compute {
   public:
     typedef std::shared_ptr<Expression> Ptr;
     Expression(const Located& loc) : Node(loc) {}
+    virtual void accept(ExpressionVisitor& v) = 0;
   };
 
   template <typename T>
@@ -72,19 +136,25 @@ namespace compute {
     typedef std::shared_ptr<Literal<T>> Ptr;
     Literal(const Located& loc, T val) : Expression(loc), value(val) {}
     T getValue() const { return value; }
+    void accept(ExpressionVisitor& v) override { v.visit(this); }
+    void to_json(json& j) const override {
+      j = json {
+        {"node",  "Literal" },
+        {"value", value },
+        {"type",  TypeName<Literal<T>>::name() },
+      };
+    }
   private:
     T value;
   };
-
-  typedef Literal<std::string> StringLit;
-  typedef Literal<uint64_t> IntLit;
-  typedef Literal<double> FloatLit;
 
   class NameRef : public Expression {
   public:
     typedef std::shared_ptr<NameRef> Ptr;
     NameRef(const Located& loc, Ident::Ptr i) : Expression(loc), name(i) {}
     Ident::Ptr getName() const { return name; }
+    void accept(ExpressionVisitor& v) override { v.visit(this); }
+    void to_json(json& j) const override;
   private:
     Ident::Ptr name;
   };
@@ -98,65 +168,11 @@ namespace compute {
       : Expression(loc), name(i), args(as) {}
     Ident::Ptr getName() const { return name; }
     const Expressions& getArgs() const { return args; }
+    void accept(ExpressionVisitor& v) override { v.visit(this); }
+    void to_json(json& j) const override;
   private:
     Ident::Ptr name;
     Expressions args;
-  };
-
-  class UnaryOp : public Expression {
-  public:
-    typedef std::shared_ptr<UnaryOp> Ptr;
-    enum class OpId
-      {
-       MATH_NEG,
-       BOOL_NOT,
-       SERE_COMPLEMENT,
-       SERE_KLEENESTAR,
-       SERE_KLEENEPLUS,
-      };
-
-    UnaryOp(const Located& loc, OpId op, Expression::Ptr a)
-      : Expression(loc), opId(op), arg(a) {}
-    OpId getOpId() const { return opId; }
-    Expression::Ptr getArg() const { return arg; }
-  private:
-    OpId opId;
-    Expression::Ptr arg;
-  };
-
-  class BinaryOp : public Expression {
-  public:
-    typedef std::shared_ptr<BinaryOp> Ptr;
-    enum class OpId
-      {
-       MATH_ADD,
-       MATH_SUB,
-       MATH_DIV,
-       MATH_MUL,
-       BOOL_AND,
-       BOOL_OR,
-       BOOL_EQ,
-       BOOL_NE,
-       BOOL_LT,
-       BOOL_LE,
-       BOOL_GT,
-       BOOL_GE,
-       SERE_INTERSECT,
-       SERE_UNION,
-       SERE_CONCAT,
-       SERE_FUSION,
-      };
-
-    BinaryOp(const Located& loc, OpId op, Expression::Ptr l, Expression::Ptr r)
-      : Expression(loc), opId(op), lhs(l), rhs(r) {}
-    OpId getOpId() const { return opId; }
-    Expression::Ptr getLhs() const { return lhs; }
-    Expression::Ptr getRhs() const { return rhs; }
-
-  private:
-    OpId opId;
-    Expression::Ptr lhs;
-    Expression::Ptr rhs;
   };
 
   class LetDecl : public Node {
@@ -169,6 +185,7 @@ namespace compute {
     Ident::Ptr getName() const { return name; }
     const Idents& getArgs() const { return args; }
     Expression::Ptr getBody() const { return body; }
+    void to_json(json& j) const override;
   private:
     Ident::Ptr name;
     Idents args;
@@ -188,6 +205,7 @@ namespace compute {
     const LetDecls& getLetDecls() const { return letDecls; }
     Expression::Ptr getExpression() const { return expression; }
 
+    void to_json(json& j) const override;
   private:
     ArgDecls argDecls;
     LetDecls letDecls;

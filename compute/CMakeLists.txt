@@ -44,8 +44,11 @@ add_library(
   compute_static
   STATIC
   "Parser.cpp"
+  "Ops.cpp"
+  "Ast.cpp"
   ${ANTLR_ComputeLexer_CXX_OUTPUTS}
-  ${ANTLR_ComputeParser_CXX_OUTPUTS})
+  ${ANTLR_ComputeParser_CXX_OUTPUTS}
+  )
 
 target_include_directories(compute_static PUBLIC ${PROJECT_SOURCE_DIR})
 # target_include_directories(sere_shared PUBLIC ${PROJECT_SOURCE_DIR})
@@ -53,8 +56,18 @@ target_include_directories(compute_static PUBLIC ${PROJECT_SOURCE_DIR})
 # target_compile_options(sere_shared PUBLIC -fPIC -Wno-attributes)
 target_compile_options(compute_static PUBLIC -fPIC -Wno-attributes)
 
-add_dependencies(compute_static ComputeParser sere_static)
+add_dependencies(
+  compute_static
+  ComputeParser
+  )
 # add_dependencies(sere_shared ComputeParser)
+
+target_link_libraries(
+  compute_static
+  PRIVATE
+  sere_static
+  nlohmann_json::nlohmann_json
+)
 
 # target_link_libraries(
 #   sere_shared

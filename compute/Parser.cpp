@@ -1,4 +1,5 @@
 #include "Parser.hpp"
+#include "Ops.hpp"
 #include "Ast.hpp"
 
 #include "antlr4-runtime.h"
@@ -178,29 +179,30 @@ namespace compute {
         Expression::Ptr arg { visit(i) };
         args.push_back(arg);
       }
-      FuncCall::Ptr r { create<FuncCall>(context, func, args) };
+      Expression::Ptr r { create<FuncCall>(context, func, args) };
       return r;
     }
 
     antlrcpp::Any visitNameReference(ComputeParser::NameReferenceContext *context) override {
       Ident::Ptr name { visit(context->ident()) };
-      NameRef::Ptr r { create<NameRef>(context, name) };
+      Expression::Ptr r { create<NameRef>(context, name) };
       return r;
     }
 
     antlrcpp::Any visitUnary(ComputeParser::UnaryContext *context) override {
       Expression::Ptr arg { visit(context->arg) };
 
-      UnaryOp::OpId opId;
+      OpId::Ix opId;
 
-      if (context->COMPLEMENT()) { opId = UnaryOp::OpId::SERE_COMPLEMENT; }
-      else if (context->MINUS()) { opId = UnaryOp::OpId::MATH_NEG; }
-      else if (context->BOOL_NOT()) { opId = UnaryOp::OpId::BOOL_NOT; }
-      else if (context->KLEENESTAR()) { opId = UnaryOp::OpId::SERE_KLEENESTAR; }
-      else if (context->KLEENEPLUS()) { opId = UnaryOp::OpId::SERE_KLEENEPLUS; }
+      if (context->COMPLEMENT()) { opId = OpId::SERE_COMPLEMENT; }
+      else if (context->MINUS()) { opId = OpId::MATH_NEG; }
+      else if (context->BOOL_NOT()) { opId = OpId::BOOL_NOT; }
+      else if (context->KLEENESTAR()) { opId = OpId::SERE_KLEENESTAR; }
+      else if (context->KLEENEPLUS()) { opId = OpId::SERE_KLEENEPLUS; }
       else { assert(false); } // unexpected operation
 
-      Expression::Ptr r { create<UnaryOp>(context, opId, arg) };
+      Expressions args {arg};
+      Expression::Ptr r { create<FuncCall>(context, lookupBuiltinOp(opId), args) };
       return r;
     }
 
@@ -208,27 +210,28 @@ namespace compute {
       Expression::Ptr lhs { visit(context->lhs) };
       Expression::Ptr rhs { visit(context->rhs) };
 
-      BinaryOp::OpId opId;
+      OpId::Ix opId;
 
-      if (context->DIVIDE()) { opId = BinaryOp::OpId::MATH_DIV; }
-      else if (context->STAR()) { opId = BinaryOp::OpId::MATH_MUL; }
-      else if (context->MINUS()) { opId = BinaryOp::OpId::MATH_SUB; }
-      else if (context->PLUS()) { opId = BinaryOp::OpId::MATH_ADD; }
-      else if (context->BOOL_AND()) { opId = BinaryOp::OpId::BOOL_AND; }
-      else if (context->BOOL_OR()) { opId = BinaryOp::OpId::BOOL_OR; }
-      else if (context->BOOL_EQ()) { opId = BinaryOp::OpId::BOOL_EQ; }
-      else if (context->BOOL_NE()) { opId = BinaryOp::OpId::BOOL_NE; }
-      else if (context->BOOL_LT()) { opId = BinaryOp::OpId::BOOL_LT; }
-      else if (context->BOOL_LE()) { opId = BinaryOp::OpId::BOOL_LE; }
-      else if (context->BOOL_GT()) { opId = BinaryOp::OpId::BOOL_GT; }
-      else if (context->BOOL_GE()) { opId = BinaryOp::OpId::BOOL_GE; }
-      else if (context->INTERSECTION()) { opId = BinaryOp::OpId::SERE_INTERSECT; }
-      else if (context->UNION()) { opId = BinaryOp::OpId::SERE_UNION; }
-      else if (context->FUSION()) { opId = BinaryOp::OpId::SERE_FUSION; }
-      else if (context->CONCAT()) { opId = BinaryOp::OpId::SERE_CONCAT; }
+      if (context->DIVIDE()) { opId = OpId::MATH_DIV; }
+      else if (context->STAR()) { opId = OpId::MATH_MUL; }
+      else if (context->MINUS()) { opId = OpId::MATH_SUB; }
+      else if (context->PLUS()) { opId = OpId::MATH_ADD; }
+      else if (context->BOOL_AND()) { opId = OpId::BOOL_AND; }
+      else if (context->BOOL_OR()) { opId = OpId::BOOL_OR; }
+      else if (context->BOOL_EQ()) { opId = OpId::BOOL_EQ; }
+      else if (context->BOOL_NE()) { opId = OpId::BOOL_NE; }
+      else if (context->BOOL_LT()) { opId = OpId::BOOL_LT; }
+      else if (context->BOOL_LE()) { opId = OpId::BOOL_LE; }
+      else if (context->BOOL_GT()) { opId = OpId::BOOL_GT; }
+      else if (context->BOOL_GE()) { opId = OpId::BOOL_GE; }
+      else if (context->INTERSECTION()) { opId = OpId::SERE_INTERSECT; }
+      else if (context->UNION()) { opId = OpId::SERE_UNION; }
+      else if (context->FUSION()) { opId = OpId::SERE_FUSION; }
+      else if (context->CONCAT()) { opId = OpId::SERE_CONCAT; }
       else { assert(false); } // unexpected operation
 
-      Expression::Ptr r { create<BinaryOp>(context, opId, lhs, rhs) };
+      Expressions args {lhs, rhs};
+      Expression::Ptr r { create<FuncCall>(context, lookupBuiltinOp(opId), args) };
       return r;
     }
 
@@ -238,19 +241,32 @@ namespace compute {
 
     antlrcpp::Any visitStringLiteral(ComputeParser::StringLiteralContext *context) override {
       std::string string {context->STRINGLIT()->getText()};
-      StringLit::Ptr r { create<StringLit>(context, string) };
+      Expression::Ptr r { create<StringLit>(context, string) };
       return r;
     }
 
     antlrcpp::Any visitIntLiteral(ComputeParser::IntLiteralContext *context) override {
       uint64_t value { std::stoull(context->INTLIT()->getText()) };
-      IntLit::Ptr r { create<IntLit>(context, value) };
+      Expression::Ptr r { create<IntLit>(context, value) };
       return r;
     }
 
     antlrcpp::Any visitFloatLiteral(ComputeParser::FloatLiteralContext *context) override {
       double value { std::stod(context->FLOATLIT()->getText()) };
-      FloatLit::Ptr r { create<FloatLit>(context, value) };
+      Expression::Ptr r { create<FloatLit>(context, value) };
+      return r;
+    }
+
+    antlrcpp::Any visitBoolLiteral(ComputeParser::BoolLiteralContext *context) override {
+      bool value = context->BOOL_TRUE() ? true : false;
+      Expression::Ptr r { create<BoolLit>(context, value) };
+      return r;
+    }
+
+    antlrcpp::Any visitSereLiteral(ComputeParser::SereLiteralContext *context) override {
+      assert(context->EPS());
+      SereLiteral value = SereLiteral::EPS;
+      Expression::Ptr r { create<SereLit>(context, value) };
       return r;
     }
 
@@ -266,6 +282,8 @@ namespace compute {
    */
 
   Root::Ptr parse(const std::string& file, std::istream& stream) {
+    fillBuiltinOps();
+
     ANTLRInputStream input(stream);
     ComputeLexer lexer(&input);
     CommonTokenStream tokens(&lexer);

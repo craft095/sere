@@ -39,6 +39,8 @@ expression
     | lhs=expression (CONCAT | FUSION)
         rhs=expression                                    # binary
     | ident                                               # nameReference
+    | EPS                                                 # sereLiteral
+    | (BOOL_TRUE | BOOL_FALSE)                            # boolLiteral
     | INTLIT                                              # intLiteral
     | FLOATLIT                                            # floatLiteral
     | STRINGLIT                                           # stringLiteral
