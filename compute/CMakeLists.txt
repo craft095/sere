@@ -46,6 +46,7 @@ add_library(
   "Parser.cpp"
   "Ops.cpp"
   "Ast.cpp"
+  "Typed.cpp"
   ${ANTLR_ComputeLexer_CXX_OUTPUTS}
   ${ANTLR_ComputeParser_CXX_OUTPUTS}
   )

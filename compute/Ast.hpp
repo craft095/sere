@@ -107,6 +107,8 @@ namespace compute {
      Time,
     };
 
+  extern void to_json(json& j, TypeId t);
+
   class ArgDecl : public Node {
   public:
     typedef std::shared_ptr<ArgDecl> Ptr;

@@ -1,6 +1,7 @@
 #ifndef COMPUTE_TYPED_HPP
 #define COMPUTE_TYPED_HPP
 
+#include "Ast.hpp"
 #include "ast/Common.hpp"
 #include "ast/Located.hpp"
 
@@ -44,25 +45,27 @@ namespace compute {
 
     virtual ~TypedNode() {}
 
+    const String pretty() const;
+
     virtual const TypeIds& getTypeIds() const = 0;
     virtual Ptr clone() const = 0;
     virtual void to_json(json& j) const = 0;
   };
 
-  typedef std::vector<TypedNode> TypedNodes;
+  typedef std::vector<TypedNode::Ptr> TypedNodes;
 
   class Scalar : public TypedNode {
   public:
     typedef std::shared_ptr<Scalar> Ptr;
 
-    static Ptr create(TypeIds typs) {
+    static Ptr create(const TypeIds& typs) {
       return std::make_shared<Scalar>(typs);
     }
 
-    TypedNode(TypeIds typs) : typeIds(typs) {}
+    Scalar(const TypeIds& typs) : typeIds(typs) {}
     const TypeIds& getTypeIds() const override { return typeIds; }
 
-    Ptr clone() const override {
+    TypedNode::Ptr clone() const override {
       return create(typeIds);
     }
 
@@ -82,7 +85,7 @@ namespace compute {
 
     Func(const FuncTypes& ft) : funcTypes(ft) {}
 
-    Ptr clone() const override {
+    Ptr clone() const {
       return create(funcTypes);
     }
 
@@ -101,8 +104,8 @@ namespace compute {
 
     Apply(Func::Ptr f, TypedNodes& as) : func(f), args(as) {}
 
-    Ptr clone() const override {
-      Args args1;
+    TypedNode::Ptr clone() const override {
+      TypedNodes args1;
       for (auto arg : args) {
         args1.push_back(arg->clone());
       }
@@ -110,6 +113,8 @@ namespace compute {
     }
 
     void to_json(json& j) const override;
+
+    const TypeIds& getTypeIds() const override { assert(false); return TypeIds{}; }
 
   private:
     Func::Ptr func;
@@ -139,17 +144,19 @@ namespace compute {
 
   private:
     typedef std::map<Ident::Name, TypedNode::Ptr> ScalarContext;
-    typedef std::map<Ident::Name, FuncNode::Ptr> FuncContext;
+    typedef std::map<Ident::Name, Func::Ptr> FuncContext;
     FuncContext funcContext;
-    ScalarContext ScalarContext;
+    ScalarContext scalarContext;
   };
 
-  class Typer : publicExpressionVisitor {
+  class Typer : public ExpressionVisitor {
     TypedNode::Ptr result;
     const NameContext& context;
 
   public:
     Typer(const NameContext& context_) : context(context_) {}
+
+    TypedNode::Ptr getResult() const { return result; }
 
     void visit(StringLit* v) override;
     void visit(FloatLit* v) override;
@@ -162,6 +169,8 @@ namespace compute {
 
   extern void to_json(json& j, const TypedNode& a);
   extern void to_json(json& j, const Func& a);
+
+  extern TypedNode::Ptr inferTypes(const NameContext& context, Expression::Ptr expr);
 } // namespace compute
 
 #endif // COMPUTE_TYPED_HPP

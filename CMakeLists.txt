@@ -138,6 +138,9 @@ list(APPEND CMAKE_MODULE_PATH ${extern_antlr4_SOURCE_DIR}/runtime/Cpp/cmake)
 
 configure_file(SereLibConfig.h.in SereLibConfig.h)
 
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
+set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
+
 add_subdirectory(lib)
 add_subdirectory(compute)
 add_subdirectory(tool)

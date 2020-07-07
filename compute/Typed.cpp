@@ -3,6 +3,20 @@
 #include <nlohmann/json.hpp>
 
 namespace compute {
+  const String TypedNode::pretty() const {
+    std::ostringstream s;
+    constexpr int spaces = 4;
+    s << json(*this).dump(spaces) << std::endl;
+    return s.str();
+  }
+
+  void to_json(json& j, const FuncType& ft) {
+    j = json {
+      {"node",   "FuncType" },
+      {"args",   ft.args },
+      {"result", ft.result },
+    };
+  }
 
   void to_json(json& j, const TypedNode& a) {
     a.to_json(j);
@@ -57,7 +71,11 @@ namespace compute {
   }
 
   void NameContext::to_json(json& j) const {
-    assert(false); // TODO
+    j = json {
+      {"node",    "NameContext" },
+      {"funcs",   funcContext },
+      {"scalars", scalarContext },
+    };
   }
 
   void Typer::visit(StringLit* v) {
@@ -69,30 +87,30 @@ namespace compute {
   }
 
   void Typer::visit(IntLit* v) {
-    TypeIds arg;
+    TypeIds args;
     if (v->getValue() < ~(uint8_t)0) {
-      arg.push_back(TypeId::SInt8);
+      args.push_back(TypeId::SInt8);
     }
     if (v->getValue() <= ~(uint8_t)0) {
-      arg.push_back(TypeId::UInt8);
+      args.push_back(TypeId::UInt8);
     }
     if (v->getValue() < ~(uint64_t)0) {
-      arg.push_back(TypeId::SInt16);
+      args.push_back(TypeId::SInt16);
     }
     if (v->getValue() <= ~(uint16_t)0) {
-      arg.push_back(TypeId::UInt16);
+      args.push_back(TypeId::UInt16);
     }
     if (v->getValue() < ~(uint32_t)0) {
-      arg.push_back(TypeId::SInt32);
+      args.push_back(TypeId::SInt32);
     }
     if (v->getValue() <= ~(uint32_t)0) {
-      arg.push_back(TypeId::UInt32);
+      args.push_back(TypeId::UInt32);
     }
     if (v->getValue() < ~(uint64_t)0) {
-      arg.push_back(TypeId::SInt64);
+      args.push_back(TypeId::SInt64);
     }
     if (v->getValue() <= ~(uint64_t)0) {
-      arg.push_back(TypeId::UInt64);
+      args.push_back(TypeId::UInt64);
     }
 
     result = Scalar::create(args);
@@ -107,7 +125,7 @@ namespace compute {
   }
 
   void Typer::visit(NameRef* v) {
-    TypedNode::Ptr node = context->lookupScalar(v->getName()->getName());
+    TypedNode::Ptr node = context.lookupScalar(v->getName()->getName());
 
     assert(node); // TODO: emit "name not found"
 
@@ -116,19 +134,25 @@ namespace compute {
   }
 
   void Typer::visit(FuncCall* v) {
-    Func::Ptr node = context->lookupFunc(v->getName()->getName());
+    Func::Ptr node = context.lookupFunc(v->getName()->getName());
 
     assert(node); // TODO: emit "name not found"
 
     Func::Ptr func = node->clone();
 
-    TypedNode::Ptr args;
+    TypedNodes args;
     for (auto arg : v->getArgs()) {
-      v->accept(*this);
+      arg->accept(*this);
       args.push_back(result);
     }
 
     result = Apply::create(func, args);
+  }
+
+  TypedNode::Ptr inferTypes(const NameContext& context, Expression::Ptr expr) {
+    Typer typer(context);
+    expr->accept(typer);
+    return typer.getResult();
   }
 
 } // namespace compute
