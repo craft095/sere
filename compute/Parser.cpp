@@ -141,7 +141,9 @@ namespace compute {
       bool resolved = resolveTypeId(typeIdent->getName(), typeId);
 
       if (!resolved) {
-        parser.notifyErrorListeners(context->type->ID()->getSymbol(), "unknown type name", nullptr);
+        parser.notifyErrorListeners(context->type->ID()->getSymbol(),
+                                    std::string("unknown type name: ") + typeIdent->getName(),
+                                    nullptr);
         return nullptr;
       }
 

@@ -4,7 +4,7 @@ lexer grammar ComputeLexer;
 WHITESPACE   : [ \r\n\t] -> skip ;
 
 // Identifiers
-ID                 : [a-z][A-Za-z0-9_]* ;
+ID                 : [A-Za-z][A-Za-z0-9_]* ;
 
 LET : 'let' ;
 

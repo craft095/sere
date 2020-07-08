@@ -14,22 +14,6 @@
  */
 
 namespace compute {
-  // class TypeDesc {
-  //   typedef std::string VarName;
-  //   typedef std::vector<TypeAtomicRef> VarConstraint;
-  //   typedef std::map<VarName, VarConstraint> VarConstraints;
-  //   typedef std::vector<VarName> Tuple;
-
-
-  //   VarConstraints context;
-  //   Tuple args;
-  //   VarName ret;
-
-
-
-  // };
-
-
   typedef std::vector<TypeId> TypeIds;
 
   struct FuncType {
@@ -90,6 +74,8 @@ namespace compute {
     }
 
     void to_json(json& j) const;
+    const FuncTypes& getTypes() const { return funcTypes; }
+
   private:
     FuncTypes funcTypes;
   };
@@ -102,7 +88,7 @@ namespace compute {
       return std::make_shared<Apply>(func, args);
     }
 
-    Apply(Func::Ptr f, TypedNodes& as) : func(f), args(as) {}
+    Apply(Func::Ptr f, TypedNodes& as);
 
     TypedNode::Ptr clone() const override {
       TypedNodes args1;
@@ -114,63 +100,17 @@ namespace compute {
 
     void to_json(json& j) const override;
 
-    const TypeIds& getTypeIds() const override { assert(false); return TypeIds{}; }
+    const TypeIds& getTypeIds() const override { return typeIds; }
 
   private:
+    FuncTypes funcTypes;
+    TypeIds typeIds;
     Func::Ptr func;
     TypedNodes args;
   };
 
-  class NameContext {
-  public:
-    /**
-       Find name in scalar context
-     */
-    TypedNode::Ptr lookupScalar(const Ident::Name& name) const;
-    /**
-       Find name in functional context
-     */
-    Func::Ptr lookupFunc(const Ident::Name& name) const;
-    /**
-       Insert name into scalar context. Name must be new one.
-     */
-    void insertScalar(const Ident::Name& name, TypedNode::Ptr typed);
-    /**
-       Insert name into functional context. Name must be new one.
-     */
-    void insertFunc(const Ident::Name& name, Func::Ptr func);
-
-    void to_json(json& j) const;
-
-  private:
-    typedef std::map<Ident::Name, TypedNode::Ptr> ScalarContext;
-    typedef std::map<Ident::Name, Func::Ptr> FuncContext;
-    FuncContext funcContext;
-    ScalarContext scalarContext;
-  };
-
-  class Typer : public ExpressionVisitor {
-    TypedNode::Ptr result;
-    const NameContext& context;
-
-  public:
-    Typer(const NameContext& context_) : context(context_) {}
-
-    TypedNode::Ptr getResult() const { return result; }
-
-    void visit(StringLit* v) override;
-    void visit(FloatLit* v) override;
-    void visit(IntLit* v) override;
-    void visit(BoolLit* v) override;
-    void visit(SereLit* v) override;
-    void visit(NameRef* v) override;
-    void visit(FuncCall* v) override;
-  };
-
   extern void to_json(json& j, const TypedNode& a);
   extern void to_json(json& j, const Func& a);
-
-  extern TypedNode::Ptr inferTypes(const NameContext& context, Expression::Ptr expr);
 } // namespace compute
 
 #endif // COMPUTE_TYPED_HPP

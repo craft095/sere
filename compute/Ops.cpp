@@ -24,7 +24,7 @@ namespace compute {
       builtinOps.resize(OpId::OP_COUNT);
     }
     newBuiltinOp(OpId::MATH_NEG, "__math_neg");
-    newBuiltinOp(OpId::BOOL_NOT, "__math_not");
+    newBuiltinOp(OpId::BOOL_NOT, "__bool_not");
     newBuiltinOp(OpId::SERE_COMPLEMENT, "__sere_complement");
     newBuiltinOp(OpId::SERE_KLEENESTAR, "__sere_kleenestar");
     newBuiltinOp(OpId::SERE_KLEENEPLUS, "__sere_kleeneplus");

@@ -47,6 +47,8 @@ add_library(
   "Ops.cpp"
   "Ast.cpp"
   "Typed.cpp"
+  "Infer.cpp"
+  "NameContext.cpp"
   ${ANTLR_ComputeLexer_CXX_OUTPUTS}
   ${ANTLR_ComputeParser_CXX_OUTPUTS}
   )
