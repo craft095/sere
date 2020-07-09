@@ -15,17 +15,6 @@ Root::Ptr parseString(const char* text) {
   return parse("<compute test>", stream);
 }
 
-bool hasTypeId(const TypeIds& x, TypeId y) {
-  return std::find(x.begin(), x.end(), y) != x.end();
-}
-
-bool eqTypeIds(const TypeIds& x, const TypeIds& y) {
-  TypeIds u{x}, v{y};
-  std::sort(u.begin(), u.end());
-  std::sort(v.begin(), v.end());
-  return u == v;
-}
-
 TEST_CASE("Parser") {
   #if 0
   Root::Ptr ast0 = parseString("12");
@@ -54,18 +43,18 @@ TEST_CASE("Parser") {
   SECTION("ArgDecls/UInt8") {
     Root::Ptr ast = parseString("a :: UInt8 ; a");
     TypedNode::Ptr typed = infer(context, ast);
-    CHECK(eqTypeIds(typed->getTypeIds(),
-                    {
+    CHECK(typed->getTypeIds() ==
+                    TypeIds {
                      TypeId::UInt8, TypeId::UInt16, TypeId::UInt32, TypeId::UInt64,
                      TypeId::SInt16, TypeId::SInt32, TypeId::SInt64, TypeId::Float
-                    }));
+                    });
   }
   SECTION("ArgDecls/Bool") {
     Root::Ptr ast = parseString("a :: Bool ; a");
     TypedNode::Ptr typed = infer(context, ast);
-    CHECK(eqTypeIds(typed->getTypeIds(),
-                    {
+    CHECK(typed->getTypeIds() ==
+                    TypeIds {
                      TypeId::Bool, TypeId::Sere,
-                    }));
+                    });
   }
 }

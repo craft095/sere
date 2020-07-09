@@ -105,11 +105,11 @@ namespace compute {
 
   static void initializeContext(NameContext& context) {
     FuncTypes add_sub {math_binary};
-    add_sub.insert(add_sub.begin(), FuncType{{TypeId::Time, TypeId::Time}, TypeId::Time} );
+    add_sub.insert(FuncType{{TypeId::Time, TypeId::Time}, TypeId::Time} );
 
     FuncTypes mul{math_binary};
-    mul.insert(mul.begin(), FuncType{{TypeId::Time, TypeId::UInt64}, TypeId::Time} );
-    mul.insert(mul.begin(), FuncType{{TypeId::UInt64, TypeId::Time}, TypeId::Time} );
+    mul.insert(FuncType{{TypeId::Time, TypeId::UInt64}, TypeId::Time} );
+    mul.insert(FuncType{{TypeId::UInt64, TypeId::Time}, TypeId::Time} );
 
     context.insertFunc("__math_add", Func::create(add_sub));
     context.insertFunc("__math_sub", Func::create(add_sub));

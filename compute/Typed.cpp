@@ -1,4 +1,5 @@
 #include "Typed.hpp"
+#include "Algo.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -26,11 +27,18 @@ namespace compute {
     a.to_json(j);
   }
 
+  void Scalar::constrain(const TypeIds& typs) {
+    //std::remove_if(typeIds.begin(), typeIds.end()
+  }
+
   void Scalar::to_json(json& j) const {
     j = json {
       {"node",     "Scalar" },
       {"typeIds",  typeIds },
     };
+  }
+
+  void Apply::constrain(const TypeIds& typs) {
   }
 
   void Apply::to_json(json& j) const {
@@ -42,6 +50,9 @@ namespace compute {
     };
   }
 
+  void Func::constrain(const FuncTypes& typs) {
+  }
+
   void Func::to_json(json& j) const {
     j = json {
       {"node",      "Func" },
@@ -49,19 +60,16 @@ namespace compute {
     };
   }
 
-  bool match(const FuncType& ft, const std::vector<TypeIds>& args) {
+  bool matchArgs(const FuncType& ft, const std::vector<TypeIds>& args) {
     if (ft.args.size() != args.size()) {
       return false;
     }
-    for (size_t ix = 0; ix < args.size(); ++ix) {
-      bool found = false;
-      for (auto t : args[ix]) {
-        if (t == ft.args[ix]) {
-          found = true;
-          break;;
-        }
-      }
-      if (!found) {
+
+    auto u = args.begin();
+    auto v = ft.args.begin();
+
+    for (; u != args.end(); ++u, ++v) {
+      if (!set_member(*u, *v)) {
         return false;
       }
     }
@@ -75,9 +83,9 @@ namespace compute {
     }
 
     for (auto& fi : func->getTypes()) {
-      if (match(fi, argsT)) {
-        funcTypes.push_back(fi);
-        typeIds.push_back(fi.result);
+      if (matchArgs(fi, argsT)) {
+        funcTypes.insert(fi);
+        typeIds.insert(fi.result);
       }
     }
   }

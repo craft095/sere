@@ -5,6 +5,7 @@
 #include "ast/Common.hpp"
 #include "ast/Located.hpp"
 
+#include <set>
 #include <string>
 #include <vector>
 #include <memory>
@@ -14,14 +15,19 @@
  */
 
 namespace compute {
-  typedef std::vector<TypeId> TypeIds;
+  typedef std::set<TypeId> TypeIds;
 
   struct FuncType {
     TypeIds args;
     TypeId result;
+
+    bool operator<(const FuncType& u) const {
+      return result < u.result || (result == u.result && args < u.args);
+    }
   };
 
-  typedef std::vector<FuncType> FuncTypes;
+
+  typedef std::set<FuncType> FuncTypes;
 
   class TypedNode {
   public:
@@ -31,6 +37,7 @@ namespace compute {
 
     const String pretty() const;
 
+    virtual void constrain(const TypeIds& typs) = 0;
     virtual const TypeIds& getTypeIds() const = 0;
     virtual Ptr clone() const = 0;
     virtual void to_json(json& j) const = 0;
@@ -47,6 +54,7 @@ namespace compute {
     }
 
     Scalar(const TypeIds& typs) : typeIds(typs) {}
+    void constrain(const TypeIds& typs) override;
     const TypeIds& getTypeIds() const override { return typeIds; }
 
     TypedNode::Ptr clone() const override {
@@ -75,6 +83,7 @@ namespace compute {
 
     void to_json(json& j) const;
     const FuncTypes& getTypes() const { return funcTypes; }
+    void constrain(const FuncTypes& typs);
 
   private:
     FuncTypes funcTypes;
@@ -101,6 +110,7 @@ namespace compute {
     void to_json(json& j) const override;
 
     const TypeIds& getTypeIds() const override { return typeIds; }
+    void constrain(const TypeIds& typs) override;
 
   private:
     FuncTypes funcTypes;

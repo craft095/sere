@@ -34,41 +34,41 @@ namespace compute {
     TypeIds args;
     if (v->getValue() >= 0) {
       if (v->getValue() <= INT8_MAX) {
-        args.push_back(TypeId::UInt8);
+        args.insert(TypeId::UInt8);
       }
       if (v->getValue() <= INT16_MAX) {
-        args.push_back(TypeId::UInt16);
+        args.insert(TypeId::UInt16);
       }
       if (v->getValue() <= INT32_MAX) {
-        args.push_back(TypeId::UInt32);
+        args.insert(TypeId::UInt32);
       }
       if (v->getValue() <= INT64_MAX) {
-        args.push_back(TypeId::UInt64);
+        args.insert(TypeId::UInt64);
       }
       if (v->getValue() < INT8_MAX) {
-        args.push_back(TypeId::SInt8);
+        args.insert(TypeId::SInt8);
       }
       if (v->getValue() < INT16_MAX) {
-        args.push_back(TypeId::SInt16);
+        args.insert(TypeId::SInt16);
       }
       if (v->getValue() < INT32_MAX) {
-        args.push_back(TypeId::SInt32);
+        args.insert(TypeId::SInt32);
       }
       if (v->getValue() < INT64_MAX) {
-        args.push_back(TypeId::SInt64);
+        args.insert(TypeId::SInt64);
       }
     } else {
       if (v->getValue() >= INT8_MIN) {
-        args.push_back(TypeId::SInt8);
+        args.insert(TypeId::SInt8);
       }
       if (v->getValue() >= INT16_MIN) {
-        args.push_back(TypeId::SInt16);
+        args.insert(TypeId::SInt16);
       }
       if (v->getValue() >= INT32_MIN) {
-        args.push_back(TypeId::SInt32);
+        args.insert(TypeId::SInt32);
       }
       if (v->getValue() >= INT64_MIN) {
-        args.push_back(TypeId::SInt64);
+        args.insert(TypeId::SInt64);
       }
     }
     result = Scalar::create(args);
@@ -111,32 +111,28 @@ namespace compute {
    * Get all types which can represent given type
    */
   TypeIds generalize(TypeId typ) {
-    TypeIds ids({typ});
+    TypeIds ids{typ};
     switch (typ) {
     case TypeId::None:
       break;
     case TypeId::Bool:
-      ids.push_back(TypeId::Sere);
+      ids.insert(TypeId::Sere);
       break;
     case TypeId::Sere:
       break;
     case TypeId::UInt8:
-      ids.insert(ids.end(),
-                 {
+      ids.insert({
                   TypeId::UInt16, TypeId::UInt32, TypeId::UInt64,
                   TypeId::SInt16, TypeId::SInt32, TypeId::SInt64, TypeId::Float
-                 });
-      break;
+                 });      break;
     case TypeId::UInt16:
-      ids.insert(ids.end(),
-                 {
+      ids.insert({
                   TypeId::UInt32, TypeId::UInt64,
                   TypeId::SInt32, TypeId::SInt64, TypeId::Float,
                  });
       break;
     case TypeId::UInt32:
-      ids.insert(ids.end(),
-                 {
+      ids.insert({
                   TypeId::UInt64,
                   TypeId::SInt64, TypeId::Float,
                  });
@@ -144,20 +140,17 @@ namespace compute {
     case TypeId::UInt64:
       break;
     case TypeId::SInt8:
-      ids.insert(ids.end(),
-                 {
+      ids.insert({
                   TypeId::SInt16, TypeId::SInt32, TypeId::SInt64, TypeId::Float,
                  });
       break;
     case TypeId::SInt16:
-      ids.insert(ids.end(),
-                 {
+      ids.insert({
                   TypeId::SInt32, TypeId::SInt64, TypeId::Float,
                  });
       break;
     case TypeId::SInt32:
-      ids.insert(ids.end(),
-                 {
+      ids.insert({
                   TypeId::SInt64, TypeId::Float,
                  });
       break;
@@ -178,6 +171,10 @@ namespace compute {
     for (auto arg : root->getArgDecls()) {
       context.insertScalar(arg->getName()->getName(),
                            Scalar::create({ generalize(arg->getTypeId()) }));
+    }
+
+    for (auto decl : root->getLetDecls()) {
+
     }
 
     return inferExpr(context, root->getExpression());
