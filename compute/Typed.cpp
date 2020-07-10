@@ -28,7 +28,7 @@ namespace compute {
   }
 
   void Scalar::constrain(const TypeIds& typs) {
-    //std::remove_if(typeIds.begin(), typeIds.end()
+    typeIds = set_intersects(typeIds, typs);
   }
 
   void Scalar::to_json(json& j) const {
@@ -39,6 +39,25 @@ namespace compute {
   }
 
   void Apply::constrain(const TypeIds& typs) {
+    TypeIds ts;
+    FuncTypes fts;
+    std::vector<TypeIds> as{args.size()};
+    for (auto const& funcType : funcTypes) {
+      if (set_member(typs, funcType.result)) {
+        fts.insert(funcType);
+        ts.insert(funcType.result);
+
+        for (size_t ix = 0; ix < as.size(); ++ix) {
+          as[ix].insert(funcType.args[ix]);
+        }
+      }
+    }
+    func->constrain(fts);
+    for (size_t ix = 0; ix < as.size(); ++ix) {
+      args[ix]->constrain(as[ix]);
+    }
+    std::swap(funcTypes, fts);
+    std::swap(typeIds, ts);
   }
 
   void Apply::to_json(json& j) const {
@@ -51,6 +70,7 @@ namespace compute {
   }
 
   void Func::constrain(const FuncTypes& typs) {
+    funcTypes = set_intersects(funcTypes, typs);
   }
 
   void Func::to_json(json& j) const {
@@ -88,6 +108,7 @@ namespace compute {
         typeIds.insert(fi.result);
       }
     }
+    constrain(typeIds);
   }
 
 } // namespace compute

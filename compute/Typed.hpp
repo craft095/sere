@@ -18,7 +18,7 @@ namespace compute {
   typedef std::set<TypeId> TypeIds;
 
   struct FuncType {
-    TypeIds args;
+    std::vector<TypeId> args;
     TypeId result;
 
     bool operator<(const FuncType& u) const {
@@ -26,8 +26,31 @@ namespace compute {
     }
   };
 
-
   typedef std::set<FuncType> FuncTypes;
+
+  /*class ScalarTypeMismatch : public Error {
+  public:
+    ScalarTypeMismatch(const Located& loc,
+                       const TypeIds& actual,
+                       const TypeIds& expected);
+  };
+
+  class FuncTypeMismatch : public Error {
+  public:
+    FuncTypeMismatch(const Located& loc,
+                     const FuncTypeIds& actual,
+                     const FuncTypeIds& expected);
+  };
+
+  class NameNotFound : public Error {
+  public:
+    NameNotFound(Ident::Ptr id);
+  };
+
+  class NameMisuse : public Error {
+  public:
+    NameMisuse(Ident::Ptr id, const std::string& descr);
+    };*/
 
   class TypedNode {
   public:

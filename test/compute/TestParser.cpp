@@ -40,6 +40,18 @@ TEST_CASE("Parser") {
   TypedNode::Ptr typed = inferExpr(context, ast3->getExpression());
   std::cout << typed->pretty() << std::endl;
 
+  SECTION("Constrain/Scalar") {
+    Root::Ptr ast = parseString("25");
+    TypedNode::Ptr typed = infer(context, ast);
+    typed->constrain({TypeId::SInt16});
+    CHECK(typed->getTypeIds() == TypeIds { TypeId::SInt16 });
+  }
+  SECTION("Constrain/Apply") {
+    Root::Ptr ast = parseString("25-12");
+    TypedNode::Ptr typed = infer(context, ast);
+    typed->constrain({TypeId::SInt16});
+    CHECK(typed->getTypeIds() == TypeIds { TypeId::SInt16 });
+  }
   SECTION("ArgDecls/UInt8") {
     Root::Ptr ast = parseString("a :: UInt8 ; a");
     TypedNode::Ptr typed = infer(context, ast);

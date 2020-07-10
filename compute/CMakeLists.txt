@@ -44,6 +44,7 @@ add_library(
   compute_static
   STATIC
   "Parser.cpp"
+  "Error.cpp"
   "Ops.cpp"
   "Ast.cpp"
   "Typed.cpp"

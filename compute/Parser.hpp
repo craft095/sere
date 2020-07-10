@@ -3,19 +3,16 @@
 
 #include <iostream>
 #include "Ast.hpp"
+#include "Error.hpp"
 
 namespace compute {
 
   /**
    * Parse error
    */
-  class ParseError : public std::exception {
+  class ParseError : public Error {
   public:
     ParseError(const Located& loc, const std::string& msg);
-    const char* what() const throw() override;
-  private:
-    Located loc;
-    std::string msg;
   };
 
   /**

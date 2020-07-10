@@ -14,16 +14,8 @@ using namespace antlr4;
 
 namespace compute {
 
-  ParseError::ParseError(const Located& loc_, const std::string& desc)
-    : loc(loc_) {
-    std::ostringstream stream{msg};
-    stream << loc.pretty() << ": " << desc;
-    msg = stream.str();
-  }
-
-  const char* ParseError::what() const throw() {
-    return msg.c_str();
-  }
+  ParseError::ParseError(const Located& loc, const std::string& desc)
+    : Error(loc, desc) {}
 
   void toPosStart(const FileName& file,
                  const antlr4::Token& token,
