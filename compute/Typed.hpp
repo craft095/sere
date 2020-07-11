@@ -56,14 +56,23 @@ namespace compute {
   public:
     typedef std::shared_ptr<TypedNode> Ptr;
 
+    /**
+     * Create TypedNode out of AST node
+     * @param node AST node
+     */
+    TypedNode(const Node* node_) : node(node_) {}
     virtual ~TypedNode() {}
 
     const String pretty() const;
+
+    const Node* getNode() const { return node; }
 
     virtual void constrain(const TypeIds& typs) = 0;
     virtual const TypeIds& getTypeIds() const = 0;
     virtual Ptr clone() const = 0;
     virtual void to_json(json& j) const = 0;
+  private:
+    const Node* node;
   };
 
   typedef std::vector<TypedNode::Ptr> TypedNodes;
@@ -72,16 +81,17 @@ namespace compute {
   public:
     typedef std::shared_ptr<Scalar> Ptr;
 
-    static Ptr create(const TypeIds& typs) {
-      return std::make_shared<Scalar>(typs);
+    static Ptr create(const Node* node, const TypeIds& typs) {
+      return std::make_shared<Scalar>(node, typs);
     }
 
-    Scalar(const TypeIds& typs) : typeIds(typs) {}
+    Scalar(const Node* node, const TypeIds& typs)
+      : TypedNode(node), typeIds(typs) {}
     void constrain(const TypeIds& typs) override;
     const TypeIds& getTypeIds() const override { return typeIds; }
 
     TypedNode::Ptr clone() const override {
-      return create(typeIds);
+      return create(getNode(), typeIds);
     }
 
     void to_json(json& j) const override;
@@ -94,21 +104,24 @@ namespace compute {
   public:
     typedef std::shared_ptr<Func> Ptr;
 
-    static Ptr create(FuncTypes typs) {
-      return std::make_shared<Func>(typs);
+    static Ptr create(const Node* node, FuncTypes typs) {
+      return std::make_shared<Func>(node, typs);
     }
 
-    Func(const FuncTypes& ft) : funcTypes(ft) {}
+    Func(const Node* node_, const FuncTypes& ft)
+      : node(node_), funcTypes(ft) {}
 
     Ptr clone() const {
-      return create(funcTypes);
+      return create(getNode(), funcTypes);
     }
 
+    const Node* getNode() const { return node; }
     void to_json(json& j) const;
     const FuncTypes& getTypes() const { return funcTypes; }
     void constrain(const FuncTypes& typs);
 
   private:
+    const Node* node;
     FuncTypes funcTypes;
   };
 
@@ -116,18 +129,18 @@ namespace compute {
   public:
     typedef std::shared_ptr<Apply> Ptr;
 
-    static Ptr create(Func::Ptr func, TypedNodes& args) {
-      return std::make_shared<Apply>(func, args);
+    static Ptr create(const Node* node, Func::Ptr func, TypedNodes& args) {
+      return std::make_shared<Apply>(node, func, args);
     }
 
-    Apply(Func::Ptr f, TypedNodes& as);
+    Apply(const Node* node, Func::Ptr f, TypedNodes& as);
 
     TypedNode::Ptr clone() const override {
       TypedNodes args1;
       for (auto arg : args) {
         args1.push_back(arg->clone());
       }
-      return create(func->clone(), args1);
+      return create(getNode(), func->clone(), args1);
     }
 
     void to_json(json& j) const override;

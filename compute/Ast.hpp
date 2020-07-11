@@ -69,6 +69,7 @@ namespace compute {
 
   class Node : public LocatedBase {
   public:
+    typedef std::shared_ptr<Node> Ptr;
     Node(const Located& loc) : LocatedBase(loc) {}
     virtual void to_json(json& j) const = 0;
     const String pretty() const override;

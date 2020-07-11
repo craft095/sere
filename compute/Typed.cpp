@@ -96,7 +96,8 @@ namespace compute {
     return true;
   }
 
-  Apply::Apply(Func::Ptr f, TypedNodes& as) : func(f), args(as) {
+  Apply::Apply(const Node* node, Func::Ptr f, TypedNodes& as)
+    : TypedNode(node), func(f), args(as) {
     std::vector<TypeIds> argsT;
     for (auto node : args) {
       argsT.push_back(node->getTypeIds());

@@ -104,6 +104,7 @@ namespace compute {
   };
 
   static void initializeContext(NameContext& context) {
+    static Ident node {RE_LOC, "__builtin__"};
     FuncTypes add_sub {math_binary};
     add_sub.insert(FuncType{{TypeId::Time, TypeId::Time}, TypeId::Time} );
 
@@ -111,33 +112,33 @@ namespace compute {
     mul.insert(FuncType{{TypeId::Time, TypeId::UInt64}, TypeId::Time} );
     mul.insert(FuncType{{TypeId::UInt64, TypeId::Time}, TypeId::Time} );
 
-    context.insertFunc("__math_add", Func::create(add_sub));
-    context.insertFunc("__math_sub", Func::create(add_sub));
-    context.insertFunc("__math_mul", Func::create(mul));
-    context.insertFunc("__math_div", Func::create(math_binary));
+    context.insertFunc("__math_add", Func::create(&node, add_sub));
+    context.insertFunc("__math_sub", Func::create(&node, add_sub));
+    context.insertFunc("__math_mul", Func::create(&node, mul));
+    context.insertFunc("__math_div", Func::create(&node, math_binary));
 
-    context.insertFunc("__math_neg", Func::create(math_neg));
+    context.insertFunc("__math_neg", Func::create(&node, math_neg));
 
-    context.insertFunc("__bool_lt", Func::create(cmp_binary));
-    context.insertFunc("__bool_le", Func::create(cmp_binary));
-    context.insertFunc("__bool_gt", Func::create(cmp_binary));
-    context.insertFunc("__bool_ge", Func::create(cmp_binary));
+    context.insertFunc("__bool_lt", Func::create(&node, cmp_binary));
+    context.insertFunc("__bool_le", Func::create(&node, cmp_binary));
+    context.insertFunc("__bool_gt", Func::create(&node, cmp_binary));
+    context.insertFunc("__bool_ge", Func::create(&node, cmp_binary));
 
-    context.insertFunc("__bool_eq", Func::create(eq_binary));
-    context.insertFunc("__bool_ne", Func::create(eq_binary));
+    context.insertFunc("__bool_eq", Func::create(&node, eq_binary));
+    context.insertFunc("__bool_ne", Func::create(&node, eq_binary));
 
-    context.insertFunc("__bool_and", Func::create(bool_binary));
-    context.insertFunc("__bool_or", Func::create(bool_binary));
+    context.insertFunc("__bool_and", Func::create(&node, bool_binary));
+    context.insertFunc("__bool_or", Func::create(&node, bool_binary));
 
-    context.insertFunc("__bool_not", Func::create(bool_unary));
+    context.insertFunc("__bool_not", Func::create(&node, bool_unary));
 
-    context.insertFunc("__sere_intersect", Func::create(sere_binary));
-    context.insertFunc("__sere_union", Func::create(sere_binary));
-    context.insertFunc("__sere_concat", Func::create(sere_binary));
-    context.insertFunc("__sere_fusion", Func::create(sere_binary));
+    context.insertFunc("__sere_intersect", Func::create(&node, sere_binary));
+    context.insertFunc("__sere_union", Func::create(&node, sere_binary));
+    context.insertFunc("__sere_concat", Func::create(&node, sere_binary));
+    context.insertFunc("__sere_fusion", Func::create(&node, sere_binary));
 
-    context.insertFunc("__sere_kleenestar", Func::create(sere_unary));
-    context.insertFunc("__sere_kleeneplus", Func::create(sere_unary));
-    context.insertFunc("__sere_complement", Func::create(sere_unary));
+    context.insertFunc("__sere_kleenestar", Func::create(&node, sere_unary));
+    context.insertFunc("__sere_kleeneplus", Func::create(&node, sere_unary));
+    context.insertFunc("__sere_complement", Func::create(&node, sere_unary));
   }
 } // namespace compute

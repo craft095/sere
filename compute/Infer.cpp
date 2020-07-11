@@ -23,11 +23,11 @@ namespace compute {
   };
 
   void Typer::visit(StringLit* v) {
-    result = Scalar::create({ TypeId::String });
+    result = Scalar::create(v, { TypeId::String });
   }
 
   void Typer::visit(FloatLit* v) {
-    result = Scalar::create({ TypeId::Float });
+    result = Scalar::create(v, { TypeId::Float });
   }
 
   void Typer::visit(IntLit* v) {
@@ -71,15 +71,15 @@ namespace compute {
         args.insert(TypeId::SInt64);
       }
     }
-    result = Scalar::create(args);
+    result = Scalar::create(v, args);
   }
 
   void Typer::visit(BoolLit* v) {
-    result = Scalar::create({TypeId::Bool, TypeId::Sere});
+    result = Scalar::create(v, {TypeId::Bool, TypeId::Sere});
   }
 
   void Typer::visit(SereLit* v) {
-    result = Scalar::create({TypeId::Sere});
+    result = Scalar::create(v, {TypeId::Sere});
   }
 
   void Typer::visit(NameRef* v) {
@@ -104,7 +104,7 @@ namespace compute {
       args.push_back(result);
     }
 
-    result = Apply::create(func, args);
+    result = Apply::create(v, func, args);
   }
 
   /**
@@ -170,7 +170,7 @@ namespace compute {
     NameContext context(context0);
     for (auto arg : root->getArgDecls()) {
       context.insertScalar(arg->getName()->getName(),
-                           Scalar::create({ generalize(arg->getTypeId()) }));
+                           Scalar::create(arg.get(), { generalize(arg->getTypeId()) }));
     }
 
     for (auto decl : root->getLetDecls()) {
