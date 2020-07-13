@@ -6,7 +6,7 @@ ident : ID ;
 
 argDeclaration : name=ident TYPE_ANN type=ident ';' ;
 
-letDeclaration : LET assignment ';' ;
+letDeclaration : LET inner=assignment ';' ;
 
 assignment
     : name=ident ASSIGN body=expression        # constAssign

@@ -33,7 +33,7 @@ TEST_CASE("Parser") {
   std::cout << ast4->pretty() << std::endl;
 #endif
 
-  NameContext context;
+  NameContext& context { NameContext::globalContext() };
 
   // Root::Ptr ast3 = parseString("12+(-4200)");
   // std::cout << ast3->pretty() << std::endl;
@@ -84,6 +84,14 @@ TEST_CASE("Parser") {
   }
   SECTION("ArgDecls/Bool") {
     Root::Ptr ast = parseString("a :: Bool ; a");
+    TypedNode::Ptr typed = infer(context, ast);
+    CHECK(typed->getTypeIds() ==
+                    TypeIds {
+                     TypeId::Bool, TypeId::Sere,
+                    });
+  }
+  SECTION("LetDecls/Scalar/Bool") {
+    Root::Ptr ast = parseString("a :: Bool ; let b = a || a ; b");
     TypedNode::Ptr typed = infer(context, ast);
     CHECK(typed->getTypeIds() ==
                     TypeIds {

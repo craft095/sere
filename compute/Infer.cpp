@@ -93,8 +93,7 @@ namespace compute {
       throw NameNotFound(v->getLoc(), name);
     }
 
-    // make a copy for futher refining
-    result = node->clone();
+    result = node;
   }
 
   void Typer::visit(FuncCall* v) {
@@ -108,7 +107,7 @@ namespace compute {
       throw NameNotFound(v->getLoc(), name);
     }
 
-    Func::Ptr func = node->clone();
+    Func::Ptr func = node;
 
     TypedNodes args;
     for (auto arg : v->getArgs()) {
@@ -186,7 +185,14 @@ namespace compute {
     }
 
     for (auto decl : root->getLetDecls()) {
-
+      if (decl->getArgs().empty()) {
+        // scalar
+        context.insertScalar(decl->getName()->getName(),
+                             inferExpr(context, decl->getBody()));
+      } else {
+        // function
+        assert(false); // not implemented
+      }
     }
 
     return inferExpr(context, root->getExpression());

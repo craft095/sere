@@ -98,8 +98,8 @@ namespace compute {
       }
 
       for (auto l : context->lets) {
-        ArgDecl::Ptr let = visit(l);
-        args.push_back(let);
+        LetDecl::Ptr let = visit(l);
+        lets.push_back(let);
       }
 
       Root::Ptr r = create<Root>(context, args, lets, expr);
@@ -144,7 +144,8 @@ namespace compute {
     }
 
     antlrcpp::Any visitLetDeclaration(ComputeParser::LetDeclarationContext *context) override {
-      return visit(context->assignment());
+      LetDecl::Ptr r { visit(context->inner) };
+      return r;
     }
 
     antlrcpp::Any visitConstAssign(ComputeParser::ConstAssignContext *context) override {

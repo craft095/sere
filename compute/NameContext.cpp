@@ -4,9 +4,19 @@
 namespace compute {
   static void initializeContext(NameContext& context);
 
-  NameContext::NameContext() {
-    initializeContext(*this);
+  NameContext& NameContext::globalContext() {
+    static PolyNameContext theContext;
+    static bool initialized = false;
+    if (!initialized) {
+      initializeContext(theContext);
+      initialized = true;
+    }
+
+    return theContext;
   }
+
+  NameContext::NameContext(const NameContext* next_)
+    : next(next_) {}
 
   TypedNode::Ptr NameContext::lookupScalar(const Ident::Name& name) const {
     auto i = scalarContext.find(name);
@@ -70,6 +80,17 @@ namespace compute {
                FuncType{{TypeId::SInt64, TypeId::SInt64}, TypeId::Bool},
                FuncType{{TypeId::Float, TypeId::Float}, TypeId::Bool},
                FuncType{{TypeId::Time, TypeId::Time}, TypeId::Bool},
+
+               FuncType{{TypeId::UInt8, TypeId::UInt8}, TypeId::Sere},
+               FuncType{{TypeId::UInt16, TypeId::UInt16}, TypeId::Sere},
+               FuncType{{TypeId::UInt32, TypeId::UInt32}, TypeId::Sere},
+               FuncType{{TypeId::UInt64, TypeId::UInt64}, TypeId::Sere},
+               FuncType{{TypeId::SInt8, TypeId::SInt8}, TypeId::Sere},
+               FuncType{{TypeId::SInt16, TypeId::SInt16}, TypeId::Sere},
+               FuncType{{TypeId::SInt32, TypeId::SInt32}, TypeId::Sere},
+               FuncType{{TypeId::SInt64, TypeId::SInt64}, TypeId::Sere},
+               FuncType{{TypeId::Float, TypeId::Float}, TypeId::Sere},
+               FuncType{{TypeId::Time, TypeId::Time}, TypeId::Sere},
   };
 
   FuncTypes eq_binary {
@@ -85,14 +106,29 @@ namespace compute {
                FuncType{{TypeId::Time, TypeId::Time}, TypeId::Bool},
                FuncType{{TypeId::Bool, TypeId::Bool}, TypeId::Bool},
                FuncType{{TypeId::String, TypeId::String}, TypeId::Bool},
+
+               FuncType{{TypeId::UInt8, TypeId::UInt8}, TypeId::Sere},
+               FuncType{{TypeId::UInt16, TypeId::UInt16}, TypeId::Sere},
+               FuncType{{TypeId::UInt32, TypeId::UInt32}, TypeId::Sere},
+               FuncType{{TypeId::UInt64, TypeId::UInt64}, TypeId::Sere},
+               FuncType{{TypeId::SInt8, TypeId::SInt8}, TypeId::Sere},
+               FuncType{{TypeId::SInt16, TypeId::SInt16}, TypeId::Sere},
+               FuncType{{TypeId::SInt32, TypeId::SInt32}, TypeId::Sere},
+               FuncType{{TypeId::SInt64, TypeId::SInt64}, TypeId::Sere},
+               FuncType{{TypeId::Float, TypeId::Float}, TypeId::Sere},
+               FuncType{{TypeId::Time, TypeId::Time}, TypeId::Sere},
+               FuncType{{TypeId::Bool, TypeId::Bool}, TypeId::Sere},
+               FuncType{{TypeId::String, TypeId::String}, TypeId::Sere},
   };
 
   FuncTypes bool_binary {
                FuncType{{TypeId::Bool, TypeId::Bool}, TypeId::Bool},
+               FuncType{{TypeId::Bool, TypeId::Bool}, TypeId::Sere},
   };
 
   FuncTypes bool_unary {
                FuncType{{TypeId::Bool}, TypeId::Bool},
+               FuncType{{TypeId::Bool}, TypeId::Sere},
   };
 
   FuncTypes sere_binary {
