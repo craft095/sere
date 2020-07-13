@@ -2,6 +2,7 @@
 #define COMPUTE_TYPED_HPP
 
 #include "Ast.hpp"
+#include "Error.hpp"
 #include "ast/Common.hpp"
 #include "ast/Located.hpp"
 
@@ -27,30 +28,6 @@ namespace compute {
   };
 
   typedef std::set<FuncType> FuncTypes;
-
-  /*class ScalarTypeMismatch : public Error {
-  public:
-    ScalarTypeMismatch(const Located& loc,
-                       const TypeIds& actual,
-                       const TypeIds& expected);
-  };
-
-  class FuncTypeMismatch : public Error {
-  public:
-    FuncTypeMismatch(const Located& loc,
-                     const FuncTypeIds& actual,
-                     const FuncTypeIds& expected);
-  };
-
-  class NameNotFound : public Error {
-  public:
-    NameNotFound(Ident::Ptr id);
-  };
-
-  class NameMisuse : public Error {
-  public:
-    NameMisuse(Ident::Ptr id, const std::string& descr);
-    };*/
 
   class TypedNode {
   public:
@@ -153,6 +130,42 @@ namespace compute {
     TypeIds typeIds;
     Func::Ptr func;
     TypedNodes args;
+  };
+
+  class ScalarTypeMismatch : public Error {
+  public:
+    ScalarTypeMismatch(const Located& loc,
+                       const TypeIds& actual,
+                       const TypeIds& expected);
+  };
+
+  class FuncTypeMismatch : public Error {
+  public:
+    FuncTypeMismatch(const Located& loc,
+                     const FuncTypes& actual,
+                     const FuncTypes& expected);
+  };
+
+  class BadApplication : public Error {
+  public:
+    BadApplication(const Located& loc,
+                   Func::Ptr func,
+                   TypedNodes& args);
+  };
+
+  class NameNotFound : public Error {
+  public:
+    NameNotFound(const Located& loc, const Ident::Name& name);
+  };
+
+  class ScalarExpected : public Error {
+  public:
+    ScalarExpected(const Located& loc, const Ident::Name& name);
+  };
+
+  class FuncExpected : public Error {
+  public:
+    FuncExpected(const Located& loc, const Ident::Name& name);
   };
 
   extern void to_json(json& j, const TypedNode& a);

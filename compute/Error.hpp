@@ -12,7 +12,8 @@ namespace compute {
    */
   class Error : public std::exception {
   public:
-    Error(const Located& loc, const std::string& msg);
+    Error(const Located& loc, const std::string& msg = "");
+    void setMessage(const std::string& msg);
     const char* what() const throw() override;
   private:
     Located loc;

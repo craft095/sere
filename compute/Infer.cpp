@@ -83,18 +83,30 @@ namespace compute {
   }
 
   void Typer::visit(NameRef* v) {
-    TypedNode::Ptr node = context.lookupScalar(v->getName()->getName());
+    const Ident::Name& name = v->getName()->getName();
+    if (context.lookupFunc(name)) {
+      throw ScalarExpected(v->getLoc(), name);
+    }
+    TypedNode::Ptr node = context.lookupScalar(name);
 
-    assert(node); // TODO: emit "name not found"
+    if (!node) {
+      throw NameNotFound(v->getLoc(), name);
+    }
 
     // make a copy for futher refining
     result = node->clone();
   }
 
   void Typer::visit(FuncCall* v) {
-    Func::Ptr node = context.lookupFunc(v->getName()->getName());
+    const Ident::Name& name = v->getName()->getName();
+    if (context.lookupScalar(name)) {
+      throw FuncExpected(v->getLoc(), name);
+    }
+    Func::Ptr node = context.lookupFunc(name);
 
-    assert(node); // TODO: emit "name not found"
+    if (!node) {
+      throw NameNotFound(v->getLoc(), name);
+    }
 
     Func::Ptr func = node->clone();
 

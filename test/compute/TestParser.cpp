@@ -35,10 +35,10 @@ TEST_CASE("Parser") {
 
   NameContext context;
 
-  Root::Ptr ast3 = parseString("12+(-4200)");
-  std::cout << ast3->pretty() << std::endl;
-  TypedNode::Ptr typed = inferExpr(context, ast3->getExpression());
-  std::cout << typed->pretty() << std::endl;
+  // Root::Ptr ast3 = parseString("12+(-4200)");
+  // std::cout << ast3->pretty() << std::endl;
+  // TypedNode::Ptr typed = inferExpr(context, ast3->getExpression());
+  // std::cout << typed->pretty() << std::endl;
 
   SECTION("Constrain/Scalar") {
     Root::Ptr ast = parseString("25");
@@ -46,14 +46,35 @@ TEST_CASE("Parser") {
     typed->constrain({TypeId::SInt16});
     CHECK(typed->getTypeIds() == TypeIds { TypeId::SInt16 });
   }
+  SECTION("Constrain/Scalar/ScalarTypeMismatch") {
+    Root::Ptr ast = parseString("-25");
+    TypedNode::Ptr typed = infer(context, ast);
+    CHECK_THROWS_AS(typed->constrain({TypeId::UInt16}), ScalarTypeMismatch);
+  }
   SECTION("Constrain/Apply") {
     Root::Ptr ast = parseString("25-12");
     TypedNode::Ptr typed = infer(context, ast);
     typed->constrain({TypeId::SInt16});
     CHECK(typed->getTypeIds() == TypeIds { TypeId::SInt16 });
   }
+  SECTION("Constrain/Apply/BadApplication") {
+    Root::Ptr ast = parseString("true - 12");
+    CHECK_THROWS_AS(infer(context, ast), BadApplication);
+  }
+  SECTION("NameNotFound") {
+    Root::Ptr ast = parseString("catch22");
+    CHECK_THROWS_AS(infer(context, ast), NameNotFound);
+  }
+  SECTION("FuncExpected") {
+    Root::Ptr ast = parseString("a :: Bool ; a(12)");
+    CHECK_THROWS_AS(infer(context, ast), FuncExpected);
+  }
+  // SECTION("ScalarExpected") {
+  //   Root::Ptr ast = parseString("permute + 12");
+  //   CHECK_THROWS_AS(infer(context, ast), ScalarExpected);
+  // }
   SECTION("ArgDecls/UInt8") {
-    Root::Ptr ast = parseString("a :: UInt8 ; a");
+    Root::Ptr ast = parseString("ab \n:: \nUInt8 \n; \nab");
     TypedNode::Ptr typed = infer(context, ast);
     CHECK(typed->getTypeIds() ==
                     TypeIds {

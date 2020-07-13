@@ -11,6 +11,10 @@ namespace compute {
     msg = stream.str();
   }
 
+  void Error::setMessage(const std::string& msg) {
+    this->msg = msg;
+  }
+
   const char* Error::what() const throw() {
     return msg.c_str();
   }

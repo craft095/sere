@@ -5,7 +5,7 @@
 #include "antlr4-runtime.h"
 #include "ComputeLexer.h"
 #include "ComputeParser.h"
-#include "ComputeParserVisitor.h"
+#include "ComputeVisitor.h"
 
 #include <iostream>
 #include <sstream>
@@ -63,7 +63,7 @@ namespace compute {
   /**
    * Parse AST traversal class
    */
-  class ExprCollector : public ComputeParserVisitor {
+  class ExprCollector : public ComputeVisitor {
     Parser& parser;
     Root::Ptr root;
     FileName fileName;

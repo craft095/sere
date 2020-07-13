@@ -4,11 +4,16 @@
 #include <nlohmann/json.hpp>
 
 namespace compute {
-  const String TypedNode::pretty() const {
+  template <typename T>
+  const String pretty(const T& v) {
     std::ostringstream s;
     constexpr int spaces = 4;
-    s << json(*this).dump(spaces) << std::endl;
+    s << json(v).dump(spaces) << std::endl;
     return s.str();
+  }
+
+  const String TypedNode::pretty() const {
+    return compute::pretty(*this);
   }
 
   void to_json(json& j, const FuncType& ft) {
@@ -27,8 +32,75 @@ namespace compute {
     a.to_json(j);
   }
 
+  ScalarTypeMismatch::ScalarTypeMismatch(const Located& loc,
+                                         const TypeIds& actual,
+                                         const TypeIds& expected)
+    : Error(loc) {
+    std::ostringstream stream;
+    stream << "type mismatch, expected: "
+           << pretty(expected)
+           << "actual: "
+           << pretty(actual);
+
+    setMessage(stream.str());
+  }
+
+  FuncTypeMismatch::FuncTypeMismatch(const Located& loc,
+                                     const FuncTypes& actual,
+                                     const FuncTypes& expected)
+    : Error(loc) {
+    std::ostringstream stream;
+    stream << "function type mismatch, expected: "
+           << pretty(expected)
+           << "actual: "
+           << pretty(actual);
+
+    setMessage(stream.str());
+  }
+
+  BadApplication::BadApplication(const Located& loc,
+                                 Func::Ptr /*func*/,
+                                 TypedNodes& /*args*/)
+    : Error(loc) {
+    std::ostringstream stream;
+    stream << "function can not be applied to its args";
+
+    setMessage(stream.str());
+  }
+
+  NameNotFound::NameNotFound(const Located& loc,
+                                         const Ident::Name& name)
+    : Error(loc) {
+    std::ostringstream stream;
+    stream << "unknown name `" << name << "'";
+
+    setMessage(stream.str());
+  }
+
+  ScalarExpected::ScalarExpected(const Located& loc,
+                                 const Ident::Name& name)
+    : Error(loc) {
+    std::ostringstream stream;
+    stream << "scalar value expected, but name `" << name << "' denotes a function";
+
+    setMessage(stream.str());
+  }
+
+  FuncExpected::FuncExpected(const Located& loc,
+                             const Ident::Name& name)
+    : Error(loc) {
+    std::ostringstream stream;
+    stream << "function expected, but name `" << name << "' denotes a scalar value";
+
+    setMessage(stream.str());
+  }
+
   void Scalar::constrain(const TypeIds& typs) {
-    typeIds = set_intersects(typeIds, typs);
+    TypeIds ids {set_intersects(typeIds, typs)};
+    if (ids.empty()) {
+      throw ScalarTypeMismatch(getNode()->getLoc(), typeIds, typs);
+    }
+    std::swap(typeIds, ids);
   }
 
   void Scalar::to_json(json& j) const {
@@ -52,6 +124,11 @@ namespace compute {
         }
       }
     }
+
+    if (fts.empty()) {
+      throw ScalarTypeMismatch(getNode()->getLoc(), typeIds, typs);
+    }
+
     func->constrain(fts);
     for (size_t ix = 0; ix < as.size(); ++ix) {
       args[ix]->constrain(as[ix]);
@@ -70,7 +147,11 @@ namespace compute {
   }
 
   void Func::constrain(const FuncTypes& typs) {
-    funcTypes = set_intersects(funcTypes, typs);
+    FuncTypes fts {set_intersects(funcTypes, typs)};
+    if (fts.empty()) {
+      throw FuncTypeMismatch(getNode()->getLoc(), funcTypes, typs);
+    }
+    std::swap(funcTypes, fts);
   }
 
   void Func::to_json(json& j) const {
@@ -109,6 +190,11 @@ namespace compute {
         typeIds.insert(fi.result);
       }
     }
+
+    if (typeIds.empty()) {
+      throw BadApplication(getNode()->getLoc(), f, as);
+    }
+
     constrain(typeIds);
   }
 

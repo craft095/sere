@@ -9,28 +9,30 @@ set(ANTLR4_WITH_STATIC_CRT OFF)
 include_directories(${ANTLR4_INCLUDE_DIRS})
 find_package(ANTLR REQUIRED)
 
-antlr_target(
-  ComputeLexer
-  ComputeLexer.g4 LEXER
-  PACKAGE compute
-  )
+# antlr_target(
+#   ComputeLexer
+#   ComputeLexer.g4 LEXER
+#   PACKAGE compute
+#   )
 antlr_target(
   ComputeParser
-  ComputeParser.g4 PARSER
+  Compute.g4
+  # ComputeParser.g4 PARSER
   PACKAGE compute
-  DEPEND_ANTLR ComputeLexer
-  COMPILE_FLAGS -lib ${ANTLR_ComputeLexer_OUTPUT_DIR}
+  # DEPEND_ANTLR ComputeLexer
+  # COMPILE_FLAGS -lib ${ANTLR_ComputeLexer_OUTPUT_DIR}
   VISITOR
   LISTENER
   )
+
 add_custom_target(
   ComputeParser
   DEPENDS
-  ${ANTLR_ComputeLexer_CXX_OUTPUTS}
+  # ${ANTLR_ComputeLexer_CXX_OUTPUTS}
   ${ANTLR_ComputeParser_CXX_OUTPUTS})
 
 include_directories(${extern_antlr4_SOURCE_DIR}/runtime/Cpp/runtime/src)
-include_directories(${ANTLR_ComputeLexer_OUTPUT_DIR})
+# include_directories(${ANTLR_ComputeLexer_OUTPUT_DIR})
 include_directories(${ANTLR_ComputeParser_OUTPUT_DIR})
 
 # file (GLOB SereCompute_files "Parser.cpp")
@@ -50,7 +52,7 @@ add_library(
   "Typed.cpp"
   "Infer.cpp"
   "NameContext.cpp"
-  ${ANTLR_ComputeLexer_CXX_OUTPUTS}
+  # ${ANTLR_ComputeLexer_CXX_OUTPUTS}
   ${ANTLR_ComputeParser_CXX_OUTPUTS}
   )
 
