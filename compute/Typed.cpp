@@ -1,16 +1,24 @@
 #include "Typed.hpp"
+#include "Error.hpp"
 #include "Algo.hpp"
 
 #include <nlohmann/json.hpp>
 
 namespace compute {
-  template <typename T>
-  const String pretty(const T& v) {
-    std::ostringstream s;
-    constexpr int spaces = 4;
-    s << json(v).dump(spaces) << std::endl;
-    return s.str();
-  }
+  TypeIds anyType {
+                   TypeId::UInt8,
+                   TypeId::UInt16,
+                   TypeId::UInt32,
+                   TypeId::UInt64,
+                   TypeId::SInt8,
+                   TypeId::SInt16,
+                   TypeId::SInt32,
+                   TypeId::SInt64,
+                   TypeId::Float,
+                   TypeId::Time,
+                   TypeId::Bool,
+                   TypeId::String,
+  };
 
   const String TypedNode::pretty() const {
     return compute::pretty(*this);
@@ -30,69 +38,6 @@ namespace compute {
 
   void to_json(json& j, const Func& a) {
     a.to_json(j);
-  }
-
-  ScalarTypeMismatch::ScalarTypeMismatch(const Located& loc,
-                                         const TypeIds& actual,
-                                         const TypeIds& expected)
-    : Error(loc) {
-    std::ostringstream stream;
-    stream << "type mismatch, expected: "
-           << pretty(expected)
-           << "actual: "
-           << pretty(actual);
-
-    setMessage(stream.str());
-  }
-
-  FuncTypeMismatch::FuncTypeMismatch(const Located& loc,
-                                     const FuncTypes& actual,
-                                     const FuncTypes& expected)
-    : Error(loc) {
-    std::ostringstream stream;
-    stream << "function type mismatch, expected: "
-           << pretty(expected)
-           << "actual: "
-           << pretty(actual);
-
-    setMessage(stream.str());
-  }
-
-  BadApplication::BadApplication(const Located& loc,
-                                 Func::Ptr /*func*/,
-                                 TypedNodes& /*args*/)
-    : Error(loc) {
-    std::ostringstream stream;
-    stream << "function can not be applied to its args";
-
-    setMessage(stream.str());
-  }
-
-  NameNotFound::NameNotFound(const Located& loc,
-                                         const Ident::Name& name)
-    : Error(loc) {
-    std::ostringstream stream;
-    stream << "unknown name `" << name << "'";
-
-    setMessage(stream.str());
-  }
-
-  ScalarExpected::ScalarExpected(const Located& loc,
-                                 const Ident::Name& name)
-    : Error(loc) {
-    std::ostringstream stream;
-    stream << "scalar value expected, but name `" << name << "' denotes a function";
-
-    setMessage(stream.str());
-  }
-
-  FuncExpected::FuncExpected(const Located& loc,
-                             const Ident::Name& name)
-    : Error(loc) {
-    std::ostringstream stream;
-    stream << "function expected, but name `" << name << "' denotes a scalar value";
-
-    setMessage(stream.str());
   }
 
   void Scalar::constrain(const TypeIds& typs) {

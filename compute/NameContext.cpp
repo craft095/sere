@@ -20,12 +20,20 @@ namespace compute {
 
   TypedNode::Ptr NameContext::lookupScalar(const Ident::Name& name) const {
     auto i = scalarContext.find(name);
-    return i == scalarContext.end() ? nullptr : i->second;
+    if (i == scalarContext.end()) {
+      return next ? next->lookupScalar(name) : nullptr;
+    } else {
+      return i->second;
+    }
   }
 
   Func::Ptr NameContext::lookupFunc(const Ident::Name& name) const {
     auto i = funcContext.find(name);
-    return i == funcContext.end() ? nullptr : i->second;
+    if (i == funcContext.end()) {
+      return next ? next->lookupFunc(name) : nullptr;
+    } else {
+      return i->second;
+    }
   }
 
   void NameContext::insertScalar(const Ident::Name& name, TypedNode::Ptr typed) {

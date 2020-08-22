@@ -2,7 +2,6 @@
 #define COMPUTE_TYPED_HPP
 
 #include "Ast.hpp"
-#include "Error.hpp"
 #include "ast/Common.hpp"
 #include "ast/Located.hpp"
 
@@ -17,6 +16,8 @@
 
 namespace compute {
   typedef std::set<TypeId> TypeIds;
+
+  extern TypeIds anyType;
 
   struct FuncType {
     std::vector<TypeId> args;
@@ -132,42 +133,15 @@ namespace compute {
     TypedNodes args;
   };
 
-  class ScalarTypeMismatch : public Error {
-  public:
-    ScalarTypeMismatch(const Located& loc,
-                       const TypeIds& actual,
-                       const TypeIds& expected);
-  };
+  template <typename T>
+  const String pretty(const T& v) {
+    std::ostringstream s;
+    constexpr int spaces = 4;
+    s << json(v).dump(spaces) << std::endl;
+    return s.str();
+  }
 
-  class FuncTypeMismatch : public Error {
-  public:
-    FuncTypeMismatch(const Located& loc,
-                     const FuncTypes& actual,
-                     const FuncTypes& expected);
-  };
-
-  class BadApplication : public Error {
-  public:
-    BadApplication(const Located& loc,
-                   Func::Ptr func,
-                   TypedNodes& args);
-  };
-
-  class NameNotFound : public Error {
-  public:
-    NameNotFound(const Located& loc, const Ident::Name& name);
-  };
-
-  class ScalarExpected : public Error {
-  public:
-    ScalarExpected(const Located& loc, const Ident::Name& name);
-  };
-
-  class FuncExpected : public Error {
-  public:
-    FuncExpected(const Located& loc, const Ident::Name& name);
-  };
-
+  extern void to_json(json& j, const FuncType& ft);
   extern void to_json(json& j, const TypedNode& a);
   extern void to_json(json& j, const Func& a);
 } // namespace compute

@@ -1,4 +1,5 @@
 #include "Infer.hpp"
+#include "Error.hpp"
 #include "NameContext.hpp"
 #include "Typed.hpp"
 #include "Ast.hpp"
@@ -185,13 +186,23 @@ namespace compute {
     }
 
     for (auto decl : root->getLetDecls()) {
+      Ident::Name name = decl->getName()->getName();
       if (decl->getArgs().empty()) {
         // scalar
-        context.insertScalar(decl->getName()->getName(),
+        context.insertScalar(name,
                              inferExpr(context, decl->getBody()));
       } else {
         // function
+#if 0
+        MonoNameContext locals(&context);
+        for (auto arg : decl->getArgs()) {
+          locals.insertScalar(arg->getName(), Scalar::create(arg.get(), anyType));
+        }
+        context.insertFunc(name,
+                           inferExpr(locals, decl->getBody()));
+#else
         assert(false); // not implemented
+#endif
       }
     }
 
