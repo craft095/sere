@@ -127,6 +127,7 @@ namespace compute {
     antlrcpp::Any visitArgDeclaration(ComputeParser::ArgDeclarationContext *context) override {
       Ident::Ptr name = visit(context->name);
       Ident::Ptr typeIdent = visit(context->type);
+      NameRef::Ptr nameRef { create<NameRef>(context, name) };
 
       // Resolve type name into type id right here (not a good idea, should be fixed)
       TypeId typeId;
@@ -139,7 +140,7 @@ namespace compute {
         return nullptr;
       }
 
-      ArgDecl::Ptr r { create<ArgDecl>(context, typeId, name) };
+      ArgDecl::Ptr r { create<ArgDecl>(context, typeId, nameRef) };
       return r;
     }
 

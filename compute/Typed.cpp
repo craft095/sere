@@ -122,7 +122,7 @@ namespace compute {
     return true;
   }
 
-  Apply::Apply(const Node* node, Func::Ptr f, TypedNodes& as)
+  Apply::Apply(const Expression* node, Func::Ptr f, TypedNodes& as)
     : TypedNode(node), func(f), args(as) {
     std::vector<TypeIds> argsT;
     for (auto node : args) {

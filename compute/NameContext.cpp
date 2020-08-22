@@ -148,7 +148,8 @@ namespace compute {
   };
 
   static void initializeContext(NameContext& context) {
-    static Ident node {RE_LOC, "__builtin__"};
+    static Ident::Ptr nodeName = std::make_shared<Ident>(RE_LOC, "__builtin__");
+    static NameRef node {RE_LOC, nodeName};
     FuncTypes add_sub {math_binary};
     add_sub.insert(FuncType{{TypeId::Time, TypeId::Time}, TypeId::Time} );
 

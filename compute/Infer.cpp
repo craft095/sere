@@ -181,8 +181,9 @@ namespace compute {
   TypedNode::Ptr infer(const NameContext& context0, Root::Ptr root) {
     NameContext context(context0);
     for (auto arg : root->getArgDecls()) {
-      context.insertScalar(arg->getName()->getName(),
-                           Scalar::create(arg.get(), { generalize(arg->getTypeId()) }));
+      context.insertScalar(arg->getNameRef()->getName()->getName(),
+                           Scalar::create(arg->getNameRef().get(),
+                                          { generalize(arg->getTypeId()) }));
     }
 
     for (auto decl : root->getLetDecls()) {
@@ -214,5 +215,54 @@ namespace compute {
     expr->accept(typer);
     return typer.getResult();
   }
+
+  /*
+  class ToSere : public ExpressionVisitor {
+    TypedNode::Ptr result;
+    const NameContext& context;
+
+  public:
+    ToSere(const NameContext& context_) : context(context_) {}
+
+    TypedNode::Ptr getResult() const { return result; }
+
+    void visit(StringLit* v) override;
+    void visit(FloatLit* v) override;
+    void visit(IntLit* v) override;
+    void visit(BoolLit* v) override;
+    void visit(SereLit* v) override;
+    void visit(NameRef* v) override;
+    void visit(FuncCall* v) override;
+  };
+
+  void ToSere::visit(StringLit* v) {
+    assert(false); // not implemented
+  }
+
+  void ToSere::visit(FloatLit* v) {
+    assert(false); // not implemented
+  }
+
+  void ToSere::visit(IntLit* v) {
+    assert(false); // not implemented
+  }
+
+  void ToSere::visit(BoolLit* v) {
+    assert(false); // not implemented
+  }
+
+  void ToSere::visit(SereLit* v) {
+    assert(false); // not implemented
+  }
+
+  void ToSere::visit(NameRef* v) {
+    assert(false); // not implemented
+  }
+
+  void ToSere::visit(FuncCall* v) {
+    assert(false); // not implemented
+  }
+  */
+
 
 } // namespace compute

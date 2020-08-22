@@ -110,22 +110,6 @@ namespace compute {
 
   extern void to_json(json& j, TypeId t);
 
-  class ArgDecl : public Node {
-  public:
-    typedef std::shared_ptr<ArgDecl> Ptr;
-    ArgDecl(const Located& loc, TypeId tid, Ident::Ptr n)
-      : Node(loc), typeId(tid), name(n) {}
-
-    TypeId getTypeId() const { return typeId; }
-    Ident::Ptr getName() const { return name; }
-    void to_json(json& j) const override;
-  private:
-    TypeId typeId;
-    Ident::Ptr name;
-  };
-
-  typedef std::vector<ArgDecl::Ptr> ArgDecls;
-
   class Expression : public Node {
   public:
     typedef std::shared_ptr<Expression> Ptr;
@@ -177,6 +161,22 @@ namespace compute {
     Ident::Ptr name;
     Expressions args;
   };
+
+  class ArgDecl : public Node {
+  public:
+    typedef std::shared_ptr<ArgDecl> Ptr;
+    ArgDecl(const Located& loc, TypeId tid, NameRef::Ptr n)
+      : Node(loc), typeId(tid), name(n) {}
+
+    TypeId getTypeId() const { return typeId; }
+    NameRef::Ptr getNameRef() const { return name; }
+    void to_json(json& j) const override;
+  private:
+    TypeId typeId;
+    NameRef::Ptr name;
+  };
+
+  typedef std::vector<ArgDecl::Ptr> ArgDecls;
 
   class LetDecl : public Node {
   public:
