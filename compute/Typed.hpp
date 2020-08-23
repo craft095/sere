@@ -30,6 +30,16 @@ namespace compute {
 
   typedef std::set<FuncType> FuncTypes;
 
+  class Scalar;
+  class Apply;
+
+  class TypedNodeVisitor {
+  public:
+    virtual void visit(Scalar& node) = 0;
+    virtual void visit(Apply& node) = 0;
+    virtual ~TypedNodeVisitor() = default;
+  };
+
   class TypedNode {
   public:
     typedef std::shared_ptr<TypedNode> Ptr;
@@ -39,7 +49,12 @@ namespace compute {
      * @param node AST node
      */
     TypedNode(const Expression* node_) : node(node_) {}
-    virtual ~TypedNode() {}
+    virtual ~TypedNode() = default;
+
+    /**
+     * Apply visitor to a node
+     */
+    virtual void accept(TypedNodeVisitor& visitor) = 0;
 
     /**
      * Pretty print typed node
@@ -105,6 +120,10 @@ namespace compute {
 
     void to_json(json& j) const override;
 
+    virtual void accept(TypedNodeVisitor& visitor) {
+      visitor.visit(*this);
+    }
+
   private:
     TypeIds typeIds;
   };
@@ -156,6 +175,10 @@ namespace compute {
 
     const TypeIds& getTypeIds() const override { return typeIds; }
     void constrain(const TypeIds& typs) override;
+
+    virtual void accept(TypedNodeVisitor& visitor) {
+      visitor.visit(*this);
+    }
 
   private:
     FuncTypes funcTypes;
