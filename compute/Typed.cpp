@@ -24,6 +24,12 @@ namespace compute {
     return compute::pretty(*this);
   }
 
+  const TypeId TypedNode::getFinalType() const {
+    auto const & types { getTypeIds() };
+    assert(!types.empty());
+    return *types.begin();
+  }
+
   void to_json(json& j, const FuncType& ft) {
     j = json {
       {"node",   "FuncType" },

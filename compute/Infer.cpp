@@ -216,7 +216,52 @@ namespace compute {
     return typer.getResult();
   }
 
-  /*
+#if 0
+  class Atomics {
+  public:
+    typedef std::map<Ident::Name, size_t> Vars;
+    typedef std::map<Ident::Name, TypedNode*> Exprs;
+
+    VarName addAtomic(Ident::Ptr id, TypedNode* expr) {
+      const Ident::Name& name { id->getName() };
+      auto i = vars.insert(Vars::value_type {name, vars.size()});
+      if (i.second) {
+        exprs[name] = expr;
+      }
+      return VarName { i.first->second };
+    }
+
+  private:
+    Vars vars;
+    Exprs expr;
+  };
+
+  class ToBool : public ExpressionVisitor {
+    Atomics& atomics;
+    Scalar* scalar;
+    BoolExpr::Ptr result;
+
+  public:
+    ToBool(Atomics& atomics_, Scalar* scalar_)
+      : atomics(atomics_), scalar(scalar_) {}
+
+    TypedNode::Ptr getResult() const { return result; }
+
+    void visit(StringLit* v) override { assert(false); }
+    void visit(FloatLit* v) override { assert(false); }
+    void visit(IntLit* v) override { assert(false); }
+    void visit(BoolLit* v) override {
+      result = std::make_shared<BoolValue>(v->getLoc(), v->getValue());
+    }
+    void visit(SereLit* v) override { assert(false); }
+    void visit(NameRef* v) override {
+      assert(scalar->getFinalType() == TypeId::Bool);
+      VarName var { atomics.addVarName(v->getName, scalar) };
+      result = std::make_shared<Variable>(v->getLoc(), var);
+    }
+    void visit(FuncCall* v) override {}
+  };
+
   class ToSere : public ExpressionVisitor {
     TypedNode::Ptr result;
     const NameContext& context;
@@ -264,5 +309,21 @@ namespace compute {
   }
   */
 
+  struct ParseResult {
+    Ptr<SereExpr> expr;
+    AtomicNameMap vars;
+  };
 
+  void toSere(TypedNode::Ptr typed, parser::ParseResult& result) {
+    if (auto scalar = dynamic_cast<Scalar*>(typed.get())) {
+      TypeId typeId = scalar->getTypeIds().front();
+
+      switch (typeId) {
+      case TypeId::Bool:
+
+      }
+      ToSere(scalar)
+    }
+  }
+#endif
 } // namespace compute

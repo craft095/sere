@@ -1,6 +1,8 @@
 #include "NameContext.hpp"
 #include "Typed.hpp"
 
+#include "Algo.hpp"
+
 namespace compute {
   static void initializeContext(NameContext& context);
 
@@ -27,6 +29,11 @@ namespace compute {
     }
   }
 
+  bool NameContext::isFuncTransparent(const Ident::Name& name) const {
+    assert(lookupFunc(name) != nullptr);
+    return set_member(funcTransparent, name);
+  }
+
   Func::Ptr NameContext::lookupFunc(const Ident::Name& name) const {
     auto i = funcContext.find(name);
     if (i == funcContext.end()) {
@@ -42,10 +49,14 @@ namespace compute {
     scalarContext[name] = typed;
   }
 
-  void NameContext::insertFunc(const Ident::Name& name, Func::Ptr func) {
+  void NameContext::insertFunc(const Ident::Name& name, Func::Ptr func, bool transparent) {
     assert(lookupFunc(name) == nullptr);
     assert(lookupScalar(name) == nullptr);
     funcContext[name] = func;
+
+    if (transparent) {
+      funcTransparent.insert(name);
+    }
   }
 
   void NameContext::to_json(json& j) const {
@@ -172,18 +183,18 @@ namespace compute {
     context.insertFunc("__bool_eq", Func::create(&node, eq_binary));
     context.insertFunc("__bool_ne", Func::create(&node, eq_binary));
 
-    context.insertFunc("__bool_and", Func::create(&node, bool_binary));
-    context.insertFunc("__bool_or", Func::create(&node, bool_binary));
+    context.insertFunc("__bool_and", Func::create(&node, bool_binary), true);
+    context.insertFunc("__bool_or", Func::create(&node, bool_binary), true);
 
-    context.insertFunc("__bool_not", Func::create(&node, bool_unary));
+    context.insertFunc("__bool_not", Func::create(&node, bool_unary), true);
 
-    context.insertFunc("__sere_intersect", Func::create(&node, sere_binary));
-    context.insertFunc("__sere_union", Func::create(&node, sere_binary));
-    context.insertFunc("__sere_concat", Func::create(&node, sere_binary));
-    context.insertFunc("__sere_fusion", Func::create(&node, sere_binary));
+    context.insertFunc("__sere_intersect", Func::create(&node, sere_binary), true);
+    context.insertFunc("__sere_union", Func::create(&node, sere_binary), true);
+    context.insertFunc("__sere_concat", Func::create(&node, sere_binary), true);
+    context.insertFunc("__sere_fusion", Func::create(&node, sere_binary), true);
 
-    context.insertFunc("__sere_kleenestar", Func::create(&node, sere_unary));
-    context.insertFunc("__sere_kleeneplus", Func::create(&node, sere_unary));
-    context.insertFunc("__sere_complement", Func::create(&node, sere_unary));
+    context.insertFunc("__sere_kleenestar", Func::create(&node, sere_unary), true);
+    context.insertFunc("__sere_kleeneplus", Func::create(&node, sere_unary), true);
+    context.insertFunc("__sere_complement", Func::create(&node, sere_unary), true);
   }
 } // namespace compute

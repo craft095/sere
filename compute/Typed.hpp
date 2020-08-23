@@ -41,18 +41,49 @@ namespace compute {
     TypedNode(const Expression* node_) : node(node_) {}
     virtual ~TypedNode() {}
 
+    /**
+     * Pretty print typed node
+     */
     const String pretty() const;
 
+    /**
+     * Get AST expression node
+     */
     const Expression* getNode() const { return node; }
 
+    /**
+     * Get fully resolved type
+     */
+    const TypeId getFinalType() const;
+
+    /**
+     * Constrain typed nodes by filtering possible types.
+     * @param typs set of acceptable types (used as a filter)
+     */
     virtual void constrain(const TypeIds& typs) = 0;
+
+    /**
+     * Get all types, which can represent the typed node
+     */
     virtual const TypeIds& getTypeIds() const = 0;
+
+    /**
+     * Make an object copy
+     */
     virtual Ptr clone() const = 0;
+
+    /**
+     * Serialize to JSON
+     */
     virtual void to_json(json& j) const = 0;
+
   private:
     const Expression* node;
   };
 
+  /**
+   * List of typed nodes
+   */
   typedef std::vector<TypedNode::Ptr> TypedNodes;
 
   class Scalar : public TypedNode {
