@@ -9,76 +9,10 @@
 #include "test/GenLetter.hpp"
 #include "test/EvalRt.hpp"
 
+#include "test/CompareExprs.hpp"
+
 #include <sstream>
 #include "catch2/catch.hpp"
-
-class RemapVars : public SereVisitor, public BoolVisitor {
-  std::map<size_t, size_t> remap;
-public:
-  RemapVars (parser::ParseResult& self,
-             std::map<std::string, size_t> theirVars) {
-    REQUIRE(self.vars.size() == theirVars.size());
-
-    for (auto& i0 : self.vars) {
-      REQUIRE(theirVars.find(i0.first) != theirVars.end());
-      remap[i0.second] = theirVars[i0.first];
-    }
-
-    self.expr->accept(*this);
-  }
-
-  void visit(Variable& v) override {
-    size_t ix = v.getName().ix;
-    assert(remap.find(ix) != remap.end());
-    v.getNameRef().ix = remap[ix];
-  }
-  void visit(BoolValue& ) override {
-  }
-  void visit(BoolNot& v) override {
-    v.getArg()->accept(*this);
-  }
-  void visit(BoolAnd& v) override {
-    v.getLhs()->accept(*this);
-    v.getRhs()->accept(*this);
-  }
-  void visit(BoolOr& v) override {
-    v.getLhs()->accept(*this);
-    v.getRhs()->accept(*this);
-  }
-  void visit(SereBool& v) override {
-    v.getExpr()->accept(*this);
-  }
-  void visit(SereEmpty& ) override {
-  }
-  void visit(Union& v) override {
-    v.getLhs()->accept(*this);
-    v.getRhs()->accept(*this);
-  }
-  void visit(Intersect& v) override {
-    v.getLhs()->accept(*this);
-    v.getRhs()->accept(*this);
-  }
-  void visit(Concat& v) override {
-    v.getLhs()->accept(*this);
-    v.getRhs()->accept(*this);
-  }
-  void visit(Fusion& v) override {
-    v.getLhs()->accept(*this);
-    v.getRhs()->accept(*this);
-  }
-  void visit(KleeneStar& v) override {
-    v.getArg()->accept(*this);
-  }
-  void visit(KleenePlus& v) override {
-    v.getArg()->accept(*this);
-  }
-  void visit(Partial& v) override {
-    v.getArg()->accept(*this);
-  }
-  void visit(Complement& v) override {
-    v.getArg()->accept(*this);
-  }
-};
 
 template <typename T>
 void checkAlt(Ptr<SereExpr> u, Ptr<SereExpr> v) {
@@ -110,26 +44,14 @@ void checkBoolExpr(Ptr<BoolExpr> expr, const char* text) {
   checkExpr(RE_SEREBOOL(expr), text);
 }
 
-void prepareExpr(Ptr<SereExpr> expr, rt::Nfasl& rtNfasl) {
-  nfasl::Nfasl expr0 = sereToNfasl(*expr);
-  nfasl::Nfasl expr1;
-  nfasl::clean(expr0, expr1);
-  toRt(expr1, rtNfasl);
-}
-
-void prepareExprs(const char* u, const char* v, rt::Nfasl& rtNfasl0, rt::Nfasl& rtNfasl1) {
-  std::istringstream stream0(u);
-  parser::ParseResult r0 = parser::parse(stream0);
-  std::istringstream stream1(v);
-  parser::ParseResult r1 = parser::parse(stream1);
-
-  REQUIRE(r0.vars.size() == r1.vars.size());
-
-  RemapVars remapper{r1, r0.vars};
-
-  prepareExpr(r0.expr, rtNfasl0);
-  prepareExpr(r1.expr, rtNfasl1);
-}
+#define COMPARE_EXPRS(u, v)                                             \
+  {                                                                     \
+    std::istringstream stream0(u);                                      \
+    parser::ParseResult r0 = parser::parse(stream0);                    \
+    std::istringstream stream1(v);                                      \
+    parser::ParseResult r1 = parser::parse(stream1);                    \
+    COMPARE_EXPRS0(r0, r1);                                             \
+  }
 
 TEST_CASE("Parser") {
   SECTION("empty") {
@@ -174,21 +96,6 @@ TEST_CASE("Parser") {
               "true [*]");
   }
 }
-
-#define COMPARE_EXPRS(u, v)                                           \
-  {                                                                   \
-  rt::Nfasl rtNfasl0, rtNfasl1;                                       \
-  prepareExprs(u, v, rtNfasl0, rtNfasl1);                             \
-                                                                      \
-  auto atoms = rtNfasl0.atomicCount;                                  \
-  for (size_t cnt = 0; cnt < 100; ++cnt) {                            \
-    auto word0 = WordGenerator::make(atoms, 0, 8);                    \
-    Match res0 = evalRtNfasl(rtNfasl0, word0);                        \
-    Match res1 = evalRtNfasl(rtNfasl1, word0);                        \
-                                                                      \
-    CHECK(res0 == res1);                                              \
-  }                                                                   \
-  }
 
 TEST_CASE("Parser Transforms: PERMUTE") {
   COMPARE_EXPRS("PERMUTE(a)", "a");

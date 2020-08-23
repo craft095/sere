@@ -10,6 +10,7 @@ set(ComputeTest_files
 #  ../EvalSere.cpp
 #  ../GenNfasl.cpp
 #  ../Letter.cpp
+  ../CompareExprs.cpp
   Main.cpp
   TestParser.cpp
 )

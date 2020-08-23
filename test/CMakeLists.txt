@@ -7,6 +7,7 @@ project(SereTest VERSION 0.9.1)
 set(Benchmark_files Benchmark.cpp)
 
 set(SereTest_files
+  CompareExprs.cpp
   EvalBoolExpr.cpp
   EvalDfasl.cpp
   EvalExpr.cpp
