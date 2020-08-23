@@ -72,6 +72,7 @@ target_link_libraries(
   compute_static
   PRIVATE
   sere_static
+  tsl::robin_map
   nlohmann_json::nlohmann_json
 )
 

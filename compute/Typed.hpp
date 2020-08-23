@@ -88,6 +88,13 @@ namespace compute {
     virtual Ptr clone() const = 0;
 
     /**
+     * Get a location
+     */
+    const Located& getLoc() const {
+      return node->getLoc();
+    }
+
+    /**
      * Serialize to JSON
      */
     virtual void to_json(json& j) const = 0;
@@ -178,6 +185,14 @@ namespace compute {
 
     virtual void accept(TypedNodeVisitor& visitor) {
       visitor.visit(*this);
+    }
+
+    Func::Ptr getFunc() const {
+      return func;
+    }
+
+    TypedNodes getArgs() const {
+      return args;
     }
 
   private:
