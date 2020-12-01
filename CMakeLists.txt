@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.14)
 
+# This suppresses cmake warnings from antl cpp runtime
+set(CMAKE_WARN_DEPRECATED FALSE CACHE BOOL "")
+
 project(Sere VERSION 0.9.0)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -105,6 +108,8 @@ if(NOT extern_benchmark_POPULATED)
   message(STATUS "benchmark populating: " ${extern_benchmark_SOURCE_DIR})
   message(STATUS "benchmark populating: " ${extern_benchmark_BINARY_DIR})
   FetchContent_Populate(extern_benchmark)
+# This suppresses cmake warnings from antl cpp runtime
+  set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
   set(BENCHMARK_ENABLE_TESTING OFF)
   add_subdirectory(
     ${extern_benchmark_SOURCE_DIR}
@@ -124,6 +129,7 @@ FetchContent_Declare(
 FetchContent_GetProperties(extern_antlr4)
 if(NOT extern_antlr4_POPULATED)
   FetchContent_Populate(extern_antlr4)
+  set(CMAKE_POLICY_DEFAULT_CMP0048 NEW CACHE BOOL "")
   add_subdirectory(
     ${extern_antlr4_SOURCE_DIR}/runtime/Cpp
     ${extern_antlr4_BINARY_DIR}
