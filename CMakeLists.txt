@@ -13,6 +13,9 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+option(BENCHMARK_ENABLE_TESTING "Disable testing of the benchmark library." OFF)
+option(BENCHMARK_ENABLE_GTEST_TESTS "Disable building the unit tests which depend on gtest" OFF)
+
 enable_testing()
 
 include(FetchContent)
@@ -30,6 +33,7 @@ if(NOT extern_minisat_POPULATED)
   message(STATUS "Populating minisat " ${extern_minisat_SOURCE_DIR})
   add_subdirectory(minisat EXCLUDE_FROM_ALL)
 endif()
+
 message(STATUS "minisat populated " ${extern_minisat_SOURCE_DIR})
 
 # FetchContent_Declare(
@@ -109,8 +113,6 @@ if(NOT extern_benchmark_POPULATED)
   message(STATUS "benchmark populating: " ${extern_benchmark_BINARY_DIR})
   FetchContent_Populate(extern_benchmark)
 # This suppresses cmake warnings from antl cpp runtime
-  set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
-  set(BENCHMARK_ENABLE_TESTING OFF)
   add_subdirectory(
     ${extern_benchmark_SOURCE_DIR}
     ${extern_benchmark_BINARY_DIR}
