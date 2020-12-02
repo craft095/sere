@@ -15,8 +15,13 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 option(BENCHMARK_ENABLE_TESTING "Disable testing of the benchmark library." OFF)
 option(BENCHMARK_ENABLE_GTEST_TESTS "Disable building the unit tests which depend on gtest" OFF)
+option(JSON_BuildTests "Disable building the unit tests" OFF)
 
 enable_testing()
+
+# using pkg-config to configure uuid
+find_package(PkgConfig REQUIRED)
+pkg_search_module(UUID REQUIRED uuid)
 
 include(FetchContent)
 
@@ -76,7 +81,6 @@ FetchContent_Declare(
 FetchContent_GetProperties(extern_json)
 if(NOT extern_json_POPULATED)
   FetchContent_Populate(extern_json)
-  set(JSON_BuildTests "OFF")
   add_subdirectory(
     ${extern_json_SOURCE_DIR}
     ${extern_json_BINARY_DIR}
