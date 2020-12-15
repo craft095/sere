@@ -52,6 +52,10 @@ jobs:
     # - name: Autobuild
     #  uses: github/codeql-action/autobuild@v1
 
+    - name: Installing dependencies
+      run: |
+        sudo apt install uuid-dev
+
     - run: |
         mkdir build
         cd build
